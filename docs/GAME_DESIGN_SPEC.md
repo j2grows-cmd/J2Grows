@@ -401,3 +401,19 @@ The first mutation is a deliberately guided onboarding experience. Its primary p
 - After the guided discovery, return to the standard probabilistic mutation system. Subsequent discoveries may be obvious, subtle, rare, inherited, unstable or newly arising.
 - Preserve player agency: the guided sequence should establish a useful starting specimen and teach the process, not dictate the player's long-term breeding specialisation or make later outcomes predictable.
 - The first discovery should feel like an exciting scientific breakthrough, with a clear visual reveal and a permanent entry in the player's discovery journal.
+
+
+## 24. Specimen ownership, space, use and preservation
+
+Plants are tangible management assets as well as scientific records. Specimens occupy growing space and can be retained, propagated, sold, retired or used in research, with clear rules about when a procedure risks or consumes the plant.
+
+- **Keep and cultivate:** living specimens occupy suitable space and require appropriate care unless a later system explicitly automates or suspends those needs.
+- **Sell or retire:** players may sell plants for income or retire/discard specimens to free capacity. The interface should clearly show the consequences before confirming an irreversible action.
+- **Propagate and preserve:** where the method allows, players can create descendants before selling, retiring or risking a valuable source. Parent and descendant records remain distinct and linked by lineage.
+- **Research risk:** most observation and non-destructive analysis should not consume a specimen. Certain advanced procedures may consume plant material, temporarily occupy the specimen, reduce its health or carry a disclosed risk of damage or loss.
+- **Method-specific costs:** propagation methods differ in required source material, time, resource cost, output count, fidelity and risk. The game must not treat every experiment as if it consumes the entire parent plant.
+- **Protect valuable genetics:** players should be able to maintain backups, reserve breeding stock and mark important specimens as protected from automated sale or disposal. Automation must respect those protections by default.
+- **Scientific records persist:** selling or losing a plant does not erase its discovery entry, recorded analysis, lineage or provenance. However, a record is not a substitute for a living specimen when a future experiment requires biological material.
+- **Transparent irreversible actions:** confirm destructive actions and clearly identify the affected specimen, expected outcome and any known risk. Avoid arbitrary losses or hidden consumption rules.
+
+The intended decision is whether to preserve, propagate, sell or risk a specimen—not to force players to hoard every plant indefinitely. Space pressure should create meaningful collection and production choices without punishing players for making reasonable early-game decisions.
