@@ -120,8 +120,14 @@ function App() {
       return;
     }
     setCash((current) => current + specimen.value);
-    setSpecimens((current) => current.filter((item) => item.id !== specimen.id));
-    setSelected(specimens.find((item) => item.id !== specimen.id)?.id ?? "");
+    const remaining = specimens.filter((item) => item.id !== specimen.id);
+    setSpecimens(remaining);
+    if (remaining.length > 0) {
+      setSelected(remaining[0].id);
+    } else {
+      setSelected("");
+      setPage("Plant Catalogue");
+    }
     announce(`${specimen.nickname} sold for ${money(specimen.value)}.`);
   }
 
