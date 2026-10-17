@@ -154,13 +154,21 @@ Automation progresses from basic watering and routine care to propagation, breed
 ## 9. Research and progression
 
 Research is split into specialisation trees for:
-- genetics;
-- cultivation;
-- tissue culture;
-- automation;
+- genetics and specimen analysis;
+- cultivation and environmental control;
+- propagation and tissue culture;
+- automation and production systems;
 - business and commercial operations.
 
-Research progress comes from passive generation, experiments, discoveries and automated research. A hybrid research tree expands through discoveries, specialisations and meaningful choices.
+### Early research choice
+Immediately after the first guided mutation discovery, introduce a small, readable research tree with three initial branches:
+1. **Analysis:** improve specimen inspection, detect subtler traits and reveal more reliable estimates of inheritance likelihood and expression strength. This is the recommended first path because it directly follows the player's first discovery.
+2. **Cultivation:** improve plant health, environmental control and growth reliability, preparing for customisable chambers and species-specific care.
+3. **Propagation:** improve propagation efficiency, output, cost and method options, allowing the player to run more experiments and build stock more quickly.
+
+Analysis should be clearly recommended, but not mandatory as the player's first investment. Each branch should provide an early useful benefit and later connect to the others, so the choice affects the player's route without locking them out of core systems.
+
+Research progress comes from experiments, discoveries, objectives and later automation or passive generation. A hybrid research tree expands through discoveries, specialisations and meaningful choices.
 
 The primary progression path is institutional: establish a profitable nursery, prove reliable production, develop specialist laboratories, recruit expertise and reach major research milestones. Players can choose when to pursue optional systems and specialisations, rather than being forced through one narrow optimal route.
 
