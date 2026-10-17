@@ -201,15 +201,19 @@ Commercial progression introduces specialist buyers, market tiers, international
 
 The shop should remain useful as an idle system, with deeper management offering meaningful optimisation rather than mandatory repetitive micromanagement. Sales are not guaranteed at any asking price; demand, price, stock and reputation affect how quickly a plant sells. There are no auctions. Any future player-to-player trading is optional and must not be required for core progression. Production costs and supply/demand create strategic trade-offs without arbitrary click limits.
 
-## 11. Institutional eras and prestige
+## 11. Institutional eras, milestones and laboratory expansion
 
-Prestige represents recognition, new research programmes and scientific eras. It is tied to a sequence of institutional milestones, with optional challenges granting extra rewards.
+Progression is organised around major institutional milestones. Reaching a milestone gives the player a meaningful choice rather than forcing a prestige reset.
 
-A prestige reset removes most operational progress, including facilities and staff, while preserving scientific records and permanent knowledge. Persistent elements include plant collections and discoveries, genetic research, cultivar records and lineage, achievements, permanent institutional upgrades and research unlocks.
+At each major milestone, the player can:
+- **Stay and freeplay:** continue running the current setup, growing the collection, improving the existing operation, completing optional goals and earning money without being forced into a new era.
+- **Invest in a new facility:** purchase or move into a larger or more capable laboratory, nursery or research site. This opens room for new equipment, staff, production capacity and research capabilities, with a substantial but understandable investment cost.
 
-Prestige rewards can include multipliers, new research branches, rooms, equipment and prestige-specific systems. New eras should add a combination of larger scale, new production chains and new scientific capabilities. Players can choose a research specialisation each era, changing the strongest strategies.
+Moving to a new facility should feel like establishing the next chapter of the institution, not deleting the player's achievements. Scientific records, discoveries, genetic research, cultivar records and lineage, achievements and established knowledge persist. Plant collections and selected equipment should be carried forward according to the move's clearly stated logistics and capacity; any choices about what to transport, sell, store or replace must be shown before committing. The new facility can require fitting out, hiring and rebuilding some operational capacity, creating a satisfying transition without an arbitrary wipe.
 
-Prestige is required for some advanced technologies, but normal progression must remain rewarding for players who delay resetting. The long-term endgame combines research completion, cultivar establishment, autonomous operations and ongoing progression.
+Larger facilities introduce new space, equipment tiers, production chains, research programmes and staffing options. Milestones can unlock new facility offers and capabilities, but the player should retain the freedom to remain at an earlier scale. Some advanced technologies may require access to later facilities or research eras, while ordinary progression and freeplay remain rewarding for players who do not move immediately.
+
+Optional milestone challenges can provide extra rewards. Permanent upgrades and era-specific bonuses may exist, but the core progression model is **facility expansion by choice**, not mandatory prestige. The long-term endgame combines research completion, cultivar establishment, autonomous operations, specialist commercial success and continued expansion where the player wants it.
 
 ## 12. Presentation and user experience
 
