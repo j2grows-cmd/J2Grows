@@ -138,7 +138,19 @@ Potential environmental variables include light, temperature, humidity, watering
 
 The interface should translate conditions into useful feedback. Beginners see clear indicators such as too dry, insufficient light or humidity outside the preferred range; advanced players can inspect detailed readings, histories and target ranges. Presets should reduce routine micromanagement, while manual controls remain available for players who enjoy fine tuning.
 
-Plant health can include deficiencies, pests, diseases and treatments. **Pests and disease remain a genuine risk throughout the game**, including in advanced facilities; research and equipment improve detection, prevention, containment and treatment, but never make a collection completely immune. Outbreaks may spread between susceptible plants when conditions and proximity allow, creating a reason to monitor collections, quarantine new arrivals, isolate affected specimens, clean equipment and maintain backups. Species and subspecies can differ in susceptibility, and environmental stress may increase vulnerability. Plants can die, so losses must be understandable and manageable through observation, research and sound procedures. Relaxed mode gives players more warning and forgiving recovery; Challenging mode makes outbreaks, treatment choices and neglect more consequential without making losses arbitrary.
+### Progressive plant health and biosecurity
+
+Plant health systems grow in depth with the player's facilities, knowledge and collection size.
+
+- **Early care:** begin with readable, common problems such as underwatering, overwatering, unsuitable light or humidity, and basic pest infestations. Clear symptoms and simple indicators teach players to inspect plants and correct care before damage becomes severe.
+- **Early treatments:** learn basic responses such as adjusting watering and environment, removing affected foliage where appropriate, and using simple pest treatments. Recovery takes time and may require continued monitoring.
+- **Advanced diagnosis:** research and equipment unlock more precise identification of deficiencies, pests and diseases, including problems that can look similar at first. Species and subspecies differ in susceptibility, symptoms and preferred treatment.
+- **Spread and outbreaks:** later systems introduce diseases and pests that can spread between susceptible plants through plausible routes such as close proximity, shared tools, handling or contaminated growing areas. Spread depends on the problem, conditions, plant susceptibility and biosecurity practices rather than happening arbitrarily.
+- **Quarantine and isolation:** dedicated quarantine space allows new arrivals and suspected cases to be separated from the main collection. Players can monitor quarantine periods and only move specimens into shared growing areas when appropriate checks are complete.
+- **Decontamination and sanitation:** unlock cleaning procedures, equipment decontamination, waste handling and room-level biosecurity. These reduce the chance of spread but cost time or supplies and cannot guarantee zero risk.
+- **Integrated control:** advanced facilities can use dedicated isolation zones, monitoring systems, staff protocols and automated alerts. Players must balance treatment costs, plant stress, spread risk and the value of the affected specimens.
+
+**Pests and disease remain a genuine risk throughout the game**, including in advanced facilities. Better tools improve prevention, detection, containment and treatment but never make a collection completely immune. Plants can die, so losses should be understandable and manageable through observation, research, good procedures and backup specimens. Relaxed mode provides more warning and easier recovery; Challenging mode makes outbreaks, treatment choices and neglect more consequential without making losses arbitrary.
 
 Substrates and nutrient regimes have different suitability rather than one universally optimal option. Growth and output depend on genetics, health, maturity, environment, equipment, staff and production-line optimisation.
 
