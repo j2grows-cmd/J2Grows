@@ -194,7 +194,12 @@ No single factor should determine every sale price. A spectacular-looking specim
 
 Players must balance selling stock against retaining collections, reserves, genetic material and breeding lines. The valuation UI should explain the main reasons behind an offer so prices feel understandable rather than arbitrary.
 
-Commercial progression introduces specialist buyers, market tiers, international distribution and eventually a player-managed shop where asking prices and inventory are under the player's control. There are no auctions. Any future player-to-player trading is optional and must not be required for core progression. Production costs and supply/demand create strategic trade-offs without arbitrary click limits.
+Commercial progression introduces specialist buyers, market tiers, international distribution and eventually a player-managed shop where asking prices and inventory are under the player's control. Shop management unlocks progressively:
+1. **Passive storefront:** list plants at chosen prices and quantities; customers purchase over time, including during eligible offline progress.
+2. **Commercial tools:** unlock price guidance, demand and stock insights, featured listings and optional promotions. Players can react to changing demand without needing constant attention.
+3. **Specialist brand:** build a reputation around plant groups, desirable traits or research-grade specimens. Reputation attracts relevant customer segments and unlocks premium opportunities, while leaving players free to diversify.
+
+The shop should remain useful as an idle system, with deeper management offering meaningful optimisation rather than mandatory repetitive micromanagement. Sales are not guaranteed at any asking price; demand, price, stock and reputation affect how quickly a plant sells. There are no auctions. Any future player-to-player trading is optional and must not be required for core progression. Production costs and supply/demand create strategic trade-offs without arbitrary click limits.
 
 ## 11. Institutional eras and prestige
 
