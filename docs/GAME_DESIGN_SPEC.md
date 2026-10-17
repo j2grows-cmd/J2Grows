@@ -387,6 +387,12 @@ The game should include:
 - useful short-session actions and deeper long-session optimisation;
 - clear costs, outcomes, risks and failure explanations.
 
+## Accessibility and interface customisation
+
+The interface should provide sensible, readable defaults for new players while supporting deep customisation for experienced institution managers. Panels and dashboard layouts should be resizable or rearrangeable where practical; tables should support sorting, filtering and saved views; and players should be able to adjust information density without losing access to important warnings or actions.
+
+Accessibility is a core design requirement, not a late polish task. Include adjustable text/UI scaling, colour-blind-friendly palettes, sufficient contrast, reduced-motion options, keyboard navigation where practical, readable chart labels and patterns/icons/text in addition to colour for communicating status. Important alerts, specimen protection states, task failures and risk indicators must remain understandable without relying on colour or animation alone. Complexity should be progressive: newcomers see clear summaries and guided explanations, while advanced players can opt into detailed scientific and operational data.
+
 ## Save system and offline progress
 
 The game should support multiple independent save slots so players can run different institutions, experiment with different decisions and try difficulty modes without overwriting another playthrough. Local saves and automatic saving are the first-release priority; the core game must not require an account or internet connection. Cloud synchronisation is a later optional feature and must include clear conflict handling rather than silently overwriting newer progress.
