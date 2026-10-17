@@ -310,7 +310,16 @@ Cultivar specimens, genetic records and lineage may be shared or traded with ant
 
 Support multiple save slots, cloud saves and sandbox mode eventually. Cross-device synchronisation requires conflict handling when two devices modify the same save.
 
-Offline progress is calculated when the player returns, not by keeping a full simulation continuously running. The exact offline cap and which processes advance must be tuned and documented. Advanced options can expose additional simulation detail without making the default overwhelming.
+Offline progress is calculated when the player returns, not by keeping a full simulation continuously running. Eligible growth, propagation, research, production, shop sales and automated tasks advance according to elapsed time and the state of the player's systems.
+
+- **System-dependent progress:** a process advances only if its requirements were met: suitable equipment and space, available inputs, sufficient staffing where needed, and an active queue or operating rule. Manual tasks do not magically complete unless they were started or assigned before leaving.
+- **Realistic limits:** queues, equipment throughput, inventory capacity, stock availability, resource shortages, maintenance and specimen health constrain results. Automation must not bypass the same rules that apply during active play.
+- **Offline safeguards:** protected specimens remain protected; automatic sales, disposal and destructive procedures obey explicit player policies. Systems pause or report blocked work when they cannot continue safely, rather than silently producing impossible results.
+- **Return summary:** show elapsed time, completed tasks, growth and research progress, sales and income, resource consumption, discoveries, blocked queues and any important risks or interventions needed.
+- **Balance and tuning:** the intended default is generous offline progression rather than a short arbitrary cap. A configurable or system-specific cap may be introduced if playtesting demonstrates a balance or technical need; any cap must be clearly communicated and must not silently discard accrued progress.
+- **Simulation consistency:** offline calculations should use the same core rules as active play as far as practical, with bounded, deterministic processing for long absences and clear handling of events that depend on order.
+
+Advanced options can expose additional simulation detail without making the default overwhelming. Offline progress should make the institution feel productive while away without rendering active decisions, research planning or optimisation irrelevant.
 
 Use a versioned save schema, validated loading, safe recovery and migrations. Simulation outcomes should be deterministic where appropriate and seeded randomness should make tests reliable. Do not implement cloud sync until save identity, conflict resolution, account trust boundaries and recovery behaviour are specified.
 
