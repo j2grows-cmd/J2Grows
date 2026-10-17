@@ -154,14 +154,20 @@ Plant health systems grow in depth with the player's facilities, knowledge and c
 
 Substrates and nutrient regimes have different suitability rather than one universally optimal option. Growth and output depend on genetics, health, maturity, environment, equipment, staff and production-line optimisation.
 
-Propagation methods include:
-- seeds and sexual crosses;
-- cuttings;
-- cloning;
-- tissue culture and acclimatisation;
-- advanced methods unlocked through research.
+### Progressive propagation and tissue-culture production
 
-Methods should have meaningful trade-offs in time, cost, genetic fidelity, mutation risk and quantity produced. The game should distinguish preserving an existing mutation from generating or discovering new variation. Tissue culture is a core pillar alongside breeding, with simple early workflows that expand into multi-stage protocols, specialised equipment and quality control.
+Propagation grows from a straightforward early activity into a configurable production chain. Players unlock methods, substrates, nutrient regimes, growing conditions and equipment through research, facility milestones and supplier access.
+
+- **Early propagation:** start with accessible methods such as cuttings, simple seed growing and basic rooting or growing media. The player chooses a plant and method, then manages a small number of understandable requirements.
+- **Substrates and media:** unlock different growing and propagation media over time. Their suitability varies by species and method, with trade-offs in cost, moisture retention, aeration, nutrient availability, contamination risk and handling.
+- **Nutrients and supplements:** unlock nutrient mixes and specialist inputs that affect suitable growth stages and species. Correct regimes can improve growth or success; unsuitable combinations can waste resources or stress plants. Avoid a single universally optimal recipe.
+- **Growing conditions:** light, temperature, humidity, airflow, watering and other relevant environmental settings affect outcomes. Presets and recommendations help new players, while advanced players can tune protocols for species, subspecies, cultivar, growth stage or experimental goal.
+- **Batch propagation:** unlock trays, racks, propagation stations and larger queues. Batch workflows improve throughput but still track each resulting specimen's identity, genetics and lineage.
+- **Tissue culture laboratory:** introduce staged protocols such as initiation, multiplication, rooting and acclimatisation as appropriate to the game's abstraction. Equipment, media, nutrients, environmental conditions, staff skill and contamination controls affect cost, output, fidelity and success.
+- **Contamination and acclimatisation:** contamination is a meaningful risk in advanced tissue culture. Better sanitation, sterile technique, equipment and validated protocols reduce risk without guaranteeing success. Newly propagated material may need a distinct acclimatisation phase before entering normal growing areas.
+- **Production optimisation:** later facilities link propagation, acclimatisation, maturation, inventory and sale or research use. Players can set targets for quantity, cost, genetic fidelity, trait selection and acceptable risk, with automation respecting specimen protections and available capacity.
+
+All methods should have meaningful trade-offs in time, cost, genetic fidelity, mutation risk and quantity produced. The system must distinguish preserving an existing mutation from generating or discovering new variation. Tissue culture is a core pillar alongside breeding, with simple early workflows expanding into multi-stage protocols, specialised equipment and quality control. No substrate, nutrient regime or environmental recipe should be universally best for every plant and objective.
 
 ## 5A. Specimen identity, collection management and scale
 
