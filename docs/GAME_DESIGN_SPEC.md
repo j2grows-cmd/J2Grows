@@ -259,6 +259,8 @@ The main production chain is:
 
 Automation is built from three complementary parts: **research unlocks capabilities, equipment performs tasks, and staff operate and optimise the systems**.
 
+This creates a gradual shift from direct control to goal-setting: the player first operates plants and tasks manually, then installs equipment for routine work, then assigns staff to monitor and maintain systems, and finally configures policies and departments to act autonomously within defined priorities, budgets and specimen-protection rules.
+
 - **Early automation:** unlock simple, discrete improvements such as scheduled watering, basic environmental control or reminders/queues for routine work. The player still makes most decisions directly.
 - **Task automation:** research enables a capability; the player purchases and installs suitable equipment, then assigns staff or a simple operating policy where appropriate. Examples include automated watering, environmental regulation, propagation stations and sample-analysis equipment.
 - **Connected production:** later facilities can link propagation, acclimatisation, growing, inventory and sales. Players set priorities, target species or traits, minimum stock levels, quality thresholds and specimen protection rules.
