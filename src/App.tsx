@@ -125,6 +125,46 @@ function App() {
     announce(`${specimen.nickname} sold for ${money(specimen.value)}.`);
   }
 
+  function runCross(parentAId: string, parentBId: string) {
+    const parentA = specimens.find((item) => item.id === parentAId);
+    const parentB = specimens.find((item) => item.id === parentBId);
+    if (!parentA || !parentB || parentA.id === parentB.id) {
+      announce("Choose two different available parent specimens.");
+      return;
+    }
+    const genusA = findSpecies(parentA.speciesId).latin.split(" ")[0];
+    const genusB = findSpecies(parentB.speciesId).latin.split(" ")[0];
+    if (genusA !== genusB) {
+      announce("This prototype only supports crosses within the same genus.");
+      return;
+    }
+    if (cash < 100) {
+      announce("You need £100 for supplies to run this cross.");
+      return;
+    }
+    const seed = [...(parentA.id + parentB.id)].reduce((sum, char) => sum + char.charCodeAt(0), day);
+    const inheritedVariation = Math.max(0, Math.min(100, Math.round((parentA.variegation + parentB.variegation) / 2 + ((seed % 17) - 8))));
+    const source = seed % 2 === 0 ? parentA : parentB;
+    const childNumber = String(specimens.length + 1).padStart(4, "0");
+    const child: Specimen = {
+      id: "J2G-" + genusA.slice(0, 3).toUpperCase() + "-" + childNumber,
+      speciesId: source.speciesId,
+      nickname: "Seedling " + childNumber,
+      location: "Propagation Bench",
+      health: 88,
+      stage: "Juvenile",
+      value: Math.max(35, Math.round(45 + inheritedVariation * 2.2)),
+      protected: false,
+      variegation: inheritedVariation,
+      discovered: inheritedVariation >= 45,
+    };
+    setCash((current) => current - 100);
+    setSpecimens((current) => [...current, child]);
+    setSelected(child.id);
+    setPage("Specimen Record");
+    announce("Cross completed. " + child.nickname + " recorded with " + inheritedVariation + "% variegation expression. This uses a simplified prototype inheritance model.");
+  }
+
   function startResearch() {
     if (projectStarted) {
       announce("Mutation Analysis is already in progress.");
@@ -169,7 +209,7 @@ function App() {
         {page === "Dashboard" && <Dashboard specimens={specimens} cash={cash} research={research} day={day} projectStarted={projectStarted} onNavigate={setPage} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onAdvance={advanceDay} />}
         {page === "Plant Catalogue" && <Catalogue specimens={filteredSpecimens} query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onSell={sellSpecimen} />}
         {page === "Specimen Record" && <SpecimenPage specimen={activeSpecimen} plant={activeSpecies} onSell={() => sellSpecimen(activeSpecimen)} onToggleProtection={() => setSpecimens((current) => current.map((item) => item.id === activeSpecimen.id ? { ...item, protected: !item.protected } : item))} onBack={() => setPage("Plant Catalogue")} announce={announce} />}
-        {page === "Breeding" && <BreedingPage specimens={specimens} onResearch={startResearch} announce={announce} />}
+        {page === "Breeding" && <BreedingPage specimens={specimens} onCross={runCross} announce={announce} />}
         {page === "Research" && <ResearchPage cash={cash} research={research} projectStarted={projectStarted} onStart={startResearch} announce={announce} />}
         {page === "Greenhouse" && <GreenhousePage specimens={specimens} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} announce={announce} />}
         {page === "Facilities" && <FacilitiesPage cash={cash} onBuy={(cost) => { if (cash < cost) announce("Not enough funds for this upgrade."); else { setCash((value) => value - cost); announce("Facility upgrade purchased. New capacity is being prepared."); } }} />}
@@ -210,10 +250,15 @@ function SpecimenPage({ specimen, plant, onSell, onToggleProtection, onBack, ann
   return <><button className="back-link" onClick={onBack}><ArrowRight size={14} /> Back to catalogue</button><div className="specimen-detail-grid"><section className="panel specimen-portrait"><PlantArt type={plant.image} large /><div className="portrait-overlay"><span className="eyebrow">INDIVIDUAL SPECIMEN</span><h2>{specimen.nickname}</h2><p>{plant.name}</p><span className="specimen-id">{specimen.id}</span></div></section><section className="panel specimen-detail-main"><SectionHeader title="Specimen overview" subtitle="Identity, condition and provenance." /><div className="detail-stat-grid"><div><span>Health</span><strong className={specimen.health < 80 ? "health-low" : "health-good"}>{specimen.health}%</strong></div><div><span>Stage</span><strong>{specimen.stage}</strong></div><div><span>Estimated value</span><strong>{money(specimen.value)}</strong></div><div><span>Variegation</span><strong>{specimen.variegation}%</strong></div></div><div className="detail-section"><h3>Species notes</h3><p>{plant.summary}</p><div className="care-grid"><div><Sun size={15} /><span>Light</span><strong>{plant.light}</strong></div><div><Droplets size={15} /><span>Humidity</span><strong>{plant.humidity}</strong></div></div></div><div className="detail-section"><h3>Current traits</h3><div className="trait-pills larger-pills">{plant.traits.map((trait) => <span key={trait}>{trait}</span>)}</div><p className="muted-copy">Trait values and inheritance are prototype placeholders; analysis mechanics will be added to the genetics simulation.</p></div><div className="detail-actions"><button className="button button-quiet" onClick={onToggleProtection}><ShieldCheck size={15} /> {specimen.protected ? "Remove protection" : "Protect specimen"}</button><button className="button button-primary" disabled={specimen.protected} onClick={onSell}>{specimen.protected ? "Protected from sale" : `Sell for ${money(specimen.value)}`}</button></div></section><aside className="panel provenance-panel"><SectionHeader title="Record & provenance" /><div className="provenance-item"><span>Current location</span><strong>{specimen.location}</strong></div><div className="provenance-item"><span>Protection status</span><strong className={specimen.protected ? "health-good" : ""}>{specimen.protected ? "Protected" : "Sale eligible"}</strong></div><div className="provenance-item"><span>Lineage</span><strong>Founder collection</strong></div><div className="provenance-item"><span>Observation history</span><strong>3 field notes</strong></div><button className="button button-quiet full-width" onClick={() => announce("The detailed lineage viewer is planned for a later milestone.")}>View family tree <ArrowRight size={14} /></button></aside></div></>;
 }
 
-function BreedingPage({ specimens, onResearch, announce }: { specimens: Specimen[]; onResearch: () => void; announce: (message: string) => void }) {
-  const [parentA, setParentA] = useState(specimens[0]?.id ?? "");
-  const [parentB, setParentB] = useState(specimens[1]?.id ?? "");
-  return <div className="two-column-layout"><section className="panel"><SectionHeader title="Breeding workbench" subtitle="Choose source specimens and review the experiment before committing resources." /><div className="breeding-parent-grid">{[{ label: "Parent A", value: parentA, set: setParentA }, { label: "Parent B", value: parentB, set: setParentB }].map((parent) => <div className="parent-picker" key={parent.label}><span className="filter-heading">{parent.label.toUpperCase()}</span><select value={parent.value} onChange={(event) => parent.set(event.target.value)}>{specimens.map((item) => <option key={item.id} value={item.id}>{item.nickname} · {findSpecies(item.speciesId).name}</option>)}</select>{parent.value && <PlantArt type={findSpecies(specimens.find((item) => item.id === parent.value)!.speciesId).image} large />}</div>)}</div><div className="experiment-summary"><div><span>Method</span><strong>Controlled cross · prototype</strong></div><div><span>Research cost</span><strong>250 cash</strong></div><div><span>Duration</span><strong>1 simulated day</strong></div></div><p className="muted-copy">The first version records the experiment flow; actual genetic inheritance and offspring creation are next-stage work.</p><button className="button button-primary" onClick={() => { if (parentA === parentB) announce("Choose two different specimens for this cross."); else onResearch(); }}>Start a research-supported cross <ArrowRight size={15} /></button></section><aside className="panel"><SectionHeader title="Outcome preview" subtitle="Possible outcomes, not guarantees." /><div className="outcome-art"><PlantArt type="monstera" large /></div><h3>Trait observation</h3><p className="muted-copy">The next genetics milestone will model visible traits, hidden potential and inheritance confidence separately.</p><div className="provenance-item"><span>Parent A</span><strong>{specimens.find((item) => item.id === parentA)?.nickname ?? "Not selected"}</strong></div><div className="provenance-item"><span>Parent B</span><strong>{specimens.find((item) => item.id === parentB)?.nickname ?? "Not selected"}</strong></div></aside></div>;
+function BreedingPage({ specimens, onCross, announce }: { specimens: Specimen[]; onCross: (parentA: string, parentB: string) => void; announce: (message: string) => void }) {
+  const [parentA, setParentA] = useState(specimens.find((item) => findSpecies(item.speciesId).latin.startsWith("Philodendron"))?.id ?? specimens[0]?.id ?? "");
+  const [parentB, setParentB] = useState(specimens.find((item) => findSpecies(item.speciesId).name === "Pink Princess")?.id ?? specimens[1]?.id ?? "");
+  const genus = (id: string) => {
+    const item = specimens.find((specimen) => specimen.id === id);
+    return item ? findSpecies(item.speciesId).latin.split(" ")[0] : "";
+  };
+  const compatible = specimens.filter((item) => item.id !== parentA && genus(item.id) === genus(parentA));
+  return <div className="two-column-layout"><section className="panel"><SectionHeader title="Breeding workbench" subtitle="Choose source specimens and review the experiment before committing resources." /><div className="breeding-parent-grid">{[{ label: "Parent A", value: parentA, set: setParentA, options: specimens }, { label: "Parent B", value: parentB, set: setParentB, options: compatible }].map((parent) => <div className="parent-picker" key={parent.label}><span className="filter-heading">{parent.label.toUpperCase()}</span><select value={parent.value} onChange={(event) => parent.set(event.target.value)}>{parent.options.map((item) => <option key={item.id} value={item.id}>{item.nickname} · {findSpecies(item.speciesId).name}</option>)}</select>{parent.value && specimens.find((item) => item.id === parent.value) && <PlantArt type={findSpecies(specimens.find((item) => item.id === parent.value)!.speciesId).image} large />}</div>)}</div><div className="experiment-summary"><div><span>Method</span><strong>Controlled cross · prototype</strong></div><div><span>Research cost</span><strong>250 cash</strong></div><div><span>Duration</span><strong>1 simulated day</strong></div></div><p className="muted-copy">The first version records the experiment flow; actual genetic inheritance and offspring creation are next-stage work.</p><button className="button button-primary" disabled={!parentA || !parentB || parentA === parentB || genus(parentA) !== genus(parentB)} onClick={() => onCross(parentA, parentB)}>Run cross · £100 <ArrowRight size={15} /></button></section><aside className="panel"><SectionHeader title="Outcome preview" subtitle="Possible outcomes, not guarantees." /><div className="outcome-art"><PlantArt type="monstera" large /></div><h3>Trait observation</h3><p className="muted-copy">The next genetics milestone will model visible traits, hidden potential and inheritance confidence separately.</p><div className="provenance-item"><span>Parent A</span><strong>{specimens.find((item) => item.id === parentA)?.nickname ?? "Not selected"}</strong></div><div className="provenance-item"><span>Parent B</span><strong>{specimens.find((item) => item.id === parentB)?.nickname ?? "Not selected"}</strong></div></aside></div>;
 }
 
 function ResearchPage({ cash, research, projectStarted, onStart, announce }: { cash: number; research: number; projectStarted: boolean; onStart: () => void; announce: (message: string) => void }) {
