@@ -52,8 +52,8 @@ The high-level loop is:
 6. **Sell stock or fulfil contracts** to fund operations while retaining valuable specimens, genetic material and reserves.
 7. **Invest in equipment, rooms and staff** to improve quality, throughput and reliability.
 8. **Automate connected production chains** and choose priorities, target plants and minimum stock levels.
-9. **Reach institutional milestones** that unlock new research eras, capabilities and eventually prestige resets.
-10. **Repeat at greater scale and depth**, with permanent scientific knowledge and records supporting long-term progression.
+9. **Reach institutional milestones** that unlock new research eras, capabilities and larger facilities. At each major milestone, choose whether to continue freeplay at the current scale or invest in a new facility; mandatory prestige resets are not part of the core progression model.
+10. **Pursue several long-term goals in parallel:** scientific mastery and stable cultivar development; commercial growth and specialist-market reputation; collection completion and provenance; and increasingly autonomous operations. Players can specialise, switch focus or work towards multiple goals, with distinct milestones and rewards for each.
 
 Useful short sessions should allow players to inspect results, adjust priorities and collect completed work. Longer sessions should reward optimisation, planning and multi-generation programmes.
 
@@ -371,6 +371,18 @@ The first playable milestone should demonstrate all core pillars together at int
 5. Define save format and migration policy before persistent data ships.
 6. Confirm the 3D scene’s performance budget and the minimum supported browser/device capabilities.
 7. Decide the initial boundaries for sandbox mode and difficulty options.
+
+## 17A. Long-term goals and endgame paths
+
+J2Grows should offer several meaningful endgame paths rather than one mandatory victory condition. They can progress in parallel, and the player can change focus over time.
+
+- **Scientific mastery:** investigate genetic systems, validate inheritance models, discover unusual combinations, stabilise valuable traits and establish recognised cultivars.
+- **Commercial success:** grow a profitable nursery, build a specialist brand, serve demanding buyers, expand facilities and optimise sales and production.
+- **Collection and provenance:** document species, mutations, trait combinations, lineages and historically significant discoveries. Collection goals should reward discovery and records, not require keeping every living specimen forever.
+- **Operational mastery:** build reliable, highly automated production and research systems, reduce bottlenecks and manage large collections efficiently.
+- **Institutional expansion:** reach milestones that unlock larger facilities and new capabilities, then choose whether to continue freeplay or invest in the next stage.
+
+Each path should have its own milestones, achievements and rewards, with cross-path benefits where appropriate. No single path should be mandatory for enjoying the full core game. Major milestones can celebrate progress without ending the save or forcing a reset; optional challenges and prestige-like bonuses may be considered later, but must not replace the player-choice facility progression model.
 
 ## 18. Definition of design success
 
