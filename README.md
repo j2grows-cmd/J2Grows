@@ -34,6 +34,13 @@ These are proposed choices, not a verified scaffold. The first implementation mi
 - Never commit secrets or expose Supabase service-role credentials in client code.
 - Keep the core game playable offline; online features must not gate solo progression.
 
+## Design documents
+
+- [Game Design Specification](docs/GAME_DESIGN_SPEC.md) — canonical product vision and approved mechanics.
+- [Design Audit and Decisions](docs/DESIGN_AUDIT_AND_DECISIONS.md) — contradictions resolved, risks, remaining gates and first-playable acceptance criteria.
+- [UI Blueprint](docs/UI_BLUEPRINT.md) — catalogue-first screens, navigation, interaction rules and implementation order.
+- [Implementation Roadmap](docs/ROADMAP.md) — staged development phases and release gates.
+
 ## Start here
 
 1. Read [docs/GAME_DESIGN_SPEC.md](docs/GAME_DESIGN_SPEC.md).
