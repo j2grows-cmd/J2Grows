@@ -182,7 +182,17 @@ Resources are layered and may include cash, research, biomass/plant material, ge
 
 Plants can be sold instantly or through market orders/contracts for better returns. Buyers include customers, institutions, contracts and specialist buyers. Demand changes with scarcity, discoveries, player progression and market events. Contracts are optional and request particular plants, traits or quantities.
 
-Pricing combines a genetic/base value with market demand and documented qualities such as rarity, appearance, stability and provenance. Players must balance selling stock against retaining collections, reserves, genetic material and breeding lines.
+Pricing combines a base value with market demand and multiple documented qualities:
+- **Appearance and phenotype:** visual appeal, trait strength and the desirability of the expressed combination.
+- **Genetic potential:** the usefulness of hidden or confirmed traits for future breeding and research, weighted by analysis confidence.
+- **Rarity and availability:** how difficult the specimen or trait is to obtain, including current supply.
+- **Inheritance stability:** whether desirable traits are reliably preserved or expressed in descendants, without making unstable specimens worthless by default.
+- **Provenance and discovery history:** notable lineage, documented first discoveries, institutional origin and recognised cultivar status.
+- **Buyer demand and context:** collectors, breeders, research institutions and commercial buyers can value different qualities differently.
+
+No single factor should determine every sale price. A spectacular-looking specimen may be valuable to collectors even if inheritance is unreliable; a visually subtle plant may be prized by breeders for its stable genetic potential; and a historically significant discovery may retain value because of provenance. These dimensions should influence different buyer types and market opportunities.
+
+Players must balance selling stock against retaining collections, reserves, genetic material and breeding lines. The valuation UI should explain the main reasons behind an offer so prices feel understandable rather than arbitrary.
 
 NPC auctions can arrive before any player-to-player trading. Market progression introduces specialist buyers, market tiers, international distribution and more advanced commercial systems. Production costs and supply/demand create strategic trade-offs without arbitrary click limits.
 
