@@ -171,7 +171,17 @@ The facility grows from an improvised home setup into a multi-room institution. 
 
 Equipment has tiers, specialisations, synergies and trade-offs. Multiple parallel queues can be expanded through upgrades.
 
-Staff are specialists with skills, experience, traits, costs and progression. Hiring draws from a changing candidate pool. Staff operate processes, improve procedures, troubleshoot and optimise systems.
+### Progressive workforce management
+
+Workforce systems unlock gradually alongside facility and institutional growth:
+- **Early helpers:** a small number of straightforward hires provide clear benefits to routine care or basic operations, with minimal administration.
+- **Specialists:** later, hire geneticists, botanists, horticulturalists, tissue-culture technicians, cultivation specialists, automation engineers and commercial managers. Each role improves relevant work rather than providing identical generic bonuses.
+- **Skills and development:** staff gain experience and develop strengths over time. Training can improve skills, while individual traits create understandable strengths and trade-offs. Recruitment offers a changing candidate pool, so building a strong team is a meaningful choice.
+- **Assignments and facilities:** assign staff to rooms, equipment, research projects or production lines. Appropriate staffing can improve speed, quality, reliability, analysis confidence, resource use or risk control depending on the role.
+- **Costs and management:** wages, training costs, workload and staff capacity matter. The interface should show what each hire and assignment contributes, and avoid excessive micromanagement.
+- **Teams and automation:** advanced facilities unlock teams, specialist leadership and workforce policies. Players can set priorities and let staff run routine operations, while retaining control over important specimens, experimental goals and investment decisions.
+
+Staff should complement equipment and research rather than replace them. Strong facilities still need suitable protocols and staffing, and skilled staff should not guarantee uncertain genetic outcomes.
 
 The main production chain is:
 
