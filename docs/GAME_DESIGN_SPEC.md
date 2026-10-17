@@ -342,3 +342,37 @@ Plant acquisition should progress through a network of suppliers and institution
 - Breaching a loan agreement may reduce reputation or restrict future access, but rules must be transparent and consequences proportionate. Never use hidden clauses or arbitrarily remove player-owned specimens.
 
 The core principle is **buy foundational species freely; earn institutional trust to access exceptional research material**. Reputation unlocks increasingly generous, predefined loan benefits without adding a negotiation minigame or making basic collection progress depend on institutional access.
+
+
+## 22. Mutation visibility, detection and trait-strengthening
+
+Mutation discovery should progress from obvious visual observation to instrument-assisted detection and deliberate selection for stronger expression.
+
+### Early game: visible anomalies
+- With home-lab equipment, the player mainly notices conspicuous changes, such as clearly increased variegation, unusual leaf shape, striking colour changes or unusually large foliage.
+- Subtle, low-expression or visually ambiguous traits can remain undetected. A specimen may look ordinary even while carrying hidden potential.
+- Visual observation should create a prompt to investigate, not automatically reveal the full genetic explanation. The player may record a suspected anomaly before having the tools to confirm it.
+- Obvious discoveries should be exciting, but not every unusual appearance must represent a stable, inheritable mutation.
+
+### Mid game: equipment-assisted detection
+- Better imaging and analysis equipment reveals less obvious changes, including weak variegation, small differences in leaf geometry, subtle growth patterns and traits that are difficult to distinguish by eye.
+- Equipment and research unlock progressively finer detection thresholds. Some discoveries require more than one type of analysis or repeated observations across growth stages.
+- Analysis distinguishes observed phenotype from inferred genetic potential and reports confidence. A visible trait is what the plant currently expresses; potential describes what may be inherited or expressed in descendants.
+- Advanced tools can flag specimens whose measurements suggest an anomaly even when the difference is not immediately obvious in the 3D view.
+
+### Late game: targeted selection and strengthening
+- Once a subtle trait is detected and sufficiently understood, players can design propagation or breeding experiments to select for stronger expression.
+- Players can compare descendants, retain promising individuals, choose suitable source material or parent combinations where the method allows, and repeat successful protocols across generations.
+- Strengthening a trait is not a guaranteed direct upgrade to the source plant. It means selecting descendants that express the desired trait more strongly, while tracking other traits and possible trade-offs.
+- Each generation has its own phenotype and genetic profile. The game should allow the trait to strengthen, remain similar, weaken, disappear or combine with other traits depending on the inheritance model and chosen method.
+- The player should be able to set research targets such as “increase variegation intensity” or “select for broader leaves,” then compare outcomes against that goal. Sophisticated programmes improve the quality of decisions and odds of success, without eliminating uncertainty.
+
+### Required distinction in the UI
+The discovery record should separate:
+1. **Observed trait:** what is visibly expressed on this specimen now.
+2. **Detected anomaly:** what instruments or tests have found, with confidence.
+3. **Inherited potential:** what the specimen may pass to descendants and estimated likelihood.
+4. **Expression strength:** how strongly the trait appears in the specimen or may appear in offspring.
+5. **Research target:** the trait expression the player is trying to select for in a programme.
+
+The intended progression is **notice the obvious → detect the subtle → understand the potential → select for stronger expression**. This should reward both careful observation and investment in scientific capability.
