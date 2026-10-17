@@ -190,9 +190,9 @@ Prestige is required for some advanced technologies, but normal progression must
 
 ## 12. Presentation and user experience
 
-The interface is management-first: panels, menus, dashboards, lists, filters and resizable layouts. The 3D laboratory provides immersion and visible evidence of progression rather than forcing direct manipulation of every plant.
+The interface is catalogue-first and management-led: panels, menus, dashboards, lists, filters and resizable layouts are the primary way to play. Individual plants are represented mainly through catalogue artwork and specimen cards; continuous trait values map to a small number of representative visual tiers rather than requiring a unique image for every value.
 
-Visual direction: premium scientific luxury, with dark surfaces, botanical greens, glass, metal and cinematic lighting. Significant discoveries receive cinematic presentation; routine results remain concise and informative.
+Visual direction: premium scientific luxury, using dark surfaces, botanical greens, restrained glass-and-metal motifs and polished typography. Significant discoveries receive a strong visual reveal using available artwork and UI effects; routine results remain concise and informative. A 3D laboratory is not required for the initial release and must not be a dependency for core gameplay. It can be reconsidered later as an optional decorative feature if the core game is successful and scope allows.
 
 The game should include:
 - a sequence of early research objectives;
@@ -246,7 +246,7 @@ The first playable milestone should demonstrate all core pillars together at int
 - discovery journal and cultivar records;
 - sale of plants and a meaningful upgrade decision;
 - one initial automation capability;
-- a polished management UI and a small 3D lab scene;
+- a polished catalogue-first management UI with representative plant artwork and a compelling discovery reveal;
 - reliable local save/load and bounded offline progression;
 - deterministic tests for economy, genetics and save logic.
 
@@ -452,3 +452,17 @@ These bands are an initial illustrative proposal, not final balance or visual th
 - Rare or exceptional trait combinations can unlock special representative artwork as a discovery reward, without making visual asset count a bottleneck for the genetics system.
 
 This approach preserves meaningful genetic granularity and breeding optimisation while keeping art production and asset storage practical.
+
+
+## 26. First-game scope: catalogue-first, no required 3D rendering
+
+J2Grows is the developer's first game, so the initial release must prioritise a complete, polished and maintainable management game over technically ambitious presentation features.
+
+- Core gameplay must work entirely through 2D interface components, plant artwork, charts, records and management screens.
+- Do not require custom 3D plant models, real-time leaf rendering or a navigable 3D laboratory for the first playable milestone or initial release.
+- Reuse and validate the existing J2Grows plant catalogue and artwork where practical. Create a limited set of representative images for meaningful visual trait tiers rather than generating artwork for every continuous trait value.
+- Use clear cards, icons, small charts, specimen comparisons and restrained transitions to make genetics and progression feel visual and premium.
+- Major discoveries can use a dedicated reveal screen, before-and-after artwork, lineage highlights and concise scientific findings without needing 3D cinematics.
+- Keep presentation components modular so a decorative 3D room could be explored in a later phase, but only after the core loop, save system, balance and usability are working.
+- Scope decisions should favour a runnable, testable and polished game that a solo first-time developer can realistically build and maintain.
+
