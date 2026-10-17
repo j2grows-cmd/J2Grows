@@ -6,7 +6,11 @@
 
 ## 1. Global design language
 
-- Dark, calm base with botanical green accents, restrained glass/metal details and strong typography.
+**Approved direction: premium botanical luxury + approachable management UI + detailed scientific views when useful.**
+
+- Near-black/dark surfaces, botanical olive-green accents, elegant typography, refined plant artwork and restrained glass/metal details create the J2Grows premium identity.
+- Everyday management uses clear cards, readable progress indicators, friendly explanations and a visible next action; scientific screens can become denser as the player unlocks expertise.
+- Avoid both extremes: the game should not look like a sterile clinical instrument panel everywhere, nor a bright casual game that hides its scientific depth.
 - Clear status is never communicated through colour alone; pair colour with labels, icons, patterns or text.
 - Default views show the next useful action and the most important risks; advanced scientific values are available on demand.
 - Every important object uses a stable identity and opens a consistent detail record.
