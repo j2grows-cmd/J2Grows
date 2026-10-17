@@ -21,7 +21,8 @@
 - [ ] Starter home lab and small curated plant set.
 - [ ] Basic growth, care and environmental controls.
 - [ ] Earn cash, research and plant material through understandable actions.
-- [ ] Inspect specimens and reveal visible traits, then genetic markers.
+- [ ] Analyse specimens to detect possible hidden mutations, with progressive levels of certainty.
+- [ ] Propagate a specimen and compare offspring to test mutation preservation and stability.
 - [ ] Clone and run simple crosses.
 - [ ] Record discoveries and cultivar lineage.
 - [ ] Sell specimens and invest in equipment.
