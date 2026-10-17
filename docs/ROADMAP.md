@@ -1,65 +1,65 @@
-# FLORALAB implementation roadmap
+# J2Grows implementation roadmap
 
-## Milestone 1 — foundation
+**Current status:** Design discovery complete. The Game Design Specification is the design baseline; implementation has not started.
 
+## Phase 0 — specification and validation
+- [ ] Review and approve `docs/GAME_DESIGN_SPEC.md`.
+- [ ] Resolve the competition/events interpretation.
+- [ ] Inspect and validate the existing plant catalogue, stable IDs and artwork paths.
+- [ ] Define first-playable acceptance criteria and an initial balance configuration.
+- [ ] Write the focused genetics and save-system technical designs.
+
+## Phase 1 — runnable foundation
 - [ ] Add React + TypeScript + Vite scaffold.
-- [ ] Establish strict TypeScript and consistent scripts.
+- [ ] Establish strict TypeScript, formatting and consistent scripts.
 - [ ] Build the responsive premium-dark application shell.
 - [ ] Add a deterministic test runner and smoke tests.
 - [ ] Ensure the browser app starts in GitHub Codespaces.
-- [ ] Document commands only after they have been verified.
+- [ ] Verify installation, test and build commands before documenting them.
 
-## Milestone 2 — playable game loop
-
-- [ ] Starter lab and starter specimen.
-- [ ] Earn research points and biomass over time.
-- [ ] Inspect a specimen and reveal genetic markers.
-- [ ] Clone and cross-breed specimens.
-- [ ] Record first-time discoveries in a journal.
+## Phase 2 — first playable loop
+- [ ] Starter home lab and small curated plant set.
+- [ ] Basic growth, care and environmental controls.
+- [ ] Earn cash, research and plant material through understandable actions.
+- [ ] Inspect specimens and reveal visible traits, then genetic markers.
+- [ ] Clone and run simple crosses.
+- [ ] Record discoveries and cultivar lineage.
 - [ ] Sell specimens and invest in equipment.
-- [ ] Provide clear costs, outcomes, and failure reasons.
+- [ ] Include one initial automation capability.
+- [ ] Provide clear costs, outcomes and failure reasons.
 
-## Milestone 3 — genetics architecture
+## Phase 3 — simulation systems
+- [ ] Genetics modules: loci, alleles, inheritance, phenotype, mutation and breeding outcomes.
+- [ ] Seeded random source and deterministic tests.
+- [ ] Cultivation, plant health, species-specific growth and propagation trade-offs.
+- [ ] Tissue-culture workflows and acclimatisation.
+- [ ] Research trees, upgrades and objective progression.
+- [ ] Document fictional rules; do not claim precise simulation of real plant genetics.
 
-Separate modules for:
-- genotype and allele representation;
-- locus definitions and inheritance rules;
-- phenotype expression;
-- mutation generation;
-- breeding outcomes;
-- species/cultivar metadata;
-- deterministic seeded random sources;
-- validation and serialization.
+## Phase 4 — management and scale
+- [ ] Multiple rooms, environmental zones and functional equipment placement.
+- [ ] Staff candidates, skills, costs and process improvements.
+- [ ] Connected propagation-to-sale production chains.
+- [ ] Configurable automation priorities and minimum stock.
+- [ ] Dynamic NPC buyers, contracts and market demand.
+- [ ] Institutional milestones, eras and prestige.
 
-The first implementation should use explicit, documented fictional rules. Avoid claiming that these rules model real plant genetics precisely.
+## Phase 5 — saves, polish and content
+- [ ] Versioned save schema, validation, migrations and recovery.
+- [ ] Bounded offline progression calculated on return.
+- [ ] Economy and progression balance tests.
+- [ ] Import and validate existing catalogue records.
+- [ ] Centralise artwork references and file-extension handling.
+- [ ] Responsive layouts, accessibility and reduced-motion options.
+- [ ] Performance and early-access readiness checks.
 
-## Milestone 4 — progression and saves
+## Phase 6 — later features
+- [ ] Sandbox mode and deeper simulation controls.
+- [ ] Cloud saves with conflict resolution and clear recovery behaviour.
+- [ ] Optional rankings, events, asynchronous lab visits and institutes.
+- [ ] Trading with anti-duplication and economy safeguards.
+- [ ] Extensible modding support.
+- [ ] Windows desktop packaging; assess macOS and mobile support.
 
-- [ ] Versioned save schema and migrations.
-- [ ] Safe save loading with validation and recovery.
-- [ ] Bounded offline progression.
-- [ ] Meaningful upgrade choices and escalating costs.
-- [ ] Economy tests and balance configuration.
-
-## Milestone 5 — 3D laboratory
-
-- [ ] Efficient React Three Fiber scene.
-- [ ] Specimen display with selectable plants.
-- [ ] Research equipment that reflects upgrades.
-- [ ] Accessible UI overlays and reduced-motion options.
-- [ ] Responsive layout and performance budget.
-
-## Milestone 6 — catalogue and artwork
-
-- [ ] Import existing catalogue through a validation script.
-- [ ] Verify stable IDs and unique records.
-- [ ] Centralize artwork URL construction and file-extension handling.
-- [ ] Provide graceful local fallback artwork.
-- [ ] Never expose Supabase service-role secrets in client code.
-
-## Milestone 7 — desktop and online features
-
-- [ ] Add Electron packaging after browser workflows are stable.
-- [ ] Review Electron security settings.
-- [ ] Add online accounts/cloud saves only with an explicit trust and data model.
-- [ ] Add competitive research rankings after cheating and validation risks are considered.
+## Release gate
+Do not begin broad implementation until the design baseline and first-playable acceptance criteria are approved. Keep the game runnable at each milestone, prefer small verifiable changes, and never describe an untested build or deployment as verified.
