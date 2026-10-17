@@ -208,6 +208,18 @@ The interface remains approachable for small collections, with advanced filters 
 
 The facility grows from an improvised home setup into a multi-room institution. Room dependencies, functional placement, environmental zones and equipment synergies affect efficiency. Customisation should be functional rather than purely cosmetic.
 
+### Physical facility journey
+
+The player's facilities should feel like a believable journey from hobbyist to professional operator, not just a sequence of abstract upgrade menus.
+
+1. **Garage and garden greenhouse/shed:** begin at home with a makeshift workbench in the garage and a small greenhouse or shed in the garden. Space, power, environmental control, storage and budget are limited. The player chooses what to prioritise and makes practical use of a tiny growing area.
+2. **Improved home setup:** add shelving, lights, propagation equipment and a more capable greenhouse. The garage remains useful for basic analysis and administration, but space constraints start to limit larger projects and parallel workflows.
+3. **Rented warehouse:** move into a warehouse or light-industrial unit with substantially more floor space, storage and room for production lines, staff and multiple growing zones. It is a scale-up step, not yet a fully equipped scientific laboratory; fit-out, utilities, environmental controls and suitable clean areas must be planned and funded.
+4. **Dedicated laboratory and nursery:** establish specialist rooms for genetic analysis, tissue culture, cultivation, acclimatisation, breeding and commercial stock. Infrastructure supports better equipment, trained staff, controlled experiments and more reliable production.
+5. **Advanced research institution:** expand into larger, interconnected specialist departments, research-grade environmental chambers, high-throughput propagation and increasingly automated operations. Further expansion can offer multiple buildings or dedicated facilities where useful.
+
+Each step should unlock meaningful capacity or capabilities while introducing understandable rent, utilities, fit-out, staffing and maintenance costs. Milestones present opportunities rather than forcing a move: the player can remain at an earlier site and continue playing, while accepting that some advanced equipment or throughput may require later infrastructure. Moves clearly explain what can be transferred, what needs rebuilding and what ongoing costs will change.
+
 Equipment has tiers, specialisations, synergies and trade-offs. Multiple parallel queues can be expanded through upgrades.
 
 ### Progressive workforce management
