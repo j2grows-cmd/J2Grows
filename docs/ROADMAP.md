@@ -1,6 +1,6 @@
 # J2Grows implementation roadmap
 
-**Current status:** Design discovery complete. The Game Design Specification is the design baseline; implementation has not started.
+**Current status:** Prototype 0.1 foundation is implemented on `agent/first-playable-foundation`; automated typecheck/build is being validated. The first slice includes the premium 2D shell, starter specimen data, navigation, catalogue filters, specimen records, basic breeding/research/upgrade interactions and browser-local persistence.
 
 ## Phase 0 — specification and validation
 - [ ] Review and approve `docs/GAME_DESIGN_SPEC.md`.
@@ -11,11 +11,11 @@
 - [ ] Review `docs/UI_BLUEPRINT.md` and agree the prototype screen scope.
 
 ## Phase 1 — runnable foundation
-- [ ] Add React + TypeScript + Vite scaffold.
+- [x] Add React + TypeScript + Vite scaffold.
 - [ ] Establish strict TypeScript, formatting and consistent scripts.
-- [ ] Build the responsive premium-dark 2D application shell from `docs/UI_BLUEPRINT.md`; no required 3D scene.
+- [x] Build the responsive premium-dark 2D application shell from `docs/UI_BLUEPRINT.md`; no required 3D scene.
 - [ ] Add a deterministic test runner and smoke tests.
-- [ ] Ensure the browser app starts in GitHub Codespaces.
+- [x] Add Vite host configuration for Codespaces/browser development; verify through CI.
 - [ ] Verify installation, test and build commands before documenting them.
 
 ## Phase 2 — first playable loop
