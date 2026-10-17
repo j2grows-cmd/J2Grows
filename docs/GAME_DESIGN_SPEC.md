@@ -59,6 +59,14 @@ Useful short sessions should allow players to inspect results, adjust priorities
 
 ## 5. Plant catalogue and collection
 
+### Initial playable catalogue scope
+
+The first playable build should fully support three starter species: Philodendron (white-variegation discovery), Alocasia (mutated leaf-shape discovery) and Monstera (stronger-fenestration discovery). These three give the tutorial and early genetics system distinct visual examples while keeping initial balancing and artwork work manageable. The tutorial's first mutation is scripted for onboarding; later mutations use the ordinary probability and inheritance systems.
+
+The catalogue architecture must be data-driven and support progressive expansion to 25–50 or more species without rewriting core systems. Additional species should be imported only after validating stable IDs, taxonomy, trait definitions, representative artwork references, provenance and usage rights. Existing J2Grows catalogue data and artwork should be reused where suitable, but actual schema, IDs, completeness and paths must be inspected rather than assumed. Catalogue quantity alone is not a progression gate: a smaller set of well-supported species is preferable to a large set of incomplete records.
+
+
+
 J2Grows should reuse the existing J2Grows plant catalogue and artwork wherever practical, after validation. The first release should have moderate catalogue breadth and meaningful system depth; data structures should support hundreds or thousands of plant entries later.
 
 The initial game uses real plant species with fictional genetic variations. Each plant record should support stable IDs, taxonomy, common names where available, care parameters, base growth characteristics and references to suitable artwork. Existing storage paths and file extensions must be validated before integration; do not assume a path or extension without checking the source data.
