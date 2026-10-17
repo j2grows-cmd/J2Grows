@@ -137,6 +137,20 @@ Propagation methods include:
 
 Methods should have meaningful trade-offs in time, cost, genetic fidelity, mutation risk and quantity produced. The game should distinguish preserving an existing mutation from generating or discovering new variation. Tissue culture is a core pillar alongside breeding, with simple early workflows that expand into multi-stage protocols, specialised equipment and quality control.
 
+## 5A. Specimen identity, collection management and scale
+
+Every plant specimen remains an individually identifiable record, even when the collection grows to hundreds or thousands of plants. A record can include its species, visible phenotype, known and uncertain genetic traits, mutation type and strength, analysis confidence, health and growth state, location, lineage, propagation history, provenance and protection status. Selling or losing a living specimen does not erase its scientific history, while records alone do not replace living material needed for future experiments.
+
+The collection interface must scale through progressive management tools rather than collapsing specimens into anonymous counts:
+- **Search, sort and filters:** filter by species, genus, mutation/trait type, expression strength, rarity, health, growth stage, location, analysis status, lineage and intended use. Filters can combine, such as a species plus mutation type and minimum expression strength.
+- **Saved views:** save useful collection views, such as breeding candidates, high-strength variegation, plants awaiting analysis, sale-ready stock or protected breeding lines.
+- **Batch actions:** select multiple eligible specimens to move, label, queue for analysis, propagate, list for sale or assign to an operational group. Actions respect each method's costs, capacity and risk, with a summary before destructive or irreversible actions.
+- **Individual detail:** each specimen retains its own identity, records, genetic profile, lineage and history. Similar plants may share a batch workflow, but unique genetics and provenance are never merged away.
+- **Protection and priorities:** mark specimens as protected, reserve them for breeding or research, or exclude them from automated sale/disposal. Automation follows these rules and reports when a rule prevents an action.
+- **Progressive automation:** early collection management is mostly manual; later research, equipment and staff unlock auto-sorting, monitoring, analysis queues, propagation rules and inventory policies. Automation removes repetitive work while leaving meaningful breeding, research and investment decisions to the player.
+
+The interface remains approachable for small collections, with advanced filters and saved views introduced as the collection grows. Hundreds or thousands of specimens are a core use case, not a late-game edge case.
+
 ## 8. Rooms, equipment, staff and production
 
 The facility grows from an improvised home setup into a multi-room institution. Room dependencies, functional placement, environmental zones and equipment synergies affect efficiency. Customisation should be functional rather than purely cosmetic.
