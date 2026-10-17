@@ -387,6 +387,12 @@ The game should include:
 - useful short-session actions and deeper long-session optimisation;
 - clear costs, outcomes, risks and failure explanations.
 
+## Save system and offline progress
+
+The game should support multiple independent save slots so players can run different institutions, experiment with different decisions and try difficulty modes without overwriting another playthrough. Local saves and automatic saving are the first-release priority; the core game must not require an account or internet connection. Cloud synchronisation is a later optional feature and must include clear conflict handling rather than silently overwriting newer progress.
+
+Eligible growth, propagation, research, production, sales and automation continue during absence. Offline progress should be generous and transparent, with any technical or balance cap clearly communicated. Tasks only advance when their requirements and capacity are available; blocked work is reported rather than silently completed. On return, show a concise activity summary covering growth, sales, discoveries, research, resource changes, blocked tasks and important alerts. Automation must continue respecting protected specimens, inventory policies and player-set priorities while offline.
+
 ## 13. Online and social features
 
 Online features follow the offline core and should not make solo progress dependent on other players. The complete core game—including progression, research, discoveries, facilities and commercial systems—must work offline.
