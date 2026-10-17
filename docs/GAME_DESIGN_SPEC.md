@@ -387,6 +387,12 @@ The game should include:
 - useful short-session actions and deeper long-session optimisation;
 - clear costs, outcomes, risks and failure explanations.
 
+## Monetisation and commercial model
+
+The intended model is a one-time purchase for the complete core game. Core cultivation, breeding, genetics, research, facilities, automation, commercial progression and meaningful endgame content must be included; essential systems should not be withheld to sell separately. There should be no energy timers, paid progression boosts, pay-to-win purchases or paid advantages to mutation odds, genetic outcomes or discovery access.
+
+The game should feel complete and worthwhile at its purchase price. Substantial future expansions may be considered after launch, but they should add genuinely new content rather than fix gaps in the base game or gate essential progression. Monetisation must not distort rarity, scientific discovery or the integrity of the breeding simulation.
+
 ## Release strategy and development gates
 
 Development should proceed in stages, with each stage proving the experience before scope expands. First, build a small internal prototype that tests the core loop: catalogue and specimen records, cultivation and propagation, a breeding outcome, research, selling, a meaningful upgrade, one automation capability, local saving and offline progress. Use this to validate that the game is understandable, satisfying and technically reliable before broadening content.
