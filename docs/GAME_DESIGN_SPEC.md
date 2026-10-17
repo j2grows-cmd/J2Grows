@@ -372,6 +372,15 @@ The first playable milestone should demonstrate all core pillars together at int
 6. Confirm the 3D scene’s performance budget and the minimum supported browser/device capabilities.
 7. Decide the initial boundaries for sandbox mode and difficulty options.
 
+## 17B. Difficulty modes
+
+The game offers two clear difficulty modes, selected at the start of a save:
+
+- **Relaxed:** designed for players who want to focus on plant discovery, collection, research and steady progression with less financial pressure. Growth and progression are more forgiving, plant losses and experimental setbacks are less punishing, and recovery from financial mistakes is easier. The mode still preserves meaningful decisions and uncertainty.
+- **Challenging:** designed for players who enjoy optimisation and managing risk. Costs, resource constraints, plant-health consequences, experiment risks and financial decisions demand more planning. Mistakes can slow progress and create recovery work, but should not cause an unrecoverable dead end.
+
+Both modes use the same core systems, catalogue, discoveries, research paths, facilities and endgame goals. Difficulty changes the pressure and forgiveness of the simulation rather than locking core content behind a mode. The game should communicate the practical differences before a save is created, and players should be able to review their selected mode later. Any option to change difficulty mid-save should be designed to avoid exploitative switching around risky outcomes or rewards.
+
 ## 17A. Long-term goals and endgame paths
 
 J2Grows should offer several meaningful endgame paths rather than one mandatory victory condition. They can progress in parallel, and the player can change focus over time.
