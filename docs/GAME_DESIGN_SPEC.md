@@ -209,6 +209,15 @@ At each major milestone, the player can:
 - **Stay and freeplay:** continue running the current setup, growing the collection, improving the existing operation, completing optional goals and earning money without being forced into a new era.
 - **Invest in a new facility:** purchase or move into a larger or more capable laboratory, nursery or research site. This opens room for new equipment, staff, production capacity and research capabilities, with a substantial but understandable investment cost.
 
+### Facility access and financing
+
+When a milestone is reached, it unlocks suitable facility opportunities; it does not force an immediate move. Each eligible site should show its purchase price, rent and recurring costs, capacity, available infrastructure, fit-out requirements and any milestone or reputation requirements before the player commits. Financing routes may include:
+- **Buy outright:** pay the full cost and avoid ongoing rent, while tying up more cash that could otherwise fund research or stock.
+- **Rent:** move in with a lower upfront cost but accept recurring payments and the terms shown in the agreement.
+- **Borrow:** use a loan to fund a purchase or expansion, with clear repayment schedules, interest and total repayment shown in advance.
+
+Availability and terms should depend on progression, finances and reputation, but borrowing should not become an unavoidable gate or a trap. The player should be able to compare options, understand the long-term costs and continue freeplay at their current facility. Financial difficulty can create meaningful pressure, but should be communicated early and provide reasonable recovery choices.
+
 Moving to a new facility should feel like establishing the next chapter of the institution, not deleting the player's achievements. Scientific records, discoveries, genetic research, cultivar records and lineage, achievements and established knowledge persist. Plant collections and selected equipment should be carried forward according to the move's clearly stated logistics and capacity; any choices about what to transport, sell, store or replace must be shown before committing. The new facility can require fitting out, hiring and rebuilding some operational capacity, creating a satisfying transition without an arbitrary wipe.
 
 Larger facilities introduce new space, equipment tiers, production chains, research programmes and staffing options. Milestones can unlock new facility offers and capabilities, but the player should retain the freedom to remain at an earlier scale. Some advanced technologies may require access to later facilities or research eras, while ordinary progression and freeplay remain rewarding for players who do not move immediately.
