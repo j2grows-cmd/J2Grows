@@ -379,3 +379,25 @@ The discovery record should separate:
 5. **Research target:** the trait expression the player is trying to select for in a programme.
 
 The intended progression is **notice the obvious → detect the subtle → understand the potential → select for stronger expression**. This should reward both careful observation and investment in scientific capability.
+
+
+## 23. Opening tutorial and first mutation
+
+The first mutation is a deliberately guided onboarding experience. Its primary purpose is to teach the player the propagation route and the basic gameplay loop in context, not to test whether a new player happens to get lucky.
+
+### Guided first-discovery sequence
+1. **Start with a familiar base species.** The player receives or purchases a common, non-variegated specimen and is introduced to its plant record and basic care needs.
+2. **Prepare a propagation attempt.** A lightweight objective teaches the player to choose an available propagation method, select the source plant or suitable material, and commit the required time and resources.
+3. **Grow and monitor the offspring.** The player sees that propagation takes time and that the new specimen receives its own identity and lineage record.
+4. **Notice the first anomaly.** The onboarding sequence presents a clearly visible, beginner-friendly mutation—such as conspicuous variegation or an obvious leaf-shape change—so every new player can experience the core discovery moment.
+5. **Record and inspect the result.** The player learns to compare parent and offspring, record the observed phenotype, and understand that visible expression does not yet reveal the full inheritance profile.
+6. **Repeat and learn.** The player propagates again or follows a simple follow-up objective to learn that not every offspring must express the same trait and that descendants should be compared rather than assumed identical.
+7. **Set a first research goal.** The player receives an introduction to improving equipment and analysis, establishing the next progression step without revealing every genetic detail immediately.
+
+### Tutorial design rules
+- Guarantee the first clear mutation discovery through controlled onboarding, rather than requiring a random roll that could frustrate or confuse a new player.
+- Keep the tutorial grounded in the normal propagation, growth, observation and recordkeeping systems. Avoid a disconnected minigame that teaches mechanics the player will not use later.
+- Explain only the next useful action at each step. Deeper genetic concepts, probabilities and equipment options should be introduced as they become relevant.
+- After the guided discovery, return to the standard probabilistic mutation system. Subsequent discoveries may be obvious, subtle, rare, inherited, unstable or newly arising.
+- Preserve player agency: the guided sequence should establish a useful starting specimen and teach the process, not dictate the player's long-term breeding specialisation or make later outcomes predictable.
+- The first discovery should feel like an exciting scientific breakthrough, with a clear visual reveal and a permanent entry in the player's discovery journal.
