@@ -387,6 +387,12 @@ The game should include:
 - useful short-session actions and deeper long-session optimisation;
 - clear costs, outcomes, risks and failure explanations.
 
+## Release strategy and development gates
+
+Development should proceed in stages, with each stage proving the experience before scope expands. First, build a small internal prototype that tests the core loop: catalogue and specimen records, cultivation and propagation, a breeding outcome, research, selling, a meaningful upgrade, one automation capability, local saving and offline progress. Use this to validate that the game is understandable, satisfying and technically reliable before broadening content.
+
+Next, develop a substantial early-access release with a polished catalogue-first interface, meaningful progression, a useful range of real plant species and fictional genetic variations, multiple research and commercial choices, scalable specimen management, and reliable save/offline systems. Clearly label systems that are intentionally simplified or planned for later. Later updates can deepen research departments, advanced genetic programmes, online/social features, modding and additional endgame systems. Each stage should have explicit acceptance criteria and player-feedback gates; advanced breadth must not come at the expense of a stable, enjoyable core.
+
 ## Modding and community content
 
 The game's architecture should be modular enough to support community content later, but a public modding system is not a first-release requirement. Initial supported modding should focus on custom plant catalogues, species metadata and artwork using documented formats and validation. Later versions may expose genetics, research, cultivation rules and broader gameplay systems through supported extension points if they can be loaded and tested safely.
