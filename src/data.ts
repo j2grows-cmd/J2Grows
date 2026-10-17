@@ -1,0 +1,125 @@
+export type Species = {
+  id: string;
+  name: string;
+  latin: string;
+  family: string;
+  difficulty: "Easy" | "Moderate" | "Advanced";
+  rarity: "Common" | "Uncommon" | "Rare" | "Very rare";
+  image: string;
+  summary: string;
+  light: string;
+  humidity: string;
+  water: string;
+  traits: string[];
+};
+
+export type Specimen = {
+  id: string;
+  speciesId: string;
+  nickname: string;
+  location: string;
+  health: number;
+  stage: "Juvenile" | "Growing" | "Mature";
+  value: number;
+  protected: boolean;
+  variegation: number;
+  discovered?: boolean;
+};
+
+export const species: Species[] = [
+  {
+    id: "philodendron-white-princess",
+    name: "White Princess",
+    latin: "Philodendron erubescens",
+    family: "Araceae",
+    difficulty: "Moderate",
+    rarity: "Uncommon",
+    image: "philodendron",
+    summary: "A climbing aroid prized for crisp white variegation and contrasting green foliage.",
+    light: "Bright, indirect",
+    humidity: "60–80%",
+    water: "When top 2–3 cm dries",
+    traits: ["White variegation", "Climbing", "Pink stems"],
+  },
+  {
+    id: "alocasia-frydek",
+    name: "Frydek Variegated",
+    latin: "Alocasia micholitziana",
+    family: "Araceae",
+    difficulty: "Advanced",
+    rarity: "Rare",
+    image: "alocasia",
+    summary: "Velvety arrow-shaped leaves with pale veins and unpredictable variegated sectors.",
+    light: "Bright, filtered",
+    humidity: "70–90%",
+    water: "Evenly moist, never soggy",
+    traits: ["Leaf-shape variation", "White variegation", "High humidity"],
+  },
+  {
+    id: "monstera-thai",
+    name: "Thai Constellation",
+    latin: "Monstera deliciosa",
+    family: "Araceae",
+    difficulty: "Easy",
+    rarity: "Uncommon",
+    image: "monstera",
+    summary: "Cream-speckled foliage with fenestrations that become more pronounced with maturity.",
+    light: "Bright, indirect",
+    humidity: "50–75%",
+    water: "When top layer dries",
+    traits: ["Cream variegation", "Fenestration", "Climbing"],
+  },
+  {
+    id: "anthurium-luxurians",
+    name: "Luxurians",
+    latin: "Anthurium luxurians",
+    family: "Araceae",
+    difficulty: "Advanced",
+    rarity: "Very rare",
+    image: "anthurium",
+    summary: "Deeply quilted, sculptural leaves with a glossy, almost reptilian texture.",
+    light: "Medium, indirect",
+    humidity: "70–90%",
+    water: "Airy mix; lightly moist",
+    traits: ["Quilted texture", "Compact growth", "Collector favourite"],
+  },
+  {
+    id: "philodendron-pink-princess",
+    name: "Pink Princess",
+    latin: "Philodendron erubescens",
+    family: "Araceae",
+    difficulty: "Moderate",
+    rarity: "Uncommon",
+    image: "pink",
+    summary: "Dark foliage with vivid pink sectors whose expression can vary between leaves.",
+    light: "Bright, indirect",
+    humidity: "60–80%",
+    water: "When top 2–3 cm dries",
+    traits: ["Pink variegation", "Climbing", "Expression variability"],
+  },
+  {
+    id: "alocasia-dragon-scale",
+    name: "Dragon Scale",
+    latin: "Alocasia baginda",
+    family: "Araceae",
+    difficulty: "Advanced",
+    rarity: "Rare",
+    image: "dragon",
+    summary: "Textured, metallic-looking leaves with contrasting venation.",
+    light: "Bright, filtered",
+    humidity: "65–85%",
+    water: "Lightly moist, airy substrate",
+    traits: ["Metallic texture", "Prominent veins", "Compact growth"],
+  },
+];
+
+export const initialSpecimens: Specimen[] = [
+  { id: "J2G-PHI-0001", speciesId: "philodendron-white-princess", nickname: "Ivory", location: "Greenhouse · Zone 1", health: 94, stage: "Mature", value: 185, protected: true, variegation: 42 },
+  { id: "J2G-ALO-0007", speciesId: "alocasia-frydek", nickname: "Ghostline", location: "Humidity Cabinet", health: 86, stage: "Growing", value: 240, protected: true, variegation: 27 },
+  { id: "J2G-MON-0003", speciesId: "monstera-thai", nickname: "Constellation", location: "Greenhouse · Zone 2", health: 98, stage: "Mature", value: 125, protected: false, variegation: 35 },
+  { id: "J2G-ANT-0002", speciesId: "anthurium-luxurians", nickname: "Basalt", location: "Humidity Cabinet", health: 79, stage: "Growing", value: 310, protected: true, variegation: 0 },
+  { id: "J2G-PHI-0012", speciesId: "philodendron-pink-princess", nickname: "Rosette", location: "Greenhouse · Zone 1", health: 91, stage: "Growing", value: 95, protected: false, variegation: 31 },
+  { id: "J2G-ALO-0015", speciesId: "alocasia-dragon-scale", nickname: "Scale Study", location: "Propagation Bench", health: 68, stage: "Juvenile", value: 75, protected: false, variegation: 0 },
+];
+
+export const findSpecies = (id: string) => species.find((plant) => plant.id === id)!;
