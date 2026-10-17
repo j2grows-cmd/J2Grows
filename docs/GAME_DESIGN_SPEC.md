@@ -321,3 +321,23 @@ Plant acquisition should progress through a network of suppliers and institution
 - Listings must communicate what is known, what is estimated and what remains unknown. Seller-provided claims can have different confidence levels and should not replace the player's own analysis.
 - Later multiplayer trading may complement these sources, but the single-player progression and core collection must remain viable without other players.
 
+
+
+## 21. Basic species access and research-society specimen loans
+
+### Guaranteed access to foundational species
+- Every standard, non-variegated and non-mutated base species in the approved catalogue should be available for direct purchase from ordinary suppliers.
+- Players should not need rare drops, research-society reputation, limited-time events or multiplayer trading to obtain a foundational species.
+- This guarantee concerns access to the base species. Unusual cultivars, variegated specimens, mutated specimens and specimens with exceptional provenance may follow separate acquisition rules.
+- Basic species remain useful as affordable experimental material throughout the game, including when investigating inherited traits and developing breeding lines.
+
+### Reputation-gated research partnerships
+- Research societies and specialist institutions become available through institutional progress, scientific achievements and reputation.
+- Partnerships grant access to institutional specimen collections and potentially to research equipment, expertise, protocols and collaborative projects.
+- Rare or unusual specimens may be loaned rather than sold. Loans allow the player to investigate material that would otherwise be inaccessible or prohibitively expensive.
+- Each loan agreement clearly states the permitted uses: observation and analysis, propagation, cloning, breeding, tissue culture, retention of descendants and any restrictions or return deadline.
+- The borrowed original remains the institution's property and must be returned according to the agreement. Any permitted descendants are tracked separately with clear provenance and lineage records.
+- Breaching an agreement may affect trust or future access, but rules must be transparent and consequences proportionate. Avoid hidden clauses or arbitrary loss of valuable player-owned plants.
+- Some societies may grant broader permissions as trust increases, allowing players to negotiate more useful specimen access over time.
+
+The core principle is **buy foundational species freely; earn institutional trust to access exceptional research material**. Partnerships expand what the player can study without making basic collection progress dependent on reputation gates.
