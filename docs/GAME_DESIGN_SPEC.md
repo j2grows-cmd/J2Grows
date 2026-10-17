@@ -25,7 +25,7 @@ The experience should be approachable at the beginning, deep for players who wan
 - **Automation is earned.** Repetitive care and production become automatable through research, equipment and staff.
 - **Choices have trade-offs.** Costs, time, quality, risk, fidelity and throughput should create strategic decisions rather than arbitrary click limits.
 - **Fictional genetics are clearly identified.** Genetics are a game system inspired by biology, not a claim to precisely simulate real plant inheritance or provide real-world botanical advice.
-- **Modular, testable architecture.** Simulation logic remains separate from UI, 3D rendering, persistence and online services.
+- **Modular, testable architecture.** Simulation logic remains separate from UI, persistence and optional online services. The initial release is catalogue-first 2D; 3D rendering is not required.
 - **Premium scientific-luxury presentation.** Dark surfaces, botanical greens, glass, metal and cinematic lighting support a polished laboratory identity.
 
 ## 3. Target players and platforms
@@ -449,7 +449,7 @@ The game does not need player-facing data export in the initial design; keep gam
 Proposed starting stack:
 - TypeScript;
 - React and Vite for the browser application;
-- Three.js / React Three Fiber for the 3D laboratory;
+- Data-driven 2D catalogue, dashboards and management screens; 3D rendering is deferred and optional;
 - a lightweight state store for UI state;
 - Vitest or equivalent for deterministic tests;
 - Electron for a later Windows desktop package.
@@ -481,15 +481,17 @@ The first playable milestone should demonstrate all core pillars together at int
 6. **Polish and early access readiness:** balance, accessibility, performance, content, save recovery and documentation.
 7. **Post-core features:** prestige depth, sandbox expansion, cloud sync, social features, trading, modding and desktop packaging.
 
-## 17. Open decisions before implementation
+## 17. Pre-implementation gates
 
-1. Resolve the intended meaning of “no competitive systems” alongside optional competitive events and leaderboards.
-2. Set the initial plant list and validate the existing catalogue schema, stable IDs and artwork paths.
-3. Define concrete early-game economy values and offline progress cap through prototype testing rather than guessing.
-4. Specify the first genetics model in a separate technical design, including locus representation, inheritance rules and mutation constraints.
-5. Define save format and migration policy before persistent data ships.
-6. Confirm the 3D scene’s performance budget and the minimum supported browser/device capabilities.
-7. Decide the initial boundaries for sandbox mode and difficulty options.
+The core product choices are recorded in this specification. The remaining pre-implementation work is validation and technical definition, not reopening settled design decisions:
+
+1. Inspect the real plant catalogue and verify stable IDs, taxonomy, artwork paths, completeness and usage rights.
+2. Select a small representative starter set and first-playable trait subset.
+3. Specify and test the bounded first genetics model, including deterministic random outcomes, inheritance and mutation constraints.
+4. Specify versioned local saves, migration/recovery and offline time accounting before persistent saves ship.
+5. Define the minimum supported browser/device baseline and performance budgets for the 2D interface and simulation.
+6. Define initial economy values as data and tune them through prototype playtesting.
+7. Keep sandbox, online/social, cloud sync, modding and any 3D scene outside the first-playable gate.
 
 ## 17B. Difficulty modes
 
