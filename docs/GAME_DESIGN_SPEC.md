@@ -153,6 +153,8 @@ Potential environmental variables include light, temperature, humidity, watering
 
 The interface should translate conditions into useful feedback. Beginners see clear indicators such as too dry, insufficient light or humidity outside the preferred range; advanced players can inspect detailed readings, histories and target ranges. Presets should reduce routine micromanagement, while manual controls remain available for players who enjoy fine tuning.
 
+- **Progressive cultivation mastery:** early care focuses on a small set of understandable controls and clear corrective advice. Research gradually unlocks more detailed species-specific readings, saved presets for species and growth stages, and controlled experiments that test how environmental conditions affect growth, health and trait expression. Advanced players can compare results across conditions and design repeatable protocols; staff and automation can maintain established targets, while the player remains responsible for meaningful trade-offs and research direction.
+
 ### Progressive plant health and biosecurity
 
 Plant health systems grow in depth with the player's facilities, knowledge and collection size.
