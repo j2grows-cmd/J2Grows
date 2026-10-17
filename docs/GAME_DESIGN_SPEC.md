@@ -180,7 +180,7 @@ J2Grows combines a research institution with a commercial nursery. The economy b
 
 Resources are layered and may include cash, research, biomass/plant material, genetic data and specialised supplies. Each resource should have a clear purpose.
 
-Plants can be sold instantly or through market orders/contracts for better returns. Buyers include customers, institutions, contracts and specialist buyers. Demand changes with scarcity, discoveries, player progression and market events. Contracts are optional and request particular plants, traits or quantities.
+Sales should grow from simple, convenient transactions into a richer commercial ecosystem, without auctions. Early on, players can sell plants quickly for a clear offer. As the nursery develops, they unlock market listings, specialist buyers and optional contracts. Eventually, the player can open and manage an in-game shop, choose which specimens to list, set their own asking prices and decide how much stock to make available. Pricing above or below the market's expected value should create understandable trade-offs in sale speed, customer interest and profit rather than guaranteeing a sale at any chosen price. Demand changes with scarcity, discoveries, player progression and market events. Contracts request particular plants, traits or quantities and remain optional. Player-to-player trading may be considered later, but auctions are explicitly out of scope.
 
 Pricing combines a base value with market demand and multiple documented qualities:
 - **Appearance and phenotype:** visual appeal, trait strength and the desirability of the expressed combination.
@@ -194,7 +194,7 @@ No single factor should determine every sale price. A spectacular-looking specim
 
 Players must balance selling stock against retaining collections, reserves, genetic material and breeding lines. The valuation UI should explain the main reasons behind an offer so prices feel understandable rather than arbitrary.
 
-NPC auctions can arrive before any player-to-player trading. Market progression introduces specialist buyers, market tiers, international distribution and more advanced commercial systems. Production costs and supply/demand create strategic trade-offs without arbitrary click limits.
+Commercial progression introduces specialist buyers, market tiers, international distribution and eventually a player-managed shop where asking prices and inventory are under the player's control. There are no auctions. Any future player-to-player trading is optional and must not be required for core progression. Production costs and supply/demand create strategic trade-offs without arbitrary click limits.
 
 ## 11. Institutional eras and prestige
 
