@@ -1,12 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Activity, AlertTriangle, ArrowDownRight, ArrowRight, ArrowUpRight, Beaker, Bell,
-  BookOpen, BriefcaseBusiness, Building2, CalendarDays, Check, ChevronDown, ChevronRight,
-  CircleDollarSign, Clock3, Droplets, FlaskConical, Flower2, Gauge, Heart, Home, Leaf,
-  Menu, Microscope, MoreHorizontal, Plus, Search, Settings, ShieldCheck, ShoppingBag,
+  Activity, AlertTriangle, ArrowDownRight, ArrowRight, Beaker, Bell,
+  BookOpen, BriefcaseBusiness, Building2, Check, ChevronDown, ChevronRight,
+  CircleDollarSign, Clock3, Droplets, FlaskConical, Flower2, Gauge, Home, Leaf,
+  Menu, Microscope, Plus, Search, Settings, ShieldCheck, ShoppingBag,
   Sprout, Sun, Thermometer, TrendingUp, Users, Wallet, X, Zap
 } from "lucide-react";
-import { findSpecies, initialSpecimens, species, type Specimen } from "./data";
+import { findSpecies, initialSpecimens, type Specimen } from "./data";
 
 type Page = "Dashboard" | "Plant Catalogue" | "Specimen Record" | "Breeding" | "Research" | "Greenhouse" | "Facilities" | "Staff" | "Shop" | "Finances";
 const nav: { label: Page; icon: typeof Home }[] = [
@@ -32,21 +32,68 @@ function Metric({ label, value, detail, icon: Icon, tone = "green" }: { label: s
   return <div className="metric-card"><div className={`metric-icon tone-${tone}`}><Icon size={19} /></div><div className="metric-copy"><span>{label}</span><strong>{value}</strong><small>{detail}</small></div></div>;
 }
 
+type GameSave = {
+  version: 1;
+  specimens: Specimen[];
+  cash: number;
+  research: number;
+  day: number;
+  projectStarted: boolean;
+  savedAt: number;
+};
+
+const SAVE_KEY = "j2grows.prototype.save.v1";
+
+function loadGameSave(): GameSave & { offlineDays: number } {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<GameSave>;
+      if (parsed.version === 1 && Array.isArray(parsed.specimens) && typeof parsed.cash === "number" && typeof parsed.research === "number" && typeof parsed.day === "number" && typeof parsed.savedAt === "number") {
+        const offlineDays = Math.min(14, Math.floor(Math.max(0, Date.now() - parsed.savedAt) / (10 * 60 * 1000)));
+        const days = offlineDays;
+        return {
+          version: 1,
+          specimens: parsed.specimens.map((specimen) => ({ ...specimen, health: Math.min(100, Math.max(0, specimen.health + (specimen.health < 90 ? days * 2 : 0))) })),
+          cash: parsed.cash,
+          research: parsed.research + days * 25,
+          day: parsed.day + days,
+          projectStarted: Boolean(parsed.projectStarted),
+          savedAt: Date.now(),
+          offlineDays,
+        };
+      }
+    }
+  } catch {
+    // A malformed or unavailable local save falls back to a fresh prototype save.
+  }
+  return { version: 1, specimens: initialSpecimens, cash: 48250, research: 1320, day: 48, projectStarted: false, savedAt: Date.now(), offlineDays: 0 };
+}
+
 function App() {
+  const loadedSave = useMemo(() => loadGameSave(), []);
   const [page, setPage] = useState<Page>("Dashboard");
-  const [specimens, setSpecimens] = useState<Specimen[]>(initialSpecimens);
-  const [cash, setCash] = useState(48250);
-  const [research, setResearch] = useState(1320);
-  const [day, setDay] = useState(48);
-  const [speed, setSpeed] = useState(1);
+  const [specimens, setSpecimens] = useState<Specimen[]>(loadedSave.specimens);
+  const [cash, setCash] = useState(loadedSave.cash);
+  const [research, setResearch] = useState(loadedSave.research);
+  const [day, setDay] = useState(loadedSave.day);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All plants");
   const [selected, setSelected] = useState<string>(initialSpecimens[0].id);
-  const [notice, setNotice] = useState("");
-  const [projectStarted, setProjectStarted] = useState(false);
+  const [notice, setNotice] = useState(loadedSave.offlineDays > 0 ? `Welcome back. ${loadedSave.offlineDays} simulated day(s) of eligible offline progress applied.` : "");
+  const [projectStarted, setProjectStarted] = useState(loadedSave.projectStarted);
   const [showMenu, setShowMenu] = useState(false);
+  useEffect(() => {
+    try {
+      const save: GameSave = { version: 1, specimens, cash, research, day, projectStarted, savedAt: Date.now() };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+    } catch {
+      setNotice("Local save unavailable. Your progress may not persist in this browser.");
+    }
+  }, [specimens, cash, research, day, projectStarted]);
+
   const activeSpecimen = specimens.find((item) => item.id === selected) ?? specimens[0];
-  const activeSpecies = findSpecies(activeSpecimen.speciesId);
+  const activeSpecies = activeSpecimen ? findSpecies(activeSpecimen.speciesId) : findSpecies(initialSpecimens[0].speciesId);
 
   const filteredSpecimens = useMemo(() => specimens.filter((specimen) => {
     const plant = findSpecies(specimen.speciesId);
@@ -201,6 +248,5 @@ function FinancesPage({ cash, specimens }: { cash: number; specimens: Specimen[]
   return <><div className="metric-grid"><Metric label="Available funds" value={money(cash)} detail="Local prototype balance" icon={Wallet} tone="gold" /><Metric label="Plant inventory" value={money(inventory)} detail="Estimated specimen values" icon={Sprout} /><Metric label="Operating costs" value={money(85)} detail="Illustrative daily estimate" icon={ArrowDownRight} tone="amber" /><Metric label="Net asset estimate" value={money(cash + inventory)} detail="Cash plus plant inventory" icon={TrendingUp} tone="gold" /></div><div className="two-column-layout"><section className="panel"><SectionHeader title="Financial outlook" subtitle="A transparent view of your current institution." /><div className="finance-chart"><div className="chart-y-labels"><span>£50k</span><span>£35k</span><span>£20k</span><span>£5k</span></div><svg viewBox="0 0 560 190" role="img" aria-label="Illustrative cash balance trend"><defs><linearGradient id="cashFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#a5c76d" stopOpacity=".25" /><stop offset="100%" stopColor="#a5c76d" stopOpacity="0" /></linearGradient></defs><path d="M0 145 C55 132 70 150 112 112 S190 122 232 92 S310 98 352 66 S435 72 478 42 S530 35 560 18 L560 190 L0 190 Z" fill="url(#cashFill)" /><path d="M0 145 C55 132 70 150 112 112 S190 122 232 92 S310 98 352 66 S435 72 478 42 S530 35 560 18" fill="none" stroke="#a5c76d" strokeWidth="3" /></svg></div><div className="chart-months"><span>Current</span><span>Projection +30 days</span></div><p className="muted-copy">This is an illustrative balance trend, not yet a simulated forecast. Future versions will calculate operating costs, debt, sales and research spending.</p></section><aside className="panel"><SectionHeader title="Financial safeguards" /><div className="safeguard-item"><ShieldCheck size={18} /><div><strong>Upfront costs</strong><span>Upgrades show their price before purchase.</span></div></div><div className="safeguard-item"><AlertTriangle size={18} /><div><strong>Bankruptcy rules</strong><span>Not yet simulated. Warnings and recovery rules will be defined before financial failure is introduced.</span></div></div><div className="safeguard-item"><Clock3 size={18} /><div><strong>Offline expenses</strong><span>Daily running costs are not deducted in this prototype.</span></div></div></aside></div></>;
 }
 
-function GreenhouseIcon() { return <Leaf size={17} />; }
 
 export default App;
