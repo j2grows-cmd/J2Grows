@@ -426,3 +426,29 @@ Plants are tangible management assets as well as scientific records. Specimens o
 - **Transparent irreversible actions:** confirm destructive actions and clearly identify the affected specimen, expected outcome and any known risk. Avoid arbitrary losses or hidden consumption rules.
 
 The intended decision is whether to preserve, propagate, sell or risk a specimen—not to force players to hoard every plant indefinitely. Space pressure should create meaningful collection and production choices without punishing players for making reasonable early-game decisions.
+
+
+## 25. Continuous trait values with tiered representative artwork
+
+Genetic and phenotype values should be more granular than the visual asset library. Trait strength is stored and simulated on a continuous scale where appropriate, while the game uses a small set of representative images or models to communicate broad visual tiers.
+
+### Example: variegation strength
+A specimen such as a Philodendron White Princess can have a variegation strength value from 1 to 100. The value affects gameplay calculations, inheritance, selection and valuation where appropriate, but does not require a unique image for every possible value.
+
+The catalogue or specimen card can select representative artwork using configurable ranges, for example:
+- **1–30:** low variegation representation;
+- **31–60:** medium variegation representation;
+- **61–100:** high variegation representation.
+
+These bands are an initial illustrative proposal, not final balance or visual thresholds. The precise ranges and number of image tiers should be configurable per trait or species when visual behaviour differs.
+
+### Rules
+- Keep the underlying trait value separate from the chosen artwork tier. A change from 30 to 31 may switch the representative image, but should not cause a sudden discontinuity in the actual genetic value or simulation.
+- Other continuous traits can use their own scales and visual bands, including leaf size, colour intensity, leaf shape and growth characteristics.
+- Multiple mutations may coexist and interact in the simulation. Artwork can represent the dominant visible traits or use a small number of curated combinations where the combination is especially meaningful.
+- Use the specimen's detailed values in records and analysis views, while the main collection interface stays visually readable.
+- Artwork tiers should be deterministic and configurable, with sensible fallback assets where a specific species or combination has no bespoke image.
+- Where practical, use existing J2Grows catalogue artwork and add representative variants selectively. Do not require a separate bespoke image for every possible trait value or combination.
+- Rare or exceptional trait combinations can unlock special representative artwork as a discovery reward, without making visual asset count a bottleneck for the genetics system.
+
+This approach preserves meaningful genetic granularity and breeding optimisation while keeping art production and asset storage practical.
