@@ -196,7 +196,15 @@ Immediately after the first guided mutation discovery, introduce a small, readab
 
 Analysis should be clearly recommended, but not mandatory as the player's first investment. Each branch should provide an early useful benefit and later connect to the others, so the choice affects the player's route without locking them out of core systems.
 
-Research progress comes from experiments, discoveries, objectives and later automation or passive generation. A hybrid research tree expands through discoveries, specialisations and meaningful choices.
+Research uses a connected loop of **data, discoveries and dedicated projects**:
+
+- **Research data:** experiments, analyses, cultivation trials, breeding results and documented failures can generate data. Different activities produce different kinds or quality of data, so players benefit from varied, well-recorded work rather than repeating one trivial action indefinitely.
+- **Discoveries unlock possibilities:** new traits, stable lines, unexpected outcomes, validated techniques and institutional milestones can reveal research nodes, protocols, equipment plans or new project options. A discovery may be required to begin a specific project, but core progression should not depend on one extremely lucky random result.
+- **Dedicated research projects:** players choose a goal, then allocate the appropriate data, specimens or plant material, equipment, staff and time. Projects can unlock capabilities, improve methods, validate inheritance hypotheses or develop new production systems. Requirements, risks, duration and expected outcomes are shown clearly before starting.
+- **Project results feed back into the loop:** successful projects unlock technologies or stronger protocols; inconclusive or unsuccessful projects can still return useful data when the experiment was informative. Results may suggest follow-up projects or new lines of investigation.
+- **Progression and automation:** early projects are small and understandable. Later facilities support multiple simultaneous projects, specialist staff, parallel queues and automation. Passive research or staff-generated data may supplement active experimentation, but should not make discoveries feel automatic or irrelevant.
+
+Research remains organised into specialisation trees, with choices across genetics and analysis, cultivation, propagation and tissue culture, automation, and business. Projects can connect branches, encouraging the player to combine a strong specimen collection with the right facilities and expertise.
 
 The primary progression path is institutional: establish a profitable nursery, prove reliable production, develop specialist laboratories, recruit expertise and reach major research milestones. Players can choose when to pursue optional systems and specialisations, rather than being forced through one narrow optimal route.
 
