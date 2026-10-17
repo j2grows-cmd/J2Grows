@@ -6,6 +6,16 @@
 
 ## 1. Global design language
 
+## Artwork production and asset standards
+
+Plant artwork should use a consistent, scalable production pipeline. First audit and reuse suitable existing J2Grows assets; do not replace good assets merely for uniformity. Establish a visual reference and asset requirements for species identity, framing, lighting, silhouette readability, transparent-background handling where needed, file formats, naming and quality checks. Create missing artwork in batches using the approved style and validate each batch before import.
+
+Use representative artwork for defined expression tiers of continuous trait values rather than generating an image for every numeric value or individual specimen. A specimen's simulation values remain precise; the selected artwork tier is a presentation choice. Multiple traits can coexist in the genetic model, while artwork should show the most relevant visible traits through curated combinations where justified. Maintain stable species IDs and a central asset manifest/resolver so code does not depend on guessed paths or scattered file-extension assumptions.
+
+Before large-scale generation or import, inspect the actual catalogue and storage conventions, confirm asset rights/provenance, detect missing or duplicate files, and validate image dimensions, transparency, file size and visual consistency. Artwork generation should be batchable, repeatable and reviewable; generated assets must not be treated as verified until they have passed checks.
+
+
+
 **Approved direction: premium botanical luxury + approachable management UI + detailed scientific views when useful.**
 
 - Near-black/dark surfaces, botanical olive-green accents, elegant typography, refined plant artwork and restrained glass/metal details create the J2Grows premium identity.
