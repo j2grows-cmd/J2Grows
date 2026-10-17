@@ -532,6 +532,19 @@ The discovery record should separate:
 The intended progression is **notice the obvious → detect the subtle → understand the potential → select for stronger expression**. This should reward both careful observation and investment in scientific capability.
 
 
+### Discovery records, provenance and cultivar recognition
+
+Discovery documentation should evolve alongside the player's scientific capability. The system begins as a personal, informal record and gradually becomes a formal route to validated cultivar recognition.
+
+- **Beginner — handwritten field notes:** the player writes or selects simple notes about each plant, including observations, care experiences, unusual features, family/related plants and the specimen's personal history. Notes can be imperfect or subjective; they preserve the player's observations without pretending to be verified scientific findings.
+- **Developing collection — organised plant histories:** unlock structured specimen records, linked family trees and lineage, propagation history, dated observations, photographs/representative artwork, and comparisons between parents and descendants. The game should make it easy to revisit an old note when a later result changes what the player understands.
+- **Research stage — evidence-backed discovery journal:** discovered anomalies and genetic findings are recorded separately from personal notes, with analysis methods, confidence, supporting observations, propagation outcomes and links to related specimens. Scientific records persist even if the living specimen is sold or lost.
+- **Advanced institution — cultivar registration:** unlock formal cultivar documentation and registration after the player has gathered the required evidence. The player must establish a sufficiently distinctive trait, document its lineage and demonstrate stability or predictable inheritance across appropriate generations/propagation tests. A striking one-off mutation is not automatically a registered cultivar.
+- **Recognition and rewards:** validated discoveries and registered cultivars can contribute to institutional reputation, collection milestones and specialist opportunities. Registration requirements and benefits are visible in advance; the system should reward good documentation and reproducible evidence, not merely owning a rare-looking plant.
+
+Personal notes, scientific findings and formal cultivar status are distinct layers. The player can enjoy documenting plants from the start, while the more demanding register becomes a meaningful later achievement. Existing notes and lineage should feed into formal records rather than requiring the player to recreate their history from scratch.
+
+
 ## 23. Opening tutorial and first mutation
 
 The first mutation is a deliberately guided onboarding experience. Its primary purpose is to teach the player the propagation route and the basic gameplay loop in context, not to test whether a new player happens to get lucky.
