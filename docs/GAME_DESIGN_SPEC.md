@@ -111,9 +111,18 @@ Detailed scientific records are available but optional. A simplified view is the
 
 ## 7. Cultivation, plant health and propagation
 
-Cultivation uses an interacting simulation of environment, growth, health and species-specific life stages. Complexity must be adjustable so the default experience remains manageable.
+Cultivation uses an interacting simulation of environment, growth, health and species-specific life stages. Complexity must be adjustable so the default experience remains manageable. Facility progression should make environmental control increasingly precise: the player begins with a basic propagation setup and gradually builds customisable growth chambers and specialist rooms.
 
-Potential environmental variables include light, temperature, humidity, watering and other relevant conditions. Environmental controllers can later optimise these variables within player-defined targets and trade-offs.
+### Cultivation facility progression
+- **Starter propagation setup:** basic trays or shelves, simple grow lighting and manual watering. Environmental control is limited; players learn through observation and straightforward care feedback.
+- **Upgraded propagation area:** better lights, shelving, humidity covers or small enclosures, and improved tools. Players can make a few meaningful adjustments without needing to configure every environmental variable.
+- **Customisable growth chambers:** dedicated chambers with adjustable humidity, light intensity or schedule, temperature, airflow and other appropriate controls. The player can save or assign presets for different species, growth stages or research targets.
+- **Specialist rooms and automated environments:** larger or multiple chambers, environmental zones, sensors, controllers and automated responses. Players set target ranges, priorities and acceptable trade-offs, while equipment and staff maintain conditions.
+- **Research-grade environments:** advanced controlled conditions support reproducible experiments and targeted cultivation research. These capabilities improve experimental control and consistency but do not guarantee genetic outcomes.
+
+Potential environmental variables include light, temperature, humidity, watering and other relevant conditions. Each species has its own tolerances, preferred ranges, growth patterns and vulnerabilities; the same environmental system applies across the catalogue, but species respond differently. Environmental controllers can later optimise variables within player-defined targets and trade-offs.
+
+The interface should translate conditions into useful feedback. Beginners see clear indicators such as too dry, insufficient light or humidity outside the preferred range; advanced players can inspect detailed readings, histories and target ranges. Presets should reduce routine micromanagement, while manual controls remain available for players who enjoy fine tuning.
 
 Plant health can include deficiencies, pests, diseases and treatments. Plants can die, so propagation backups and risk management matter. Losses must be understandable and reasonably preventable through observation, research and sound procedures.
 
