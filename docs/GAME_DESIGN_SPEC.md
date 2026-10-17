@@ -335,9 +335,10 @@ Plant acquisition should progress through a network of suppliers and institution
 - Research societies and specialist institutions become available through institutional progress, scientific achievements and reputation.
 - Partnerships grant access to institutional specimen collections and potentially to research equipment, expertise, protocols and collaborative projects.
 - Rare or unusual specimens may be loaned rather than sold. Loans allow the player to investigate material that would otherwise be inaccessible or prohibitively expensive.
-- Each loan agreement clearly states the permitted uses: observation and analysis, propagation, cloning, breeding, tissue culture, retention of descendants and any restrictions or return deadline.
-- The borrowed original remains the institution's property and must be returned according to the agreement. Any permitted descendants are tracked separately with clear provenance and lineage records.
-- Breaching an agreement may affect trust or future access, but rules must be transparent and consequences proportionate. Avoid hidden clauses or arbitrary loss of valuable player-owned plants.
-- Some societies may grant broader permissions as trust increases, allowing players to negotiate more useful specimen access over time.
+- Each loan displays its permissions and obligations before acceptance, including whether analysis, propagation, cloning, breeding, tissue culture or keeping descendants is allowed, plus the return deadline where applicable.
+- The borrowed original remains the institution's property and must be returned according to the loan terms. Permitted descendants are tracked separately with clear provenance and lineage records.
+- Loan terms are defined by the society and the player's current reputation tier; the player does not negotiate bespoke terms. As reputation improves, societies automatically offer more generous loan perks, such as broader propagation rights, permission to retain offspring, longer loan periods or access to more valuable specimens.
+- Society perks should be distinct and legible, so players have reasons to build relationships with multiple institutions rather than treating reputation as one universal score.
+- Breaching a loan agreement may reduce reputation or restrict future access, but rules must be transparent and consequences proportionate. Never use hidden clauses or arbitrarily remove player-owned specimens.
 
-The core principle is **buy foundational species freely; earn institutional trust to access exceptional research material**. Partnerships expand what the player can study without making basic collection progress dependent on reputation gates.
+The core principle is **buy foundational species freely; earn institutional trust to access exceptional research material**. Reputation unlocks increasingly generous, predefined loan benefits without adding a negotiation minigame or making basic collection progress depend on institutional access.
