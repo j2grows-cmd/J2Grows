@@ -288,6 +288,18 @@ Research uses a connected loop of **data, discoveries and dedicated projects**:
 
 Research remains organised into specialisation trees, with choices across genetics and analysis, cultivation, propagation and tissue culture, automation, and business. Projects can connect branches, encouraging the player to combine a strong specimen collection with the right facilities and expertise.
 
+### Research trees, mutation programmes and departments
+
+The game has two connected research layers with different purposes:
+
+- **Technology research tree — unlock capabilities:** spend research data and meet visible prerequisites to unlock equipment, rooms, environmental chambers, laboratory methods, departments, automation systems and new project types. Nodes can require discoveries, facility milestones, staff expertise or progress in connected branches. The tree represents what the institution is capable of doing.
+- **Specific mutation programmes — develop a genetic line:** use experiments and specialist departments to investigate a named mutation or trait. The player defines an objective such as detecting hidden inheritance, increasing expression strength, improving stability across generations, understanding tissue-specific variation or testing whether a trait can be reliably cloned.
+- **Experiment design:** choose suitable specimens or source material, a propagation or testing method, the target trait, relevant conditions and acceptable trade-offs. Show required equipment, staff, supplies, duration, risks and likely evidence or outcomes before starting.
+- **Department execution:** assign the project to a suitable department or team. Staff carry out analysis, breeding, cultivation trials or tissue-culture batches using available capacity and resources. Advanced departments can run multiple projects and use automation policies.
+- **Evidence-driven progress:** results update the mutation's research record and may improve understanding of trait strength, inheritance, stability or the next best experiment. Unsuccessful or unexpected outcomes can still provide useful evidence when informative; they should not automatically advance a target just because time passed.
+- **Clear separation of rewards:** technology research unlocks new tools and capabilities; mutation programmes produce knowledge about a specific line and help the player select or establish better descendants. The two layers can support one another without becoming the same progress bar.
+- **Research goals and reporting:** projects show their objective, current evidence, remaining work, costs, uncertainties and next-step options. Department dashboards summarise progress, bottlenecks, resource use and results so the player directs the institution without micromanaging every task.
+
 The primary progression path is institutional: establish a profitable nursery, prove reliable production, develop specialist laboratories, recruit expertise and reach major research milestones. Players can choose when to pursue optional systems and specialisations, rather than being forced through one narrow optimal route.
 
 Upgrades include numerical improvements as well as capability unlocks. Early objectives gradually teach systems without requiring a long mandatory tutorial.
