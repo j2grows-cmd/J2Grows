@@ -47,7 +47,7 @@ The high-level loop is:
 1. **Acquire and grow plants** using available space, substrates, nutrients and environmental controls.
 2. **Inspect specimens** to understand visible traits and gradually reveal hidden genetic information.
 3. **Research and experiment** to unlock equipment, techniques, specialisations and improved protocols.
-4. **Propagate and breed** through seeds, cuttings, cloning and tissue culture, each with distinct costs, speed, fidelity, mutation risk and output.
+4. **Propagate and breed** through seeds, cuttings, cloning and tissue culture, each with distinct costs, speed, fidelity, mutation risk and output. Use propagation results to test whether a discovered mutation is stable, tissue-specific or likely to produce new variation.
 5. **Record discoveries** in a scientific catalogue, preserving genotype/phenotype data, lineage, provenance and breeding history.
 6. **Sell stock or fulfil contracts** to fund operations while retaining valuable specimens, genetic material and reserves.
 7. **Invest in equipment, rooms and staff** to improve quality, throughput and reliability.
@@ -67,6 +67,7 @@ The scientific catalogue should track:
 - taxonomy and species identity;
 - genotype and observed phenotype;
 - traits, rarity and stability;
+- detected and suspected mutations, confidence level, tissue distribution where relevant, and propagation outcomes;
 - parentage, lineage and breeding programme;
 - discovery history, provenance and named cultivar records;
 - collection completion and relevant milestones.
@@ -86,6 +87,11 @@ Genetics are abstracted into traits, loci and alleles rather than literal DNA se
 The initial trait families are yield, rarity, size, growth, colour and variegation. Additional traits may be introduced only when they create meaningful gameplay.
 
 ### Outcomes and discoveries
+- The player begins with ordinary, recognisable species from genera such as Alocasia, Monstera and Philodendron. The early hook is that individual specimens can contain hidden genetic variation, not that every new species is automatically rare.
+- Specimen analysis can first indicate that something unusual is present, then reveal candidate traits or markers, and eventually identify a mutation more precisely as equipment and research improve.
+- Mutation discovery and mutation propagation are separate achievements: detecting a mutation does not guarantee every propagated offspring will preserve or express it.
+- Model three useful gameplay categories: **stable mutations**, which are reliably preserved through compatible methods; **unstable or mosaic mutations**, where different tissues or growth points can yield different outcomes; and **new mutations**, which can arise during growth or propagation as a low-probability event.
+- Propagation rules must depend on method and mutation type. Cuttings may preserve traits from the source tissue; cloning aims for high-fidelity copies; tissue culture enables scale but can introduce fidelity trade-offs and variation; seeds recombine inherited traits rather than simply copying a parent. These are simplified game rules inspired by biology, not universal claims about all plants.
 - Natural mutations can occur, with advanced research improving the odds of targeted outcomes without guaranteeing them.
 - An unsuccessful cross should still be capable of producing useful genetic data or research progress.
 - Discovery tiers distinguish interesting offspring, novel phenotypes and formally established stable cultivars.
@@ -112,7 +118,7 @@ Propagation methods include:
 - tissue culture and acclimatisation;
 - advanced methods unlocked through research.
 
-Methods should have meaningful trade-offs in time, cost, genetic fidelity, mutation risk and quantity produced. Tissue culture is a core pillar alongside breeding, with simple early workflows that expand into multi-stage protocols, specialised equipment and quality control.
+Methods should have meaningful trade-offs in time, cost, genetic fidelity, mutation risk and quantity produced. The game should distinguish preserving an existing mutation from generating or discovering new variation. Tissue culture is a core pillar alongside breeding, with simple early workflows that expand into multi-stage protocols, specialised equipment and quality control.
 
 ## 8. Rooms, equipment, staff and production
 
