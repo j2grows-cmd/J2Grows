@@ -482,3 +482,29 @@ J2Grows is the developer's first game, so the initial release must prioritise a 
 - Keep presentation components modular so a decorative 3D room could be explored in a later phase, but only after the core loop, save system, balance and usability are working.
 - Scope decisions should favour a runnable, testable and polished game that a solo first-time developer can realistically build and maintain.
 
+
+
+## 27. Accelerated simulation time, queues and offline progress
+
+J2Grows uses a hybrid idle model with an accelerated simulation clock. Plants, propagation, analysis, research and production progress over time, but game timelines are compressed compared with real-world botany and laboratory work. The player should experience meaningful progress during normal play sessions without waiting real-world weeks for routine outcomes.
+
+### Time model
+- The simulation uses a consistent game-time model rather than requiring plant growth and research to mirror real-world durations.
+- Growth stages, propagation cycles, specimen analysis, research projects and production tasks have tuned game durations appropriate to their importance and progression tier.
+- Routine early-game tasks should complete quickly enough to teach the loop and provide regular feedback. Rare discoveries and major research milestones may take longer, but must remain understandable and worth the wait.
+- Time compression is a gameplay abstraction, not a claim that real plants grow or mutate at these rates.
+- The exact relationship between game time and real time, task durations and offline caps must be tuned through playtesting rather than fixed prematurely.
+
+### Tasks, queues and efficiency
+- Propagation, specimen analysis, research and later production use time-based tasks or queues. Starting a task commits its required resources and makes progress over time.
+- Equipment, research, staff, protocols and environmental optimisation can improve speed, success rates, output, reliability or resource efficiency. These benefits should be distinct rather than collapsing every upgrade into a generic speed bonus.
+- Multiple queues and parallel processing unlock gradually. Early players make a few meaningful choices; later institutions can operate several specialised processes at once.
+- Equipment should create strategic trade-offs such as faster processing versus cost, precision, throughput or fidelity. Avoid upgrades that make earlier equipment instantly pointless unless that is an intentional tier transition.
+- Show progress, expected completion and relevant modifiers clearly. Players should be able to understand why one task is faster or more efficient than another.
+
+### Offline progression
+- Growth, active propagation tasks, analysis, research and eligible production continue while the game is closed, subject to defined offline rules and caps.
+- On return, the game calculates elapsed progress and presents a concise summary of completed tasks, growth changes, discoveries and issues requiring attention.
+- Offline simulation must be bounded and deterministic enough for reliable saves and testing. Important irreversible events, health risks and queue behaviour must be transparent.
+- Automation can reduce the number of decisions required while offline, but the player should retain control over protected specimens, queue priorities, resource budgets and sale/disposal rules.
+- Exact task durations, simulation rate, offline cap and which hazards progress offline remain open balance decisions until tested in a playable build.
