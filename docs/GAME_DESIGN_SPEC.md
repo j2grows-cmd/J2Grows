@@ -91,6 +91,18 @@ Genetics are abstracted into traits, loci and alleles rather than literal DNA se
 ### Traits
 The initial trait families are yield, rarity, size, growth, colour and variegation. Additional traits may be introduced only when they create meaningful gameplay.
 
+### Experiment failure, risk and scientific value
+
+Experiments should be forgiving while players learn, then offer more meaningful risk/reward decisions as research becomes more advanced.
+
+- **Early game:** failed or disappointing crosses primarily cost time and basic resources. Results explain what did not work, and players receive enough feedback to learn without losing irreplaceable progress.
+- **Scientific value of failure:** unsuccessful crosses, unexpected phenotypes and inconclusive analyses can still produce research data. The amount and usefulness depend on the experiment, quality of records, available analysis tools and how informative the result is; repeated identical failures should not grant unlimited research.
+- **Advanced experimental risk:** specialised protocols may carry explicit risks such as lower viability, specimen stress or loss of consumed plant material, while offering better throughput, more informative data or improved chances of a targeted outcome. The player sees the risk, resource cost and possible benefit before committing.
+- **Unexpected outcomes:** experiments can reveal unanticipated traits or combinations. These may be valuable discoveries even when the original target was not achieved.
+- **Risk mitigation:** better equipment, validated protocols, skilled staff, backups and pilot experiments reduce uncertainty or limit losses, but do not remove every risk.
+- **Clear consent and recovery:** destructive or irreversible procedures require a clear confirmation showing what may be consumed or lost. Protecting valuable breeding stock and maintaining backups should be viable strategies. Scientific records and data already collected remain available even if a specimen is lost.
+- **No arbitrary punishment:** outcomes should follow the stated experiment mechanics. Failure must be explainable, and an experiment should not destroy unrelated specimens or silently consume protected plants.
+
 ### Outcomes and discoveries
 - The player begins with ordinary, recognisable species from genera such as Alocasia, Monstera and Philodendron. **Every specimen has hidden genetic potential**: no plant is automatically guaranteed to be ordinary, and no plant is guaranteed to contain a valuable mutation. This makes even common plants worth analysing.
 - Potential traits include colour, variegation, leaf shape, size, growth characteristics and yield. A specimen's hidden profile can contain several possible traits with different probabilities and possible strengths.
