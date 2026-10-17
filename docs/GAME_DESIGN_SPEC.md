@@ -389,13 +389,11 @@ The game should include:
 
 ## 13. Online and social features
 
-Online features follow the offline core and should not make solo progress dependent on other players.
+Online features follow the offline core and should not make solo progress dependent on other players. The complete core game—including progression, research, discoveries, facilities and commercial systems—must work offline.
 
-Planned optional features include multiple leaderboard categories, competitive discovery races, seasonal events and specialist challenges; asynchronous visits to other labs and collections; optional institutes/groups for sharing achievements and comparing progress; and eventually player-to-player trading.
+Planned optional additions include asynchronous visits to other labs and collections, sharing discoveries and achievements, optional institutes or groups, carefully safeguarded player-to-player specimen trading, and opt-in leaderboards for players who enjoy comparing progress. These features come after the offline experience is reliable and are not required to obtain foundational species, unlock core technologies or establish cultivars. Online rewards should be limited to cosmetics, recognition or other non-essential rewards; no pay-to-win advantages or online-exclusive progression gates. Trading must preserve specimen identity, provenance and lineage and include anti-duplication safeguards.
 
-Cultivar specimens, genetic records and lineage may be shared or traded with anti-duplication safeguards. Online rewards are limited to cosmetics and recognition. Personal discoveries remain personal; community events must not be required to unlock the single-player game.
-
-**Fairness decision to resolve:** the discovery answers selected optional competitive events and leaderboards, but also selected “no competitive systems.” Until clarified, interpret this conservatively: no mandatory competition, no paid boosts and no online-exclusive progression advantages. Optional events should be non-blocking and may use separate categories or verified rules.
+Social and competitive features should be opt-in. The game must not require races, seasonal events or rankings to progress, and players who prefer a purely solo experience should not be penalised or constantly prompted to compete.
 
 ## 14. Saves, offline simulation and data
 
