@@ -260,3 +260,43 @@ The first playable milestone should demonstrate all core pillars together at int
 ## 18. Definition of design success
 
 The design is ready to move into implementation when the owner approves the scope, open decisions are either resolved or explicitly deferred, and the first playable milestone has testable acceptance criteria. The first code milestone must be small enough to run and verify end-to-end; no attempt should be made to implement the entire game in one pass.
+
+
+## 19. Mutation research progression: home lab to specialist facility
+
+Mutation discovery and targeted selection must develop alongside the player's facilities. The player begins with limited equipment and imperfect understanding, then earns the ability to investigate and pursue specific anomalies through investment, research and institutional growth.
+
+### Stage 1: Home laboratory — observe and hope
+- Start with basic propagation supplies, modest grow lighting, simple environmental controls and handwritten or basic digital records.
+- The player can propagate, clone or grow plants, but has little or no reliable visibility into hidden genetic potential.
+- Results are uncertain. An unusual trait may appear unexpectedly, and an apparently ordinary result can still provide useful material or experience.
+- Players can keep promising specimens, compare visible outcomes and learn from results, but cannot yet reliably target a particular hidden trait.
+- This stage should feel exciting and accessible, not punitive: limited control creates surprise, while early discoveries can remain valuable throughout the game.
+
+### Stage 2: Analysis workstation — understand the specimen
+- Invest in progressively better imaging, microscopy, trait-analysis and genetic-analysis equipment.
+- Analysis reveals the possible anomaly, estimated likelihood of expression in relevant offspring, expected strength and the confidence of each estimate.
+- Early equipment offers broad clues and ranges; research, specialist staff, improved instruments and repeated experiments refine the estimates.
+- Players can compare parents, propagation methods and offspring, turning chance outcomes into usable evidence.
+- Better analysis improves knowledge and decision-making; it does not guarantee a desired result or change the specimen's underlying genetics.
+
+### Stage 3: Research laboratory — pursue a hypothesis
+- Unlock controlled propagation protocols, tissue or growth-point selection, advanced cloning and tissue-culture facilities, and experiments designed around a target trait.
+- Players can choose candidate specimens, select suitable source material where the method allows, define a protocol and set acceptable trade-offs such as cost, speed, fidelity and variation.
+- Research improves the odds of obtaining a target outcome and helps distinguish stable, tissue-specific, weak, strong or newly arising variation.
+- Targeted research remains probabilistic. Rare or complex anomalies may require multiple generations, several specimens, careful recordkeeping and substantial investment.
+- Failed or unexpected results can still yield research data and reveal useful secondary traits.
+
+### Stage 4: Specialist programmes — develop and reproduce anomalies
+- Establish focused breeding programmes around specific traits or combinations, using archived lineages, specialist staff, dedicated rooms and automation.
+- Advanced tools support more informed selection and repeatable protocols, but do not remove biological uncertainty or make every combination achievable.
+- The player can maintain source specimens, compare lines, preserve valuable genotypes and scale successful propagation into commercial production.
+- Endgame mastery is expressed through better experimental design, reproducibility, discovery quality and throughput—not simply a universal bonus to mutation chance.
+
+### Design principles
+1. **Control grows with knowledge.** Progression moves from chance-led experimentation to evidence-led selection and then to sophisticated programmes.
+2. **Knowledge and probability are different.** A more accurate prediction does not itself increase the chance of an outcome; a suitable intervention or protocol may do so.
+3. **Methods have distinct trade-offs.** Seeds recombine inherited traits; cuttings and cloning generally prioritise source fidelity; tissue culture supports scale but can introduce its own variation and acclimatisation risks. These are simplified game rules, not universal claims about every plant or protocol.
+4. **Keep the original specimen intact.** Propagation produces descendants with their own records. Parent analysis remains a record of the parent, while offspring analysis reveals what was inherited or changed.
+5. **Preserve surprise at every stage.** Advanced players can target and improve odds, but unexpected results and new discoveries remain possible.
+6. **Make uncertainty legible.** Show estimates, confidence and relevant costs clearly; never imply that a probability is a promise.
