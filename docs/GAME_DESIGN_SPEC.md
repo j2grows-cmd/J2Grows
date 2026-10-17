@@ -533,6 +533,8 @@ Mutation discovery and targeted selection must develop alongside the player's fa
 
 Plant acquisition should progress through a network of suppliers and institutions rather than one universal shop. Access to sources is earned through institutional progression, scientific achievements, reputation and, where appropriate, relationships or completed research.
 
+- **Predictable access with occasional exceptional offers:** foundational common species remain readily purchasable and are never locked behind random availability or reputation. Specialist suppliers expand their catalogues as the institution gains standing, while rare or exceptional specimens can appear through limited offers, research partnerships, loans or the player's own discoveries. These offers add excitement and opportunity, but should not be the sole route to a required capability or core progression milestone; players can pursue alternative research, breeding or supplier routes rather than waiting for a shop refresh.
+
 ### Supplier tiers
 1. **General plant supplier:** available from the beginning; sells common starter species and affordable specimens suitable for learning cultivation and basic propagation.
 2. **Specialist nurseries and collectors:** unlock through progression and reputation; offer unusual cultivars, collector specimens and plants with valuable provenance.
