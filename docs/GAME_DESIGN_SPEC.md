@@ -187,7 +187,19 @@ The main production chain is:
 
 **Propagation → acclimatisation → growing/maturation → inventory → sale or research use**
 
-Automation progresses from basic watering and routine care to propagation, breeding, research and connected production. Players configure priorities, target plants, minimum stock levels and other operational policies. Late-game play should focus on strategy and optimisation rather than constant manual intervention.
+### Progressive automation system
+
+Automation is built from three complementary parts: **research unlocks capabilities, equipment performs tasks, and staff operate and optimise the systems**.
+
+- **Early automation:** unlock simple, discrete improvements such as scheduled watering, basic environmental control or reminders/queues for routine work. The player still makes most decisions directly.
+- **Task automation:** research enables a capability; the player purchases and installs suitable equipment, then assigns staff or a simple operating policy where appropriate. Examples include automated watering, environmental regulation, propagation stations and sample-analysis equipment.
+- **Connected production:** later facilities can link propagation, acclimatisation, growing, inventory and sales. Players set priorities, target species or traits, minimum stock levels, quality thresholds and specimen protection rules.
+- **Research and staff synergy:** research improves available protocols and control; equipment determines capacity, precision and throughput; staff expertise affects setup, reliability, troubleshooting and efficiency. No one layer should make the others irrelevant.
+- **Queues and bottlenecks:** automation has real capacity limits, inputs, maintenance needs and queues. Dashboards explain bottlenecks and let players decide whether to invest in equipment, staff, space or research.
+- **Player safeguards:** automation respects protected specimens, breeding reserves, research commitments, facility capacity and sale/disposal rules. Destructive or irreversible actions need explicit permissions and transparent reporting.
+- **Endgame autonomy:** advanced institutions can run most routine production and analysis with limited supervision. Players remain responsible for strategic priorities, experimental design, major purchases and responding to unusual results.
+
+Automation should remove repetitive work rather than all meaningful decisions. Players can keep systems manual if they prefer, and automation upgrades should offer clear, distinct benefits instead of only generic speed multipliers.
 
 ## 9. Research and progression
 
