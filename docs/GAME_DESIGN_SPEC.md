@@ -387,6 +387,12 @@ The game should include:
 - useful short-session actions and deeper long-session optimisation;
 - clear costs, outcomes, risks and failure explanations.
 
+## Modding and community content
+
+The game's architecture should be modular enough to support community content later, but a public modding system is not a first-release requirement. Initial supported modding should focus on custom plant catalogues, species metadata and artwork using documented formats and validation. Later versions may expose genetics, research, cultivation rules and broader gameplay systems through supported extension points if they can be loaded and tested safely.
+
+Mods and imported content must be validated, versioned and isolated where practical; provide clear warnings about compatibility, backups before applying changes, and a way to disable content that breaks a save or conflicts with an update. A clean unmodded game must remain fully playable, and community content should not be required for core progression. Mod support should build on the modular simulation and data-driven catalogue rather than forcing a rewrite of the game architecture.
+
 ## Accessibility and interface customisation
 
 The interface should provide sensible, readable defaults for new players while supporting deep customisation for experienced institution managers. Panels and dashboard layouts should be resizable or rearrangeable where practical; tables should support sorting, filtering and saved views; and players should be able to adjust information density without losing access to important warnings or actions.
