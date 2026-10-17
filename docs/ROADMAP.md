@@ -19,7 +19,8 @@
 - [ ] Verify installation, test and build commands before documenting them.
 
 ## Phase 2 — first playable loop
-- [ ] Starter home lab and small curated plant set.
+- [ ] Starter home lab and three fully supported species: Philodendron, Alocasia and Monstera.
+- [ ] Data-driven catalogue architecture validated for progressive expansion toward 25–50+ species.
 - [ ] Basic growth, care and environmental controls.
 - [ ] Earn cash, research and plant material through understandable actions.
 - [ ] Analyse specimens to detect possible hidden mutations, with progressive levels of certainty.
