@@ -1,29 +1,45 @@
 # J2Grows — Botanical Research & Management Simulation
 
-J2Grows is a premium botanical research, cultivation, genetics and management game. Players start with a small home growing setup, establish a profitable nursery, discover and breed unusual plants, develop tissue culture, automate production, and expand into a recognised research institution.
+J2Grows is a premium botanical research, cultivation, genetics and management game. Players start with a small home growing setup, establish a nursery, discover and breed unusual plants, develop propagation methods, automate production and eventually expand into a research institution.
 
 ## Current status
 
-**Design discovery is complete. Implementation has not started.** The agreed direction is recorded in [the Game Design Specification](docs/GAME_DESIGN_SPEC.md), with delivery phases in [the implementation roadmap](docs/ROADMAP.md).
+**Prototype 0.1 is under development** on the [agent/first-playable-foundation](https://github.com/j2grows-cmd/J2Grows/tree/agent/first-playable-foundation) branch. This first slice establishes the premium 2D interface, starter specimen data, navigation, collection filters, specimen records, basic research/upgrade interactions, and versioned browser-local saving with capped offline progress. The simulation and displayed economic values are still prototype-level.
 
-## Product pillars
+## Run locally
 
-- **Discovery:** genetic traits, rare phenotypes, breeding lines and stable cultivars.
-- **Cultivation:** plant growth, environmental conditions, health and propagation.
-- **Automation:** staff, equipment and connected production chains.
-- **Enterprise:** sales, contracts, market demand and institutional growth.
+Requires Node.js 20 or newer.
 
-The game should be accessible to new players while providing meaningful depth for long-term optimisation. It is single-player first, with optional online features planned after the offline core is reliable.
+```bash
+npm install
+npm run dev
+```
 
-## Intended technical direction
+Vite prints the local development URL (normally `http://localhost:5173`). To verify a production build:
 
-- TypeScript
-- React + Vite for the browser experience
-- Three.js / React Three Fiber for the 3D laboratory
-- Deterministic tests for simulation rules
-- Electron for a later Windows desktop build
+```bash
+npm run typecheck
+npm run build
+npm run preview
+```
 
-These are proposed choices, not a verified scaffold. The first implementation milestone must establish a runnable app and verified commands before the README claims the project can be built or run.
+## Current prototype interactions
+
+- Navigate between Dashboard, Plant Catalogue, Breeding, Research, Greenhouse, Facilities, Staff, Shop and Finances.
+- Search and filter individual specimens; open their records and toggle protection.
+- Sell unprotected specimens and use funds for a starter facility upgrade or research project.
+- Advance a simulated day to progress the prototype's research data and improve eligible plant-health values.
+- Adjust the greenhouse's illustrative temperature and humidity controls.
+- Save institution state automatically in browser local storage. On return, eligible prototype progress is calculated at one simulated day per ten minutes away, capped at fourteen days.
+
+The prototype intentionally labels unfinished mechanics: plant artwork is stylised placeholder art, genetics and valuation are not yet a full simulation, and environmental controls do not yet alter plant health. Do not treat example prices, care values or research costs as final balance or real-world plant-care advice.
+
+## Design documents
+
+- [Game Design Specification](docs/GAME_DESIGN_SPEC.md) — approved product vision and mechanics.
+- [Design Audit and Decisions](docs/DESIGN_AUDIT_AND_DECISIONS.md) — risks, resolved contradictions and first-playable acceptance criteria.
+- [UI Blueprint](docs/UI_BLUEPRINT.md) — screen layouts and interaction rules.
+- [Implementation Roadmap](docs/ROADMAP.md) — staged delivery plan.
 
 ## Development principles
 
@@ -33,19 +49,3 @@ These are proposed choices, not a verified scaffold. The first implementation mi
 - Reuse and validate existing plant catalogue data and artwork wherever practical.
 - Never commit secrets or expose Supabase service-role credentials in client code.
 - Keep the core game playable offline; online features must not gate solo progression.
-
-## Design documents
-
-- [Game Design Specification](docs/GAME_DESIGN_SPEC.md) — canonical product vision and approved mechanics.
-- [Design Audit and Decisions](docs/DESIGN_AUDIT_AND_DECISIONS.md) — contradictions resolved, risks, remaining gates and first-playable acceptance criteria.
-- [UI Blueprint](docs/UI_BLUEPRINT.md) — catalogue-first screens, navigation, interaction rules and implementation order.
-- [Implementation Roadmap](docs/ROADMAP.md) — staged development phases and release gates.
-
-## Start here
-
-1. Read [docs/GAME_DESIGN_SPEC.md](docs/GAME_DESIGN_SPEC.md).
-2. Review [docs/ROADMAP.md](docs/ROADMAP.md).
-3. Resolve the listed open decisions and approve the first-playable scope.
-4. Only then begin the runnable browser foundation.
-
-The app scaffold and verified development commands will be documented after the first implementation milestone.
