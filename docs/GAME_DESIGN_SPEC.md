@@ -394,12 +394,20 @@ The intended progression is **notice the obvious → detect the subtle → under
 
 The first mutation is a deliberately guided onboarding experience. Its primary purpose is to teach the player the propagation route and the basic gameplay loop in context, not to test whether a new player happens to get lucky.
 
+### Starter choice and tailored first discovery
+At the beginning, the player chooses one of three starter species. Each option teaches the same propagation and discovery loop, but the guaranteed first anomaly is tailored to the selected species:
+- **Philodendron — white variegation:** the first offspring displays a clear white-variegation trait. This introduces visible trait strength and the idea of selecting descendants with stronger expression.
+- **Alocasia — mutated leaf shape:** the first offspring displays a clearly unusual leaf shape. This introduces phenotype comparison and selection for a desired shape.
+- **Monstera — stronger fenestration:** the first offspring displays more pronounced leaf fenestration than the starter. This introduces comparing leaf-development traits across specimens.
+
+These are scripted tutorial outcomes and fictionalised game-genetics events, not promises about real-world inheritance. Each starter option should use existing catalogue artwork where possible and a representative mutation image or tier where needed. All three options teach the same underlying systems, so the tutorial logic should be shared rather than implemented as three separate tutorials.
+
 ### Guided first-discovery sequence
-1. **Start with a familiar base species.** The player receives or purchases a common, non-variegated specimen and is introduced to its plant record and basic care needs.
+1. **Choose a starter species.** The player selects one of the three options above, receives a common starter specimen and is introduced to its plant record and basic care needs.
 2. **Prepare a propagation attempt.** A lightweight objective teaches the player to choose an available propagation method, select the source plant or suitable material, and commit the required time and resources.
 3. **Grow and monitor the offspring.** The player sees that propagation takes time and that the new specimen receives its own identity and lineage record.
-4. **Notice the first anomaly.** The onboarding sequence presents a clearly visible, beginner-friendly mutation—such as conspicuous variegation or an obvious leaf-shape change—so every new player can experience the core discovery moment.
-5. **Record and inspect the result.** The player learns to compare parent and offspring, record the observed phenotype, and understand that visible expression does not yet reveal the full inheritance profile.
+4. **Notice the first anomaly.** The tutorial guarantees the matching visible trait for the selected species, making the discovery exciting and reliable rather than dependent on a random roll.
+5. **Record and inspect the result.** The player learns to compare the parent and offspring, record the observed phenotype, and understand that visible expression does not yet reveal the full inheritance profile.
 6. **Repeat and learn.** The player propagates again or follows a simple follow-up objective to learn that not every offspring must express the same trait and that descendants should be compared rather than assumed identical.
 7. **Set a first research goal.** The player receives an introduction to improving equipment and analysis, establishing the next progression step without revealing every genetic detail immediately.
 
