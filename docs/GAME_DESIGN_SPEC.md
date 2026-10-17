@@ -79,9 +79,12 @@ Players can name cultivars, manage breeding lines and feature notable plants in 
 Genetics are abstracted into traits, loci and alleles rather than literal DNA sequences. The system should support multiple loci, allele combinations, polygenic traits, linkage and epistasis as deeper mechanics become available through research.
 
 ### Progressive complexity
-- **Early:** readable visible traits, straightforward crosses and clear result feedback.
-- **Mid-game:** scans reveal hidden markers and alleles; players compare parents and plan crosses.
-- **Advanced:** configurable breeding programmes, multi-generation selection, deeper inheritance rules and automated selection criteria.
+- **Early:** readable visible traits and straightforward inheritance rules. Players can make basic crosses and understand the main reasons an offspring may or may not express a trait without needing to study a genetic diagram.
+- **Mid-game:** scans reveal hidden markers and alleles. Players compare parents, investigate inheritance patterns and begin planning crosses around specific outcomes.
+- **Advanced:** configurable breeding programmes, multi-generation selection, interacting loci, polygenic traits, linkage, epistasis and automated selection criteria.
+- **Hybrid model:** use simple, legible rules for foundational traits, while allowing advanced anomalies and trait combinations to depend on multiple genes, modifiers and interactions. Complexity should be introduced progressively through research, equipment and optional detail views rather than imposed on every player at once.
+- **Teach through experiments:** early crosses should provide understandable feedback; later experiments can reveal that a trait's inheritance is more complicated than first assumed. Research should help players discover the underlying model instead of merely unlocking unexplained percentage bonuses.
+- **Separate expression from inheritance:** a plant's visible phenotype, its underlying genetic potential and the probability of passing or expressing a trait in offspring are related but distinct values.
 
 ### Traits
 The initial trait families are yield, rarity, size, growth, colour and variegation. Additional traits may be introduced only when they create meaningful gameplay.
