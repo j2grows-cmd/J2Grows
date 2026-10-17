@@ -181,6 +181,15 @@ Propagation grows from a straightforward early activity into a configurable prod
 
 All methods should have meaningful trade-offs in time, cost, genetic fidelity, mutation risk and quantity produced. The system must distinguish preserving an existing mutation from generating or discovering new variation. Tissue culture is a core pillar alongside breeding, with simple early workflows expanding into multi-stage protocols, specialised equipment and quality control. No substrate, nutrient regime or environmental recipe should be universally best for every plant and objective.
 
+### Progressive tissue-culture mastery
+
+- **Early — cloning:** tissue culture begins as a straightforward way to produce copies of a plant. The player chooses a source specimen, commits basic supplies and waits for a batch of clones, with clear output and success feedback.
+- **Intermediate — staged laboratory workflow:** unlock initiation, multiplication, rooting and acclimatisation stages, along with suitable equipment, media, sanitation and staff. Each stage creates useful decisions around speed, cost, contamination risk, survival and fidelity.
+- **Advanced — mutation-aware propagation:** unlock protocols that target a known mutation or selected source tissue/growth point. The goal is to preserve a desired trait more reliably and scale a promising named line without confusing it with unrelated variation.
+- **Expert — test and select expression strength:** compare multiple culture batches and descendants to investigate how strongly a mutation expresses. Players can select material from promising specimens, compare trait strength and stability, and retain candidates for further propagation or breeding. Different batches may vary; the protocol should not simply let the player set an exact strength slider and guarantee the result.
+- **Separate fidelity from variation:** a high-fidelity cloning protocol aims to preserve the source specimen's traits, while specialised variation-focused experiments may accept greater uncertainty to investigate new outcomes. The interface makes clear whether the player is trying to copy an existing mutation, test its expression or seek new variation.
+- **Record every batch:** link cultures and resulting plants to their source specimen, selected material, protocol, batch conditions and outcomes. Track individual descendants and their own trait strength, health and lineage even when produced in large batches.
+
 ## 5A. Specimen identity, collection management and scale
 
 Every plant specimen remains an individually identifiable record, even when the collection grows to hundreds or thousands of plants. A record can include its species, visible phenotype, known and uncertain genetic traits, mutation type and strength, analysis confidence, health and growth state, location, lineage, propagation history, provenance and protection status. Selling or losing a living specimen does not erase its scientific history, while records alone do not replace living material needed for future experiments.
