@@ -300,3 +300,24 @@ Mutation discovery and targeted selection must develop alongside the player's fa
 4. **Keep the original specimen intact.** Propagation produces descendants with their own records. Parent analysis remains a record of the parent, while offspring analysis reveals what was inherited or changed.
 5. **Preserve surprise at every stage.** Advanced players can target and improve odds, but unexpected results and new discoveries remain possible.
 6. **Make uncertainty legible.** Show estimates, confidence and relevant costs clearly; never imply that a probability is a promise.
+
+
+## 20. Specimen suppliers, research partners and institutional access
+
+Plant acquisition should progress through a network of suppliers and institutions rather than one universal shop. Access to sources is earned through institutional progression, scientific achievements, reputation and, where appropriate, relationships or completed research.
+
+### Supplier tiers
+1. **General plant supplier:** available from the beginning; sells common starter species and affordable specimens suitable for learning cultivation and basic propagation.
+2. **Specialist nurseries and collectors:** unlock through progression and reputation; offer unusual cultivars, collector specimens and plants with valuable provenance.
+3. **Research laboratories:** provide rare research material, selected genetic lines, tissue-cultured specimens and experiment-specific stock. Some listings may include partial analysis or research notes, while others retain uncertainty.
+4. **Research societies and elite institutions:** later-game sources for exceptional specimens, exclusive breeding lines, specialist research partnerships and access to high-level programmes.
+
+### Acquisition design principles
+- Each source has a distinct catalogue, price range, availability pattern and unlock criteria. A source should feel like a meaningful new relationship or milestone, not merely a more expensive version of the previous shop.
+- Price, rarity, provenance, visible phenotype and hidden genetic potential are separate dimensions. Expensive or rare specimens are not guaranteed to have the most valuable hidden potential.
+- Common, affordable plants remain useful throughout the game because their hidden potential, suitability for experiments and role in breeding programmes can make them valuable.
+- Suppliers may rotate stock or offer limited quantities, but time-limited stock must not become a pay-to-win or mandatory daily-login mechanic.
+- Research institutions can offer specimens in exchange for money, research records, reputation, completed objectives or reciprocal discoveries.
+- Listings must communicate what is known, what is estimated and what remains unknown. Seller-provided claims can have different confidence levels and should not replace the player's own analysis.
+- Later multiplayer trading may complement these sources, but the single-player progression and core collection must remain viable without other players.
+
