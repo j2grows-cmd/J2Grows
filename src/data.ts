@@ -122,7 +122,7 @@ export function setSpeciesCatalog(next: Species[]) {
 
 export function makeStorageSpecies(slug: string, image: string): Species {
   const local = prototypeSpecies.find((plant) => plant.id === slug);
-  if (local) return { ...local, image };
+  if (local) return { ...local, image: image || local.image };
   const name = slug.split("-").map((word) => word[0]?.toUpperCase() + word.slice(1)).join(" ");
   return {
     id: slug,
@@ -131,7 +131,7 @@ export function makeStorageSpecies(slug: string, image: string): Species {
     family: "Araceae",
     difficulty: "Moderate",
     rarity: "Common",
-    image,
+    image: image || "hero",
     summary: "Species details are not stored in the image catalogue yet.",
     light: "Not recorded",
     humidity: "Not recorded",
