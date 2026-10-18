@@ -23,6 +23,17 @@ npm run build
 npm run preview
 ```
 
+## Connect the plant species library
+
+The app reads species folders and public hero images from the existing Supabase `plant-images` storage bucket. The storage folder names are the species IDs; the prototype's local catalogue and saved specimen data remain available when Supabase is not configured or cannot be reached.
+
+Set these Codespaces repository secrets under **GitHub repository → Settings → Secrets and variables → Codespaces → New repository secret**:
+
+- `VITE_SUPABASE_URL` — `https://lwaxzivcjzpmmantryor.supabase.co`
+- `VITE_SUPABASE_ANON_KEY` — the project's **publishable** API key from Supabase **Project Settings → API Keys** (a legacy `anon` key also works)
+
+Do not use a service-role or secret API key. After saving both secrets, rebuild/restart the Codespace so Vite can read them. For local development, copy `.env.example` to `.env.local` and set the same two values there; keep `.env.local` private and uncommitted.
+
 ## Current prototype interactions
 
 - Navigate between Dashboard, Plant Catalogue, Breeding, Research, Greenhouse, Facilities, Staff, Shop and Finances.

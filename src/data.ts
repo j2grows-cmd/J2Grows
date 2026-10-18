@@ -26,7 +26,7 @@ export type Specimen = {
   discovered?: boolean;
 };
 
-export const species: Species[] = [
+const prototypeSpecies: Species[] = [
   {
     id: "philodendron-white-princess",
     name: "White Princess",
@@ -113,6 +113,33 @@ export const species: Species[] = [
   },
 ];
 
+// The local catalogue remains available when Supabase is not configured or unreachable.
+export let species: Species[] = prototypeSpecies;
+
+export function setSpeciesCatalog(next: Species[]) {
+  species = next.length ? next : prototypeSpecies;
+}
+
+export function makeStorageSpecies(slug: string, image: string): Species {
+  const local = prototypeSpecies.find((plant) => plant.id === slug);
+  if (local) return { ...local, image };
+  const name = slug.split("-").map((word) => word[0]?.toUpperCase() + word.slice(1)).join(" ");
+  return {
+    id: slug,
+    name: name || slug,
+    latin: "Species details not yet recorded",
+    family: "Araceae",
+    difficulty: "Moderate",
+    rarity: "Common",
+    image,
+    summary: "Species details are not stored in the image catalogue yet.",
+    light: "Not recorded",
+    humidity: "Not recorded",
+    water: "Not recorded",
+    traits: ["Image available"],
+  };
+}
+
 export const initialSpecimens: Specimen[] = [
   { id: "J2G-PHI-0001", speciesId: "philodendron-white-princess", nickname: "Ivory", location: "Greenhouse · Zone 1", health: 94, stage: "Mature", value: 185, protected: true, variegation: 42 },
   { id: "J2G-ALO-0007", speciesId: "alocasia-frydek", nickname: "Ghostline", location: "Humidity Cabinet", health: 86, stage: "Growing", value: 240, protected: true, variegation: 27 },
@@ -122,4 +149,4 @@ export const initialSpecimens: Specimen[] = [
   { id: "J2G-ALO-0015", speciesId: "alocasia-dragon-scale", nickname: "Scale Study", location: "Propagation Bench", health: 68, stage: "Juvenile", value: 75, protected: false, variegation: 0 },
 ];
 
-export const findSpecies = (id: string) => species.find((plant) => plant.id === id)!;
+export const findSpecies = (id: string) => species.find((plant) => plant.id === id) ?? prototypeSpecies.find((plant) => plant.id === id) ?? prototypeSpecies[0];

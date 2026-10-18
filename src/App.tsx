@@ -6,7 +6,8 @@ import {
   Menu, Microscope, Plus, Search, Settings, ShieldCheck, ShoppingBag,
   Sprout, Sun, Thermometer, TrendingUp, Users, Wallet, X, Zap
 } from "lucide-react";
-import { findSpecies, initialSpecimens, type Specimen } from "./data";
+import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeSpecies, type Species, type Specimen } from "./data";
+import { loadSpeciesCatalog, supabase } from "./supabase";
 
 type Page = "Dashboard" | "Plant Catalogue" | "Specimen Record" | "Breeding" | "Research" | "Greenhouse" | "Facilities" | "Staff" | "Shop" | "Finances";
 const nav: { label: Page; icon: typeof Home }[] = [
@@ -21,6 +22,9 @@ function money(value: number) {
 }
 
 function PlantArt({ type, large = false }: { type: string; large?: boolean }) {
+  if (type.startsWith("https://") || type.startsWith("http://")) {
+    return <div className={`plant-art ${large ? "plant-art-large" : ""}`} role="img" aria-label="Plant species image"><img src={type} alt="" loading="lazy" /></div>;
+  }
   return <div className={`plant-art art-${type} ${large ? "plant-art-large" : ""}`} aria-label="Botanical plant artwork">
     <span className="art-leaf leaf-one" /><span className="art-leaf leaf-two" /><span className="art-leaf leaf-three" /><span className="art-leaf leaf-four" /><span className="art-stem" />
     <span className="art-vein vein-one" /><span className="art-vein vein-two" /><span className="art-vein vein-three" />
@@ -72,6 +76,18 @@ function loadGameSave(): GameSave & { offlineDays: number } {
 
 function App() {
   const loadedSave = useMemo(() => loadGameSave(), []);
+  const [catalogSpecies, setCatalogSpecies] = useState<Species[]>(prototypeSpecies);
+  const [catalogSource, setCatalogSource] = useState<"supabase" | "local">("local");
+  useEffect(() => {
+    let cancelled = false;
+    loadSpeciesCatalog().then((catalog) => {
+      if (cancelled) return;
+      setSpeciesCatalog(catalog.species);
+      setCatalogSpecies(catalog.species);
+      setCatalogSource(catalog.source);
+    });
+    return () => { cancelled = true; };
+  }, []);
   const [page, setPage] = useState<Page>("Dashboard");
   const [specimens, setSpecimens] = useState<Specimen[]>(loadedSave.specimens);
   const [cash, setCash] = useState(loadedSave.cash);
@@ -213,9 +229,9 @@ function App() {
         </section>
 
         {page === "Dashboard" && <Dashboard specimens={specimens} cash={cash} research={research} day={day} projectStarted={projectStarted} onNavigate={setPage} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onAdvance={advanceDay} />}
-        {page === "Plant Catalogue" && <Catalogue specimens={filteredSpecimens} query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onSell={sellSpecimen} />}
+        {page === "Plant Catalogue" && <Catalogue specimens={filteredSpecimens} species={catalogSpecies} catalogSource={catalogSource} query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onSell={sellSpecimen} />}
         {page === "Specimen Record" && <SpecimenPage specimen={activeSpecimen} plant={activeSpecies} onSell={() => sellSpecimen(activeSpecimen)} onToggleProtection={() => setSpecimens((current) => current.map((item) => item.id === activeSpecimen.id ? { ...item, protected: !item.protected } : item))} onBack={() => setPage("Plant Catalogue")} announce={announce} />}
-        {page === "Breeding" && <BreedingPage specimens={specimens} onCross={runCross} announce={announce} />}
+        {page === "Breeding" && <BreedingPage specimens={specimens} onCross={runCross} />}
         {page === "Research" && <ResearchPage cash={cash} research={research} projectStarted={projectStarted} onStart={startResearch} announce={announce} />}
         {page === "Greenhouse" && <GreenhousePage specimens={specimens} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} announce={announce} />}
         {page === "Facilities" && <FacilitiesPage cash={cash} onBuy={(cost) => { if (cash < cost) announce("Not enough funds for this upgrade."); else { setCash((value) => value - cost); announce("Facility upgrade purchased. New capacity is being prepared."); } }} />}
@@ -247,16 +263,16 @@ function Dashboard({ specimens, cash, research, day, projectStarted, onNavigate,
   </>;
 }
 
-function Catalogue({ specimens, query, setQuery, filter, setFilter, onSelect, onSell }: { specimens: Specimen[]; query: string; setQuery: (value: string) => void; filter: string; setFilter: (value: string) => void; onSelect: (id: string) => void; onSell: (specimen: Specimen) => void }) {
+function Catalogue({ specimens, species, catalogSource, query, setQuery, filter, setFilter, onSelect, onSell }: { specimens: Specimen[]; species: Species[]; catalogSource: "supabase" | "local"; query: string; setQuery: (value: string) => void; filter: string; setFilter: (value: string) => void; onSelect: (id: string) => void; onSell: (specimen: Specimen) => void }) {
   const filters = ["All plants", "Protected", "Needs attention", "Ready to sell"];
-  return <div className="catalogue-layout"><aside className="panel catalogue-filters"><SectionHeader title="Collection filters" /><label className="search-field"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search plants or specimen ID" /></label><div className="filter-heading">QUICK VIEWS</div>{filters.map((item) => <button key={item} className={`filter-option ${filter === item ? "selected" : ""}`} onClick={() => setFilter(item)}><span>{item}</span>{filter === item && <Check size={14} />}</button>)}<div className="filter-note"><ShieldCheck size={16} /><p>Protected specimens are excluded from automated sale. Each plant retains its own identity and history.</p></div></aside><section className="catalogue-main"><div className="catalogue-toolbar"><div><h2>Your collection</h2><span>{specimens.length} individual specimens</span></div><span className="pill subtle-pill">Specimen view</span></div>{specimens.length ? <div className="catalogue-grid">{specimens.map((item) => { const plant = findSpecies(item.speciesId); return <article key={item.id} className="catalogue-card"><button className="catalogue-art-button" onClick={() => onSelect(item.id)} aria-label={`Open ${item.nickname}`}><PlantArt type={plant.image} large /><span className="art-label">{plant.rarity}</span></button><div className="catalogue-card-content"><span className="specimen-id">{item.id}</span><h3>{item.nickname}</h3><p>{plant.name}</p><div className="trait-pills">{plant.traits.slice(0, 2).map((trait) => <span key={trait}>{trait}</span>)}</div><div className="catalogue-card-stats"><span><Activity size={13} /> {item.health}% health</span><strong>{money(item.value)}</strong></div><div className="catalogue-card-actions"><button className="button button-quiet" onClick={() => onSelect(item.id)}>Record</button><button className="button button-primary" disabled={item.protected} onClick={() => onSell(item)}>{item.protected ? "Protected" : "Sell"}</button></div></div></article>; })}</div> : <div className="empty-panel"><Search size={24} /><h3>No specimens match</h3><p>Try another search or clear the current filter.</p><button className="button button-quiet" onClick={() => { setQuery(""); setFilter("All plants"); }}>Clear filters</button></div>}</section></div>;
+  return <><div className="catalogue-layout"><aside className="panel catalogue-filters"><SectionHeader title="Collection filters" /><label className="search-field"><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search plants or specimen ID" /></label><div className="filter-heading">QUICK VIEWS</div>{filters.map((item) => <button key={item} className={`filter-option ${filter === item ? "selected" : ""}`} onClick={() => setFilter(item)}><span>{item}</span>{filter === item && <Check size={14} />}</button>)}<div className="filter-note"><ShieldCheck size={16} /><p>Protected specimens are excluded from automated sale. Each plant retains its own identity and history.</p></div></aside><section className="catalogue-main"><div className="catalogue-toolbar"><div><h2>Your collection</h2><span>{specimens.length} individual specimens</span></div><span className="pill subtle-pill">Specimen view</span></div>{specimens.length ? <div className="catalogue-grid">{specimens.map((item) => { const plant = findSpecies(item.speciesId); return <article key={item.id} className="catalogue-card"><button className="catalogue-art-button" onClick={() => onSelect(item.id)} aria-label={`Open ${item.nickname}`}><PlantArt type={plant.image} large /><span className="art-label">{plant.rarity}</span></button><div className="catalogue-card-content"><span className="specimen-id">{item.id}</span><h3>{item.nickname}</h3><p>{plant.name}</p><div className="trait-pills">{plant.traits.slice(0, 2).map((trait) => <span key={trait}>{trait}</span>)}</div><div className="catalogue-card-stats"><span><Activity size={13} /> {item.health}% health</span><strong>{money(item.value)}</strong></div><div className="catalogue-card-actions"><button className="button button-quiet" onClick={() => onSelect(item.id)}>Record</button><button className="button button-primary" disabled={item.protected} onClick={() => onSell(item)}>{item.protected ? "Protected" : "Sell"}</button></div></div></article>; })}</div> : <div className="empty-panel"><Search size={24} /><h3>No specimens match</h3><p>Try another search or clear the current filter.</p><button className="button button-quiet" onClick={() => { setQuery(""); setFilter("All plants"); }}>Clear filters</button></div>}</section></div><section className="panel species-library"><div className="section-header"><div><h2>Species library</h2><p>{species.length} species folders · {catalogSource === "supabase" ? "Loaded from Supabase storage" : "Using the local prototype catalogue"}</p></div><span className="pill subtle-pill">{supabase && catalogSource === "supabase" ? "Connected" : "Local fallback"}</span></div><div className="species-library-grid">{species.map((plant) => <article className="species-library-card" key={plant.id}><PlantArt type={plant.image} /><div><strong>{plant.name}</strong><span>{plant.latin === "Species details not yet recorded" ? plant.id : plant.latin}</span></div></article>)}</div></section></>;
 }
 
 function SpecimenPage({ specimen, plant, onSell, onToggleProtection, onBack, announce }: { specimen: Specimen; plant: ReturnType<typeof findSpecies>; onSell: () => void; onToggleProtection: () => void; onBack: () => void; announce: (message: string) => void }) {
   return <><button className="back-link" onClick={onBack}><ArrowRight size={14} /> Back to catalogue</button><div className="specimen-detail-grid"><section className="panel specimen-portrait"><PlantArt type={plant.image} large /><div className="portrait-overlay"><span className="eyebrow">INDIVIDUAL SPECIMEN</span><h2>{specimen.nickname}</h2><p>{plant.name}</p><span className="specimen-id">{specimen.id}</span></div></section><section className="panel specimen-detail-main"><SectionHeader title="Specimen overview" subtitle="Identity, condition and provenance." /><div className="detail-stat-grid"><div><span>Health</span><strong className={specimen.health < 80 ? "health-low" : "health-good"}>{specimen.health}%</strong></div><div><span>Stage</span><strong>{specimen.stage}</strong></div><div><span>Estimated value</span><strong>{money(specimen.value)}</strong></div><div><span>Variegation</span><strong>{specimen.variegation}%</strong></div></div><div className="detail-section"><h3>Species notes</h3><p>{plant.summary}</p><div className="care-grid"><div><Sun size={15} /><span>Light</span><strong>{plant.light}</strong></div><div><Droplets size={15} /><span>Humidity</span><strong>{plant.humidity}</strong></div></div></div><div className="detail-section"><h3>Current traits</h3><div className="trait-pills larger-pills">{plant.traits.map((trait) => <span key={trait}>{trait}</span>)}</div><p className="muted-copy">Trait values and inheritance are prototype placeholders; analysis mechanics will be added to the genetics simulation.</p></div><div className="detail-actions"><button className="button button-quiet" onClick={onToggleProtection}><ShieldCheck size={15} /> {specimen.protected ? "Remove protection" : "Protect specimen"}</button><button className="button button-primary" disabled={specimen.protected} onClick={onSell}>{specimen.protected ? "Protected from sale" : `Sell for ${money(specimen.value)}`}</button></div></section><aside className="panel provenance-panel"><SectionHeader title="Record & provenance" /><div className="provenance-item"><span>Current location</span><strong>{specimen.location}</strong></div><div className="provenance-item"><span>Protection status</span><strong className={specimen.protected ? "health-good" : ""}>{specimen.protected ? "Protected" : "Sale eligible"}</strong></div><div className="provenance-item"><span>Lineage</span><strong>Founder collection</strong></div><div className="provenance-item"><span>Observation history</span><strong>3 field notes</strong></div><button className="button button-quiet full-width" onClick={() => announce("The detailed lineage viewer is planned for a later milestone.")}>View family tree <ArrowRight size={14} /></button></aside></div></>;
 }
 
-function BreedingPage({ specimens, onCross, announce }: { specimens: Specimen[]; onCross: (parentA: string, parentB: string) => void; announce: (message: string) => void }) {
+function BreedingPage({ specimens, onCross }: { specimens: Specimen[]; onCross: (parentA: string, parentB: string) => void }) {
   const [parentA, setParentA] = useState(specimens.find((item) => findSpecies(item.speciesId).latin.startsWith("Philodendron"))?.id ?? specimens[0]?.id ?? "");
   const [parentB, setParentB] = useState(specimens.find((item) => findSpecies(item.speciesId).name === "Pink Princess")?.id ?? specimens[1]?.id ?? "");
   const genus = (id: string) => {
