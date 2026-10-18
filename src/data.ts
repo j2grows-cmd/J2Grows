@@ -85,7 +85,7 @@ const prototypeSpecies: Species[] = [
   },
   {
     id: "philodendron-pink-princess",
-    name: "Pink Princess",
+    name: "Philodendron Pink Princess",
     latin: "Philodendron erubescens",
     family: "Araceae",
     difficulty: "Moderate",
