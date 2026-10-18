@@ -3,6 +3,10 @@ import { makeStorageSpecies, species as prototypeSpecies, type Species } from ".
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const imagePathOverrides: Record<string, string> = {
+  // This existing object predates the standard hero.png naming convention.
+  "philodendron-pink-princess": "species/philodendron-pink-princess/7313b09c-ff44-4a9f-8720-840d47117091.png",
+};
 
 export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
@@ -30,12 +34,15 @@ export async function loadSpeciesCatalog(): Promise<{ species: Species[]; source
   for (let index = 0; index < folders.length; index += 10) {
     const batch = await Promise.all(folders.slice(index, index + 10).map(async ({ name }) => {
       const folderPath = `species/${name}`;
-      const { data: files, error: listError } = await supabase.storage.from("plant-images").list(folderPath, { limit: 100 });
-      if (listError) return makeStorageSpecies(name, "");
+      let imagePath = imagePathOverrides[name] ?? "";
+      if (!imagePath) {
+        const { data: files, error: listError } = await supabase.storage.from("plant-images").list(folderPath, { limit: 100 });
+        if (listError) return makeStorageSpecies(name, "");
 
-      const imageFile = files?.find((file) => file.name === "hero.png")
-        ?? files?.find((file) => /\.(png|jpe?g|webp|avif)$/i.test(file.name));
-      const imagePath = imageFile ? `${folderPath}/${imageFile.name}` : "";
+        const imageFile = files?.find((file) => file.name === "hero.png")
+          ?? files?.find((file) => /\.(png|jpe?g|webp|avif)$/i.test(file.name));
+        imagePath = imageFile ? `${folderPath}/${imageFile.name}` : "";
+      }
       const imageUrl = imagePath ? supabase.storage.from("plant-images").getPublicUrl(imagePath).data.publicUrl : "";
       return makeStorageSpecies(name, imageUrl);
     }));
