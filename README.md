@@ -25,7 +25,7 @@ npm run preview
 
 ## Connect the plant species library
 
-The app reads species folders and public hero images from the existing Supabase `plant-images` storage bucket. The storage folder names are the species IDs; the prototype's local catalogue and saved specimen data remain available when Supabase is not configured or cannot be reached.
+The app reads species metadata from the public `species` table and image objects from the existing Supabase `plant-images` storage bucket. Species IDs match their storage folder names, and each table row stores its image object path. If the table is unavailable, the app falls back to listing Storage folders; if Supabase is not configured or cannot be reached, the local prototype catalogue and saved specimen data remain available.
 
 Set these Codespaces repository secrets under **GitHub repository → Settings → Secrets and variables → Codespaces → New repository secret**:
 
