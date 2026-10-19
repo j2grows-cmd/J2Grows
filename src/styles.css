@@ -1740,3 +1740,29 @@ body{
 }
 @media(max-width:1250px){.main-area{margin-left:205px}.topbar{padding-left:16px;padding-right:20px}}
 @media(max-width:850px){.main-area{margin-left:0}.topbar{padding-left:14px;padding-right:14px}}
+
+
+/* Spread the header controls across the entire workspace, not just the left */
+.topbar{
+  justify-content:space-between!important;
+  gap:clamp(10px,1.15vw,20px)!important;
+}
+.top-institution{flex:0 1 155px;min-width:125px}
+.top-resource{flex:1 1 150px;max-width:210px;min-width:135px}
+.top-resource.research-resource{flex:1 1 150px;max-width:200px}
+.top-level{flex:1 1 205px;max-width:245px;min-width:190px}
+.topbar>.icon-button{flex:0 0 40px}
+.topbar>.profile-chip{flex:0 1 245px;min-width:180px;max-width:280px;margin-left:0}
+@media(max-width:1250px){
+ .topbar{justify-content:space-between!important}
+ .top-institution{flex:0 1 125px}
+ .top-resource,.top-resource.research-resource{flex:1 1 125px;max-width:175px;min-width:115px}
+ .top-level{flex:1 1 180px;min-width:170px}
+ .topbar>.profile-chip{flex:0 1 190px;min-width:155px}
+}
+@media(max-width:850px){
+ .topbar{justify-content:flex-start!important}
+ .top-institution{flex:0 0 auto}
+ .top-resource{flex:1 1 0;max-width:none}
+ .topbar>.profile-chip{flex:0 0 auto;margin-left:auto}
+}
