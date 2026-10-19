@@ -16,6 +16,9 @@ export type PlantEnvironment = {
   nutrition: number;
   humidity: number;
   health: number;
+  temperature?: number;
+  autoCare?: boolean;
+  lightHours?: number;
 };
 
 export type MutationCategory = "colour" | "morphology" | "growth" | "novelty";
