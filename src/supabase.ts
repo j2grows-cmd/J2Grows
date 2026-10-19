@@ -51,7 +51,7 @@ export async function loadSpeciesCatalog(): Promise<{ species: Species[]; source
     const validatedRows = normalizeSpeciesRows(rows);
     if (validatedRows.length) {
       if (validatedRows.length !== rows.length) console.warn(`Skipped ${rows.length - validatedRows.length} invalid or duplicate Supabase species row(s).`);
-      return { species: validatedRows.map(fromSpeciesRow), source: "supabase" };
+      return { species: validatedRows.map(fromSpeciesRow), source: "supabase-table" };
     }
     console.warn("Supabase returned no valid species rows; falling back to Storage folders.");
   }
