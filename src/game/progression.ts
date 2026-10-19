@@ -107,6 +107,32 @@ export function breedingFailureChance(researchLevel: number, condition: number):
   return Math.max(0.01, Math.min(0.45, 0.08 + poorConditions * 0.35 - researchReduction));
 }
 
+export type TargetableTrait = "variegationPotential" | "stability" | "growthPotential" | "hiddenPotential";
+
+/** Targeting is an expensive, probabilistic bias—not a guaranteed result. */
+export function applyTraitTargeting(
+  inherited: GeneticProfile,
+  parentA: GeneticProfile,
+  parentB: GeneticProfile,
+  targetTrait: TargetableTrait | undefined,
+  random: () => number = Math.random,
+): GeneticProfile {
+  if (!targetTrait || random() >= 0.7) return inherited;
+  const strongestParent = Math.max(parentA[targetTrait], parentB[targetTrait]);
+  const current = inherited[targetTrait];
+  // A small positive nudge towards the stronger parental expression; never a guarantee.
+  const nudged = Math.max(current, Math.round(current + Math.max(0, strongestParent - current) * 0.3));
+  return { ...inherited, [targetTrait]: Math.min(100, nudged) };
+}
+
+export function calculateTargetedBreedingCost(baseCost: number, targeted: boolean): number {
+  return Math.max(1, Math.ceil(baseCost * (targeted ? 1.25 : 1)));
+}
+
+export function calculateTargetedFailureChance(baseChance: number, targeted: boolean): number {
+  return Math.max(0, Math.min(0.95, baseChance + (targeted ? 0.08 : 0)));
+}
+
 /** Explicit trait-wise inheritance with bounded randomness, rather than unrestricted blending. */
 export function inheritTraits(parentA: GeneticProfile, parentB: GeneticProfile, random: () => number = Math.random): GeneticProfile {
   const inherit = (a: number, b: number, spread: number) => Math.max(0, Math.min(100, Math.round((random() < 0.5 ? a : b) * 0.65 + ((a + b) / 2) * 0.35 + (random() * 2 - 1) * spread)));
