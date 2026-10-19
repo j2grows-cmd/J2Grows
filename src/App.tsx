@@ -113,7 +113,7 @@ function App() {
     { page: "Plant Catalogue", title: "Acquire your first plant", body: "Choose an affordable starter species using its base price. This is your first living specimen and the source of your first propagation.", tip: "You start with £1,000, so you will have funds left for propagation." },
     { page: "Specimen Record", title: "Propagate your first plant", body: "Create your first new specimen using a propagation method that fits your chosen plant. It costs £100 in this guided prototype.", tip: "Most aroids can be propagated in several ways, but Alocasia uses corms rather than stem cuttings here." },
     { page: "Greenhouse", title: "Give your new plant time to establish", body: "Advance one simulated day to let your new specimen establish. This tutorial uses a scripted outcome so you can learn the discovery loop.", tip: "The full growth and environmental simulation is still being developed." },
-    { page: "Specimen Record", title: "Discover your first mutation", body: "Your propagated plant develops a new variegation expression. The mutation is recorded on the specimen so you can inspect and protect this discovery.", tip: "This first mutation is scripted for onboarding; later genetics will use the game's inheritance and mutation rules." },
+    { page: "Specimen Record", title: "Record your first observation", body: "Record the new growth on your propagated plant. Observations build research evidence and help reveal variegation stability over time.", tip: "Mutations are rare and not guaranteed. Research improves your understanding rather than forcing a result." },
   ];
   const [tutorialStep, setTutorialStep] = useState(0);
   const [tutorialOpen, setTutorialOpen] = useState(() => {
@@ -180,14 +180,14 @@ function App() {
     }
     const genus = findSpecies(parent.speciesId).latin.split(" ")[0].toLowerCase();
     const isAlocasia = genus === "alocasia";
-    const cost = 100;
+    const cost = isAlocasia ? 2 : 4;
     if (cash < cost) { announce(`You need ${money(cost)} for propagation supplies.`); return; }
     const offspring: Specimen = {
       id: `J2G-${isAlocasia ? "COR" : "CUT"}-${Date.now().toString().slice(-6)}`,
       speciesId: parent.speciesId, nickname: isAlocasia ? "First Corm" : "First Cutting",
       location: isAlocasia ? "Corm Nursery" : "Propagation Bench",
-      health: isAlocasia ? 75 : 85, stage: "Juvenile", value: Math.max(35, Math.round(parent.value * 0.6)),
-      protected: false, variegation: parent.variegation, discovered: false,
+      health: isAlocasia ? 75 : 85, stage: "Juvenile", value: 0,
+      protected: false, variegation: parent.variegation, discovered: false, genetics: parent.genetics ? { ...parent.genetics, genetics: { ...parent.genetics.genetics, mutationIds: [...parent.genetics.genetics.mutationIds] }, observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: [] } } : createSpecimenGenetics(parent.variegation),
     };
     setCash((current) => current - cost);
     setSpecimens((current) => [...current, offspring]);
@@ -208,16 +208,18 @@ function App() {
     announce("One day passed. Your propagated specimen is ready for its guided mutation discovery.");
   }
 
-  function discoverTutorialMutation() {
+  function recordTutorialObservation() {
     const cutting = specimens.find((item) => ["First Cutting", "First Corm", "First Mutation"].includes(item.nickname));
     if (!cutting) { announce("Propagate your first plant before discovering a mutation."); return; }
-    setSpecimens((current) => current.map((item) => item.id === cutting.id
-      ? { ...item, nickname: "First Mutation", variegation: Math.max(65, item.variegation), discovered: true, value: Math.max(item.value, 180) }
-      : item));
+    const record = cutting.genetics ?? createSpecimenGenetics(cutting.variegation);
+    const observed = observePlant(record, cutting.variegation);
+    const updated = { ...cutting, genetics: observed, value: specimenValue(cutting) };
+    setSpecimens((current) => current.map((item) => item.id === cutting.id ? updated : item));
+    setResearch((current) => current + 2);
     setSelected(cutting.id);
     setPage("Specimen Record");
     finishTutorial();
-    announce("Mutation discovered! Your First Mutation specimen has been recorded.");
+    announce("Growth observation recorded. Research evidence added; future mutations remain rare and uncertain.");
   }
 
   function finishTutorial() {
@@ -369,11 +371,13 @@ function App() {
       location: detail.location,
       health: detail.health,
       stage: "Juvenile",
-      value: Math.max(25, Math.round(parent.value * (method === "tissue-culture" ? 0.35 : 0.6))),
+      value: 0,
       protected: false,
       variegation: parent.variegation,
       discovered: false,
+      genetics: parent.genetics ? { ...parent.genetics, genetics: { ...parent.genetics.genetics, mutationIds: [...parent.genetics.genetics.mutationIds] }, observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: [] } } : createSpecimenGenetics(parent.variegation),
     };
+    child.value = specimenValue(child);
     setCash((current) => current - detail.cost);
     setSpecimens((current) => [...current, child]);
     setSelected(child.id);
@@ -410,8 +414,8 @@ function App() {
       announce("This prototype only supports crosses within the same genus.");
       return;
     }
-    if (cash < 100) {
-      announce("You need £100 for supplies to run this cross.");
+    if (cash < 4) {
+      announce("You need £4 for supplies to run this cross.");
       return;
     }
     const parentAGenetics = parentA.genetics ?? createSpecimenGenetics(parentA.variegation);
@@ -502,8 +506,8 @@ function App() {
       {tutorialStep === 1 && <div className="guided-field"><label htmlFor="starter-species">Choose your first plant · base price</label><select id="starter-species" value={starterSpeciesId} onChange={(event) => setStarterSpeciesId(event.target.value)}>{["alocasia-polly", "anthurium-clarinervium", "monstera-adansonii", "philodendron-birkin"].map((id) => { const plant = catalogSpecies.find((item) => item.id === id) ?? prototypeSpecies.find((item) => item.id === id); const labels: Record<string, string> = { "alocasia-polly": "Alocasia Polly", "anthurium-clarinervium": "Anthurium clarinervium", "monstera-adansonii": "Monstera Adansonii", "philodendron-birkin": "Philodendron Birkin" }; return <option key={id} value={id}>{labels[id]}{plant ? ` · ${plant.rarity}` : ""}</option>; })}</select><div className="guided-balance">Base price: <strong>{money(starterPrice)}</strong> · Available funds: <strong>{money(cash)}</strong></div></div>}
       {tutorialStep === 2 && <div className="guided-action-summary"><span className="guided-action-icon"><Sprout size={20} /></span><div><strong>{starterSpeciesId === "alocasia-polly" ? "Start an Alocasia corm" : "Take one healthy cutting"}</strong><p>Cost: £100 · Creates a separate specimen record.</p></div></div>}
       {tutorialStep === 3 && <div className="guided-action-summary"><span className="guided-action-icon"><Sun size={20} /></span><div><strong>Advance one simulated day</strong><p>Your cutting will establish and become eligible for the scripted first mutation.</p></div></div>}
-      {tutorialStep === 4 && <div className="guided-action-summary mutation-summary"><span className="guided-action-icon"><Sparkles size={20} /></span><div><strong>First mutation: variegation expression</strong><p>Your cutting will be recorded as “First Mutation” with 65% variegation expression. This is a guided, guaranteed discovery.</p></div></div>}
-      <div className="tutorial-tip"><Leaf size={16} /><span>{tutorialSteps[tutorialStep].tip}</span></div></div><div className="tutorial-footer"><button className="button button-quiet" onClick={finishTutorial}>Skip guide</button><div>{tutorialStep > 0 && <button className="button button-quiet tutorial-back" onClick={() => moveTutorial(-1)}>Back</button>}{tutorialStep === 0 ? <button className="button button-primary" onClick={saveInstituteName}>Name institute <ArrowRight size={15} /></button> : tutorialStep === 1 ? <button className="button button-primary" onClick={acquireStarterPlant} disabled={cash < starterPrice}>Acquire plant · {money(starterPrice)} <ArrowRight size={15} /></button> : tutorialStep === 2 ? <button className="button button-primary" onClick={takeTutorialCutting} disabled={cash < 100}>{starterSpeciesId === "alocasia-polly" ? "Start corm · £100" : "Take cutting · £100"} <ArrowRight size={15} /></button> : tutorialStep === 3 ? <button className="button button-primary" onClick={growTutorialCutting}>Advance one day <ArrowRight size={15} /></button> : <button className="button button-primary" onClick={discoverTutorialMutation}><Sparkles size={15} /> Discover mutation</button>}</div></div></section></div>}
+      {tutorialStep === 4 && <div className="guided-action-summary mutation-summary"><span className="guided-action-icon"><Sparkles size={20} /></span><div><strong>First observation: variegation expression</strong><p>Record the current expression and add evidence to your specimen’s research record. Mutations are not guaranteed.</p></div></div>}
+      <div className="tutorial-tip"><Leaf size={16} /><span>{tutorialSteps[tutorialStep].tip}</span></div></div><div className="tutorial-footer"><button className="button button-quiet" onClick={finishTutorial}>Skip guide</button><div>{tutorialStep > 0 && <button className="button button-quiet tutorial-back" onClick={() => moveTutorial(-1)}>Back</button>}{tutorialStep === 0 ? <button className="button button-primary" onClick={saveInstituteName}>Name institute <ArrowRight size={15} /></button> : tutorialStep === 1 ? <button className="button button-primary" onClick={acquireStarterPlant} disabled={cash < starterPrice}>Acquire plant · {money(starterPrice)} <ArrowRight size={15} /></button> : tutorialStep === 2 ? <button className="button button-primary" onClick={takeTutorialCutting} disabled={cash < 100}>{starterSpeciesId === "alocasia-polly" ? "Start corm · £100" : "Take cutting · £100"} <ArrowRight size={15} /></button> : tutorialStep === 3 ? <button className="button button-primary" onClick={growTutorialCutting}>Advance one day <ArrowRight size={15} /></button> : <button className="button button-primary" onClick={recordTutorialObservation}><Sparkles size={15} /> Record observation</button>}</div></div></section></div>}
   </div>;
 }
 
