@@ -50,7 +50,7 @@ These mechanics are a playable foundation, not final balance. The 99 base prices
 - Sell unprotected specimens and use funds for a starter facility upgrade or research project.
 - Advance a simulated day to progress the prototype's research data and improve eligible plant-health values.
 - Adjust the greenhouse's illustrative temperature and humidity controls.
-- Save institution state automatically in browser local storage. On return, eligible prototype progress is calculated at one simulated day per ten minutes away, capped at fourteen days.
+- Save institution state automatically in browser local storage. On return, eligible prototype progress is calculated at one simulated day per real-life hour away, capped at fourteen days.
 
 The prototype intentionally labels unfinished mechanics: plant artwork is stylised placeholder art, genetics and valuation are not yet a full simulation, and environmental controls do not yet alter plant health. Do not treat example prices, care values or research costs as final balance or real-world plant-care advice.
 
