@@ -8,10 +8,14 @@ export type ValidatedSpeciesRow = {
 };
 
 const DIFFICULTIES = new Set(["Easy", "Moderate", "Advanced"]);
-const RARITY_BY_LABEL = new Map(
-  ["Common", "Uncommon", "Rare", "Very Rare", "Ultra Rare", "Mythic"]
-    .map((rarity) => [rarity.toLowerCase(), rarity as Species["rarity"]]),
-);
+const RARITY_BY_LABEL = new Map<string, Species["rarity"]>([
+  ["common", "Common"],
+  ["uncommon", "Uncommon"],
+  ["rare", "Rare"],
+  ["very rare", "Very Rare"],
+  ["ultra rare", "Ultra Rare"],
+  ["mythic", "Mythic"],
+]);
 const IMAGE_EXTENSIONS = /\.(png|jpe?g|webp|avif)$/i;
 
 function optionalText(value: unknown): string | null {
