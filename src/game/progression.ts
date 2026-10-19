@@ -21,6 +21,7 @@ export type BreedingProject = {
   status: "active" | "completed" | "cancelled";
   failureChance: number;
   lineId: string;
+  targetTrait?: "variegationPotential" | "stability" | "growthPotential" | "hiddenPotential";
 };
 
 export type GeneticLine = {
