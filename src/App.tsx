@@ -943,7 +943,7 @@ function App() {
 
   return <div className="app-shell">
     <aside className={`sidebar ${showMenu ? "sidebar-open" : ""}`}>
-      <div className="brand"><img className="brand-logo-image" src="https://lwaxzivcjzpmmantryor.supabase.co/storage/v1/object/public/Artwork/67da7ee1-380e-4773-8ea5-21304c39738c.png" alt="J2Grows botanical logo" /><div className="brand-tagline">CULTIVATE · DISCOVER · BREED · BUILD</div></div>
+      <div className="brand"><img className="brand-logo-image" src="https://lwaxzivcjzpmmantryor.supabase.co/storage/v1/object/public/Artwork/logo.png" alt="J2Grows botanical logo" /><div className="brand-tagline">CULTIVATE · DISCOVER · BREED · BUILD</div></div>
       <div className="institution-switch"><div className="institution-emblem"><Sprout size={19} /></div><div><strong>{instituteName || "Unnamed Institute"}</strong><span>Home institution</span></div><ChevronDown size={14} /></div>
       <nav className="main-nav">{nav.map(({ label, icon: Icon }) => <button key={label} className={`nav-item ${page === label || (page === "Specimen Record" && label === "Plant Catalogue") ? "active" : ""}`} onClick={() => { setPage(label); setShowMenu(false); }}><Icon size={17} /><span>{label}</span>{label === "Research" && <span className="nav-dot" />}</button>)}</nav>
       <div className="sidebar-bottom"><div className="facility-mini"><div className="facility-mini-top"><span>STARTER FACILITY</span><span className="status-dot" /></div><strong>Home greenhouse</strong><div className="facility-progress"><span style={{ width: "36%" }} /></div><small>36% capacity used</small></div><div className="season-card"><Sun size={18} /><div><strong>Year 1 · Spring</strong><span>Day {day}</span></div><button onClick={advanceDay} title="Advance one day"><ArrowRight size={16} /></button></div><div className="sidebar-footer"><span><span className="online-dot" /> Local save active</span><div className="sidebar-footer-actions"><button onClick={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} aria-label="Open tutorial" title="Tutorial"><BookOpen size={16} /></button><button onClick={() => { setPage("Settings"); setShowMenu(false); }} aria-label="Settings" title="Settings"><Settings size={16} /></button></div></div></div>
@@ -1021,7 +1021,7 @@ function Dashboard({ specimens, cash, research, day, projectStarted, onNavigate,
           <button className="button button-primary" onClick={onAdvance}><Zap size={15} /> Advance day <ArrowRight size={14} /></button>
         </div>
       </div>
-      <div className="dash-feature-photo" role="img" aria-label="J2Grows tropical botanical banner" style={{ backgroundImage: "url(https://lwaxzivcjzpmmantryor.supabase.co/storage/v1/object/public/Artwork/banner.png)" }}>
+      <div className="dash-feature-photo" role="img" aria-label="J2Grows tropical botanical banner" style={{ backgroundImage: "url(https://lwaxzivcjzpmmantryor.supabase.co/storage/v1/object/public/Artwork/banner%20with%20logo.png)" }}>
         <div className="dash-photo-caption"><span>J2GROWS · BOTANICAL JOURNAL</span><strong>New growth, new possibilities.</strong></div>
       </div>
     </section>
