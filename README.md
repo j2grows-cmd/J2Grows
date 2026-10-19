@@ -18,6 +18,7 @@ npm run dev
 Vite prints the local development URL (normally `http://localhost:5173`). To verify a production build:
 
 ```bash
+npm test
 npm run typecheck
 npm run build
 npm run preview
@@ -33,6 +34,14 @@ Set these Codespaces repository secrets under **GitHub repository → Settings �
 - `VITE_SUPABASE_ANON_KEY` — the project's **publishable** API key from Supabase **Project Settings → API Keys** (a legacy `anon` key also works)
 
 Do not use a service-role or secret API key. After saving both secrets, rebuild/restart the Codespace so Vite can read them. For local development, copy `.env.example` to `.env.local` and set the same two values there; keep `.env.local` private and uncommitted.
+
+## Genetics and economy foundation
+
+The current development branch includes an initial, tuneable implementation of the 99-species base-price catalogue, six rarity tiers, rarity-weighted daily shop stock, £100 starting cash, rarity/method-based propagation costs, specimen valuation, and local save migration. Specimen values use health and maturity factors plus current variegation expression, inherited stability, genetics and discovery bonuses.
+
+The genetics module models blended parental inheritance with bounded variation, hidden potential, environment-sensitive expression/reversion risk, observation records, research analysis, mutation categories and mutation-specific inheritance stability. Research data and the analysis workstation can improve discovery; neither guarantees a mutation. The greenhouse applies its settings to future growth rather than directly adding a price multiplier.
+
+These mechanics are a playable foundation, not final balance. The 99 base prices and rarity assignments are the current research-informed draft; low-confidence entries, exact shop probabilities, mutation rates, research costs and valuation multipliers should be reviewed and tuned before release. Cultivar naming after stabilisation remains a design decision for a later stage. No database schema or live Supabase records are changed by this implementation.
 
 ## Current prototype interactions
 
