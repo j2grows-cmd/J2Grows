@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { makeStorageSpecies, species as prototypeSpecies, type Species } from "./data";
+import { getSpeciesEconomy } from "./game/catalog";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -32,6 +33,7 @@ function fromSpeciesRow(row: SpeciesRow): Species {
   const imagePath = imagePathOverrides[row.id] ?? row.image_path;
   const image = supabase!.storage.from("plant-images").getPublicUrl(imagePath).data.publicUrl;
   const fallback = makeStorageSpecies(row.id, image);
+  const economy = getSpeciesEconomy(row.name) ?? getSpeciesEconomy(row.id);
 
   return {
     ...fallback,
@@ -39,7 +41,8 @@ function fromSpeciesRow(row: SpeciesRow): Species {
     latin: row.scientific_name ?? local?.latin ?? fallback.latin,
     family: row.family ?? local?.family ?? fallback.family,
     difficulty: row.difficulty ?? local?.difficulty ?? fallback.difficulty,
-    rarity: row.rarity ?? local?.rarity ?? fallback.rarity,
+    rarity: economy?.rarity ?? row.rarity ?? local?.rarity ?? fallback.rarity,
+    basePrice: economy?.basePrice ?? fallback.basePrice,
     summary: row.summary ?? local?.summary ?? fallback.summary,
     light: row.light ?? local?.light ?? fallback.light,
     humidity: row.humidity ?? local?.humidity ?? fallback.humidity,
