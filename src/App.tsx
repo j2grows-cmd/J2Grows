@@ -184,7 +184,7 @@ function App() {
       if (!raw) return { "1": null, "2": null, "3": null };
       const parsed: unknown = JSON.parse(raw);
       const normalized = normalizeManualSaveSlots(parsed);
-      if (!isRecord(parsed) || Object.keys(normalized).some((key) => parsed[key] !== undefined && parsed[key] !== null && normalized[key] === null)) {
+      if (!isRecord(parsed) || JSON.stringify(normalized) !== JSON.stringify(parsed)) {
         try { localStorage.setItem(`${slotsKey}.recovery-backup`, JSON.stringify({ backedUpAt: Date.now(), raw, reason: "One or more manual save slots were malformed." })); } catch { /* Keep usable slots even if backup storage fails. */ }
       }
       return normalized as Record<string, GameSave | null>;
