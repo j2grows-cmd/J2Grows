@@ -71,11 +71,13 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **Tests:** Added `tests/plant-artwork.test.mjs` covering genus matching, unknown-species fallback, valid image priority, local artwork preference and invalid/missing URLs.
 - **Verification:** GitHub Actions passed `npm test`, `npm run typecheck` and `npm run build` on implementation commit `5e3e73ea71fb98dfef8ef9123e0b951504d721d3`.
 - **Remaining check:** Browser-test real catalogue entries with missing and broken image objects, including the visual quality of each fallback class.
-### A10. Supabase row data is trusted without runtime validation
-- **Evidence:** `fromSpeciesRow` assumes `row.traits` is a non-null array and `row.image_path` is a usable string, although TypeScript's `SpeciesRow` type does not validate API payloads at runtime.
-- **Impact:** Unexpected nulls or schema drift can throw during catalogue mapping or create broken image URLs.
-- **Recommended fix:** Validate and normalise each row at the network boundary; default null traits to `[]`, validate image paths, and fall back per record rather than failing the whole catalogue.
-
+### A10. Supabase row data is trusted without runtime validation — implemented on the development branch
+- **Previous evidence:** `fromSpeciesRow` assumed `traits` was an array and `image_path` was a usable string, although TypeScript types do not validate network payloads at runtime.
+- **Current state:** Added `src/game/supabase-catalog.ts` to validate unknown rows at the network boundary. Rows need a safe slug-like ID and non-empty name; optional metadata is normalized to null, unknown difficulty/rarity values are discarded, traits are filtered/deduplicated, and image paths are restricted to supported image extensions without traversal, absolute paths, query fragments or backslashes.
+- **Recovery behaviour:** Malformed and duplicate rows are skipped individually while valid neighbours are retained. If the table returns no valid rows, the loader falls back to Storage folders; if those are unavailable, it uses the local prototype catalogue. Invalid row counts are logged for diagnosis. Storage file selection also checks that entries are actual files with supported image extensions.
+- **Tests:** Added `tests/supabase-catalog.test.mjs` for valid rows, missing/null fields, invalid IDs/names, unsafe image paths, unexpected enums, mixed malformed rows and duplicate IDs.
+- **Verification:** CI status is being checked for this implementation before closing the audit item.
+- **Remaining check:** Browser-test the fallback behaviour against malformed table responses and Storage errors; no live Supabase data or configuration was changed.
 ### A11. Catalogue labels overstate what was loaded
 - **Evidence:** The library header always reports “species folders”, even when rows came from the `species` table. The “Supabase connected” label reflects a successful metadata path, not validation that every image loaded.
 - **Impact:** Users can misdiagnose missing metadata/images and misunderstand the source.
