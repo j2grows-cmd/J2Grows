@@ -786,3 +786,17 @@ body{
   .empty-panel-actions{flex-direction:column;width:100%}
   .empty-panel-actions .button{width:100%}
 }
+
+
+/* Species library: six roomier cards per row on wide desktop screens */
+.species-library-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+.species-library-card>.plant-art{height:clamp(130px,10vw,165px)}
+@media(max-width:1250px){
+  .species-library-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(max-width:850px){
+  .species-library-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  .species-library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
