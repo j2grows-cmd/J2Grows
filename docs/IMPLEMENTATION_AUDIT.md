@@ -52,7 +52,8 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **Timing:** One in-game day is earned for every complete real-life hour away. Offline catch-up is capped at 14 simulated days (336 hours); partial hours do not earn a day.
 - **Settings:** The enabled/disabled preference is stored in save version 7 and appears in Game Settings. Disabled offline progression applies no catch-up days. Existing save versions 1–6 migrate with offline progression enabled by default.
 - **Tests:** Added `tests/offline-progress.test.mjs` for hourly thresholds, the 14-day cap, disabled mode, and invalid/backwards timestamps.
-- **Remaining check:** CI and browser-level validation of a return from a long absence, settings persistence, and queued daily progression.
+- **CI:** Passed on implementation commit `b3834ff9` (`npm test`, `npm run typecheck`, `npm run build`).
+- **Remaining check:** Browser-level validation of a return from a long absence, settings persistence, and queued daily progression.
 
 ### A08. Save validation is too shallow
 - **Evidence:** `loadGameSave` checks top-level types and `Array.isArray(specimens)`, then trusts each specimen's fields and numeric ranges. Malformed but parseable local data can introduce missing health, invalid species IDs or bad values into the UI.
