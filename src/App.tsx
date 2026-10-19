@@ -52,13 +52,15 @@ function Metric({ label, value, detail, icon: Icon, tone = "green" }: { label: s
 }
 
 type GameSave = {
-  version: 1 | 2 | 3;
+  version: 1 | 2 | 3 | 4;
   specimens: Specimen[];
   breedingProjects: BreedingProject[];
   cash: number;
   research: number;
   day: number;
   projectStarted: boolean;
+  analysisTargetSpecimenId?: string;
+  analysisStartedDay?: number;
   savedAt: number;
   analysisEquipmentLevel: number;
   greenhouseEnvironment?: PlantEnvironment;
@@ -72,7 +74,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
     const raw = localStorage.getItem(SAVE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<GameSave>;
-      if ((parsed.version === 1 || parsed.version === 2 || parsed.version === 3) && Array.isArray(parsed.specimens) && typeof parsed.cash === "number" && typeof parsed.research === "number" && typeof parsed.day === "number" && typeof parsed.savedAt === "number") {
+      if ((parsed.version === 1 || parsed.version === 2 || parsed.version === 3 || parsed.version === 4) && Array.isArray(parsed.specimens) && typeof parsed.cash === "number" && typeof parsed.research === "number" && typeof parsed.day === "number" && typeof parsed.savedAt === "number") {
         const offlineDays = Math.min(14, Math.floor(Math.max(0, Date.now() - parsed.savedAt) / (10 * 60 * 1000)));
         const days = offlineDays;
         const savedEnvironment = parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT };
@@ -98,7 +100,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
           return current;
         });
         return {
-          version: 3,
+          version: 4,
           specimens: progressedSpecimens,
           breedingProjects: Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects : [],
           researchUnlocks: Array.isArray(parsed.researchUnlocks) ? parsed.researchUnlocks.filter((item): item is string => typeof item === "string") : [],
@@ -106,6 +108,8 @@ function loadGameSave(): GameSave & { offlineDays: number } {
           research: parsed.research,
           day: parsed.day + days,
           projectStarted: Boolean(parsed.projectStarted),
+          analysisTargetSpecimenId: typeof parsed.analysisTargetSpecimenId === "string" ? parsed.analysisTargetSpecimenId : undefined,
+          analysisStartedDay: typeof parsed.analysisStartedDay === "number" ? parsed.analysisStartedDay : undefined,
           savedAt: Date.now(),
           analysisEquipmentLevel: typeof parsed.analysisEquipmentLevel === "number" ? parsed.analysisEquipmentLevel : 0,
           greenhouseEnvironment: parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT },
@@ -116,7 +120,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
   } catch {
     // A malformed or unavailable local save falls back to a fresh prototype save.
   }
-  return { version: 3, specimens: [], breedingProjects: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, greenhouseEnvironment: { ...DEFAULT_ENVIRONMENT }, offlineDays: 0 };
+  return { version: 4, specimens: [], breedingProjects: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, greenhouseEnvironment: { ...DEFAULT_ENVIRONMENT }, offlineDays: 0 };
 }
 
 function App() {
@@ -150,6 +154,8 @@ function App() {
   const [selected, setSelected] = useState<string>(initialSpecimens[0].id);
   const [notice, setNotice] = useState(loadedSave.offlineDays > 0 ? `Welcome back. ${loadedSave.offlineDays} simulated day(s) of eligible offline progress applied.` : "");
   const [projectStarted, setProjectStarted] = useState(loadedSave.projectStarted);
+  const [analysisTargetSpecimenId, setAnalysisTargetSpecimenId] = useState<string | undefined>(loadedSave.analysisTargetSpecimenId);
+  const [analysisStartedDay, setAnalysisStartedDay] = useState<number | undefined>(loadedSave.analysisStartedDay);
   const [analysisEquipmentLevel, setAnalysisEquipmentLevel] = useState(loadedSave.analysisEquipmentLevel);
   const [showMenu, setShowMenu] = useState(false);
   const [instituteName, setInstituteName] = useState(() => {
@@ -343,12 +349,12 @@ function App() {
   }
   useEffect(() => {
     try {
-      const save: GameSave = { version: 3, specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, savedAt: Date.now() };
+      const save: GameSave = { version: 4, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, savedAt: Date.now() };
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     } catch {
       setNotice("Local save unavailable. Your progress may not persist in this browser.");
     }
-  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks]);
+  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks]);
 
   useEffect(() => {
     try { localStorage.setItem("j2grows.manual-save-slots.v1", JSON.stringify(saveSlots)); }
@@ -356,7 +362,7 @@ function App() {
   }, [saveSlots]);
 
   function saveToSlot(slot: string) {
-    const save: GameSave = { version: 3, specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, savedAt: Date.now() };
+    const save: GameSave = { version: 4, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, savedAt: Date.now() };
     setSaveSlots((current) => ({ ...current, [slot]: save }));
     announce(`Saved the current game to slot ${slot}.`);
   }
@@ -398,6 +404,8 @@ function App() {
     setResearch(0);
     setDay(1);
     setProjectStarted(false);
+    setAnalysisTargetSpecimenId(undefined);
+    setAnalysisStartedDay(undefined);
     setAnalysisEquipmentLevel(0);
     setSelected("");
     setInstituteName("");
@@ -564,7 +572,38 @@ function App() {
       return { ...project, status: "completed" as const };
     });
     const releasedSpecimens = nextSpecimens.map((item) => item.reservedByProjectId && finishedIds.has(item.reservedByProjectId) ? { ...item, reservedByProjectId: undefined } : item);
-    const finalSpecimens = [...releasedSpecimens, ...completedChildren];
+    let finalSpecimens = [...releasedSpecimens, ...completedChildren];
+    if (projectStarted && analysisTargetSpecimenId && analysisStartedDay !== undefined && nextDay - analysisStartedDay >= 3) {
+      const target = finalSpecimens.find((item) => item.id === analysisTargetSpecimenId);
+      if (!target || target.dead || target.health <= 0) {
+        mutationMessage += " Mutation Analysis could not be completed because its target specimen is no longer available.";
+      } else {
+        const completedTarget: Specimen = { ...target, mutationAnalysisCompleted: true };
+        const record = completedTarget.genetics ?? createSpecimenGenetics(completedTarget.variegation);
+        if (record.genetics.mutationGenePresent) {
+          const mutation = { ...createMutation(), detected: true, evidenceCount: 3 };
+          const geneticsRecord = {
+            ...record,
+            genetics: { ...record.genetics, mutationIds: [...new Set([...record.genetics.mutationIds, mutation.id])] },
+            research: {
+              ...record.research,
+              mutations: [...record.research.mutations, mutation],
+              discoveredTraits: [...new Set([...record.research.discoveredTraits, "mutation-details"])],
+            },
+          };
+          completedTarget.genetics = geneticsRecord;
+          completedTarget.discovered = true;
+          mutationMessage += ` Mutation Analysis detected ${mutation.name} (${mutation.rarity}) in ${completedTarget.nickname}.`;
+        } else {
+          mutationMessage += ` Mutation Analysis found no detectable mutation gene in ${completedTarget.nickname}. This specimen cannot be analysed again.`;
+        }
+        completedTarget.value = specimenValue(completedTarget);
+        finalSpecimens = finalSpecimens.map((item) => item.id === completedTarget.id ? completedTarget : item);
+      }
+      setProjectStarted(false);
+      setAnalysisTargetSpecimenId(undefined);
+      setAnalysisStartedDay(undefined);
+    }
     const weeklyOperatingCost = analysisEquipmentLevel * 5 + (researchUnlocks.includes("routine-automation") ? 10 : 0);
     if (nextDay % 7 === 0 && weeklyOperatingCost > 0) {
       setCash((current) => current - weeklyOperatingCost);
@@ -765,18 +804,29 @@ function App() {
     announce(`Research unlocked: ${nodeId.replaceAll("-", " ")}.`);
   }
 
-  function startResearch() {
+  function startResearch(specimenId: string) {
     if (projectStarted) {
       announce("Mutation Analysis is already in progress.");
       return;
     }
+    const target = specimens.find((item) => item.id === specimenId);
+    if (!target || target.dead || target.health <= 0) {
+      announce("Choose a living specimen for Mutation Analysis.");
+      return;
+    }
+    if (target.mutationAnalysisCompleted) {
+      announce("Mutation Analysis can only be performed once per specimen.");
+      return;
+    }
     if (cash < 25) {
-      announce("Not enough funds to start this research project.");
+      announce("Not enough funds to start Mutation Analysis.");
       return;
     }
     setCash((current) => current - 25);
     setProjectStarted(true);
-    announce("Mutation Analysis started for £25. Your research team is on it.");
+    setAnalysisTargetSpecimenId(target.id);
+    setAnalysisStartedDay(day);
+    announce(`Mutation Analysis started for ${target.nickname}. It will finish after 3 in-game days.`);
   }
 
   const pageTitle = page === "Plant Catalogue" ? "Plant Catalogue" : page === "Specimen Record" ? activeSpecies.name : page;
@@ -811,7 +861,7 @@ function App() {
         {page === "Plant Catalogue" && <Catalogue specimens={filteredSpecimens} species={catalogSpecies} catalogSource={catalogSource} query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onSell={sellSpecimen} />}
         {page === "Specimen Record" && <SpecimenPage specimen={activeSpecimen} plant={activeSpecies} onPropagate={(method) => propagateSpecimen(activeSpecimen, method)} onSell={() => sellSpecimen(activeSpecimen)} onObserve={observeSelectedSpecimen} onAnalyse={analyseSelectedSpecimen} researchPoints={research} currentDay={day} onToggleProtection={() => setSpecimens((current) => current.map((item) => item.id === activeSpecimen.id ? { ...item, protected: !item.protected } : item))} onBack={() => setPage("Plant Catalogue")} announce={announce} />}
         {page === "Breeding" && <BreedingPage specimens={specimens} researchUnlocks={researchUnlocks} projects={breedingProjects} day={day} traitTargetingUnlocked={researchUnlocks.includes("inheritance-mapping")} onCross={runCross} />}
-        {page === "Research" && <ResearchPage cash={cash} research={research} projectStarted={projectStarted} onStart={startResearch} announce={announce} researchUnlocks={researchUnlocks} onUnlockResearch={unlockResearchNode} />}
+        {page === "Research" && <ResearchPage specimens={specimens} cash={cash} research={research} day={day} projectStarted={projectStarted} analysisTargetSpecimenId={analysisTargetSpecimenId} analysisStartedDay={analysisStartedDay} onStart={startResearch} announce={announce} researchUnlocks={researchUnlocks} onUnlockResearch={unlockResearchNode} />}
         {page === "Greenhouse" && <GreenhousePage specimens={specimens} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onApplyEnvironment={(humidity, temperature, autoCare) => setGreenhouseEnvironment({ ...greenhouseEnvironment, humidity, temperature, autoCare, lightHours: 14, light: 70, nutrition: Math.max(20, 100 - Math.abs(temperature - 24) * 7) })} environment={greenhouseEnvironment} autoCareUnlocked={researchUnlocks.includes("routine-automation")} announce={announce} />}
         {page === "Facilities" && <FacilitiesPage cash={cash} analysisEquipmentLevel={analysisEquipmentLevel} onBuy={(name, cost) => { if (cash < cost) announce("Not enough funds for this upgrade."); else { setCash((value) => value - cost); if (name === "Analysis workstation") setAnalysisEquipmentLevel((level) => level + 1); announce(name === "Analysis workstation" ? "Analysis workstation upgraded. Mutation detection and research are more effective." : "Facility upgrade purchased. New capacity is being prepared."); } }} />}
         {page === "Staff" && <StaffPage />}
@@ -887,8 +937,13 @@ function BreedingPage({ specimens, researchUnlocks, projects, day, traitTargetin
   </section><section className="panel"><SectionHeader title="Genetic lineage" subtitle="Each completed cross creates a distinct line linked to both parents." /><div className="lineage-list">{specimens.filter((item) => item.lineParentIds?.length).map((item) => <div className="lineage-item" key={item.id}><strong>{item.nickname}</strong><span>Generation {item.generation ?? 1} · {item.lineParentIds!.map((id) => specimens.find((parent) => parent.id === id)?.nickname ?? id).join(" × ")}</span>{item.stableMutationIds?.length ? <small>Stable mutations: {item.stableMutationIds.length}</small> : null}</div>)}</div>{researchUnlocks.includes("batch-breeding") && <p className="muted-copy">Batch breeding unlocked: successful projects produce three offspring.</p>}<div className="active-projects"><h3>Breeding projects</h3>{projects.filter((project) => project.status === "active").length === 0 ? <p className="muted-copy">No active breeding projects.</p> : projects.filter((project) => project.status === "active").map((project) => <div className="lineage-item" key={project.id}><strong>{specimens.find((item) => item.id === project.parentAId)?.nickname ?? "Parent"} × {specimens.find((item) => item.id === project.parentBId)?.nickname ?? "Parent"}</strong><span>Completes on day {project.completesOnDay} · {Math.max(0, project.completesOnDay - day)} day(s) remaining</span></div>)}</div></section></div>;
 }
 
-function ResearchPage({ cash, research, projectStarted, onStart, announce, researchUnlocks, onUnlockResearch }: { cash: number; research: number; projectStarted: boolean; onStart: () => void; announce: (message: string) => void; researchUnlocks: string[]; onUnlockResearch: (id: string) => void }) {
-  return <div className="research-layout"><section className="panel"><SectionHeader title="Research pathways" subtitle="Unlock permanent capabilities through a branching research tree." /><div className="research-tree">{RESEARCH_TREE.map((node) => { const unlocked = researchUnlocks.includes(node.id); const prerequisitesMet = node.prerequisites.every((id) => researchUnlocks.includes(id)); return <div className={`research-node ${unlocked ? "node-done" : prerequisitesMet && research >= node.cost ? "node-current" : "node-locked"}`} key={node.id}><div className="node-icon">{unlocked ? <Check size={18} /> : <Beaker size={18} />}</div><div><strong>{node.id.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join(" ")}</strong><span>{node.description} · Cost: {node.cost} research</span></div><button className="button button-quiet" disabled={unlocked || !canUnlockResearch(node.id, { points: research, unlocked: researchUnlocks, completed: researchUnlocks })} onClick={() => onUnlockResearch(node.id)}>{unlocked ? "Unlocked" : prerequisitesMet ? "Unlock" : "Prerequisites"}</button></div>; })}</div></section><aside className="panel project-panel"><div className="eyebrow"><FlaskConical size={13} /> RECOMMENDED PROJECT</div><h2>Mutation Analysis</h2><p>Record unusual traits, gather specimen evidence and validate promising discoveries.</p><div className="project-art"><PlantArt type="philodendron" large /></div><div className="project-cost"><span>Estimated cost</span><strong>{money(25)}</strong></div><div className="project-cost"><span>Available funds</span><strong>{money(cash)}</strong></div><div className="project-cost"><span>Research data</span><strong>{research.toLocaleString("en-GB")}</strong></div><button className="button button-primary full-width" disabled={projectStarted || cash < 25} onClick={onStart}>{projectStarted ? "Project in progress" : cash < 25 ? "Insufficient funds" : "Begin project"}<ArrowRight size={15} /></button><button className="button button-quiet full-width" onClick={() => announce("Choose a research branch to unlock targeted capabilities.")}>Explore research branches</button></aside></div>;
+function ResearchPage({ specimens, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, onStart, announce, researchUnlocks, onUnlockResearch }: { specimens: Specimen[]; cash: number; research: number; day: number; projectStarted: boolean; analysisTargetSpecimenId?: string; analysisStartedDay?: number; onStart: (specimenId: string) => void; announce: (message: string) => void; researchUnlocks: string[]; onUnlockResearch: (id: string) => void }) {
+  const [targetId, setTargetId] = useState("");
+  const eligibleSpecimens = specimens.filter((item) => !item.dead && item.health > 0 && !item.mutationAnalysisCompleted);
+  const selectedTarget = eligibleSpecimens.find((item) => item.id === targetId) ?? eligibleSpecimens[0];
+  const activeTarget = specimens.find((item) => item.id === analysisTargetSpecimenId);
+  const daysRemaining = analysisStartedDay === undefined ? 0 : Math.max(0, 3 - (day - analysisStartedDay));
+  return <div className="research-layout"><section className="panel"><SectionHeader title="Research pathways" subtitle="Unlock permanent capabilities through a branching research tree." /><div className="research-tree">{RESEARCH_TREE.map((node) => { const unlocked = researchUnlocks.includes(node.id); const prerequisitesMet = node.prerequisites.every((id) => researchUnlocks.includes(id)); return <div className={`research-node ${unlocked ? "node-done" : prerequisitesMet && research >= node.cost ? "node-current" : "node-locked"}`} key={node.id}><div className="node-icon">{unlocked ? <Check size={18} /> : <Beaker size={18} />}</div><div><strong>{node.id.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join(" ")}</strong><span>{node.description} · Cost: {node.cost} research</span></div><button className="button button-quiet" disabled={unlocked || !canUnlockResearch(node.id, { points: research, unlocked: researchUnlocks, completed: researchUnlocks })} onClick={() => onUnlockResearch(node.id)}>{unlocked ? "Unlocked" : prerequisitesMet ? "Unlock" : "Prerequisites"}</button></div>; })}</div></section><aside className="panel project-panel"><div className="eyebrow"><FlaskConical size={13} /> SPECIMEN PROJECT</div><h2>Mutation Analysis</h2><p>Spend three in-game days analysing one specimen. If it carries the latent mutation gene, the analysis detects one random mutation. Each specimen can be analysed only once.</p><div className="project-art"><PlantArt type={selectedTarget ? findSpecies(selectedTarget.speciesId).image : "philodendron"} large /></div>{projectStarted ? <><div className="project-cost"><span>Specimen</span><strong>{activeTarget?.nickname ?? "Unavailable"}</strong></div><div className="project-cost"><span>Time remaining</span><strong>{daysRemaining} in-game day(s)</strong></div><div className="project-cost"><span>Completes on</span><strong>Day {(analysisStartedDay ?? day) + 3}</strong></div></> : <><label className="control-row" htmlFor="mutation-analysis-specimen">Specimen to analyse</label><select id="mutation-analysis-specimen" className="field-input" value={selectedTarget?.id ?? ""} onChange={(event) => setTargetId(event.target.value)} disabled={!eligibleSpecimens.length}>{eligibleSpecimens.map((item) => <option key={item.id} value={item.id}>{item.nickname} — {findSpecies(item.speciesId).name}</option>)}</select><div className="project-cost"><span>Project cost</span><strong>{money(25)}</strong></div><div className="project-cost"><span>Available funds</span><strong>{money(cash)}</strong></div><div className="project-cost"><span>Eligible specimens</span><strong>{eligibleSpecimens.length}</strong></div></>}<button className="button button-primary full-width" disabled={projectStarted || cash < 25 || !selectedTarget} onClick={() => selectedTarget && onStart(selectedTarget.id)}>{projectStarted ? "Analysis in progress" : !eligibleSpecimens.length ? "No eligible specimens" : cash < 25 ? "Insufficient funds" : "Begin 3-day analysis"}<ArrowRight size={15} /></button><button className="button button-quiet full-width" onClick={() => announce("Mutation Analysis is available once per living specimen. Plants without the mutation gene may yield no discovery.")}>How analysis works</button></aside></div>;
 }
 function GreenhousePage({ specimens, onSelect, onApplyEnvironment, environment, autoCareUnlocked, announce }: { specimens: Specimen[]; onSelect: (id: string) => void; onApplyEnvironment: (humidity: number, temperature: number, autoCare: boolean) => void; environment: PlantEnvironment; autoCareUnlocked: boolean; announce: (message: string) => void }) {
   const [humidity, setHumidity] = useState(environment.humidity);
