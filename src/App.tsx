@@ -10,6 +10,7 @@ import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeS
 import { loadSpeciesCatalog } from "./supabase";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
 import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, inheritGenetics, observePlant, shouldDiscoverMutation, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
+import { breedingDurationDays, breedingFailureChance, calculateBreedingCost, canBreed, inheritTraits, mutationOccurs, stableAcrossGenerations, type BreedingProject } from "./game/progression";
 
 type PropagationMethod = "cutting" | "division" | "corm" | "tissue-culture";
 
@@ -51,8 +52,9 @@ function Metric({ label, value, detail, icon: Icon, tone = "green" }: { label: s
 }
 
 type GameSave = {
-  version: 1 | 2;
+  version: 1 | 2 | 3;
   specimens: Specimen[];
+  breedingProjects: BreedingProject[];
   cash: number;
   research: number;
   day: number;
@@ -68,14 +70,15 @@ function loadGameSave(): GameSave & { offlineDays: number } {
     const raw = localStorage.getItem(SAVE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<GameSave>;
-      if ((parsed.version === 1 || parsed.version === 2) && Array.isArray(parsed.specimens) && typeof parsed.cash === "number" && typeof parsed.research === "number" && typeof parsed.day === "number" && typeof parsed.savedAt === "number") {
+      if ((parsed.version === 1 || parsed.version === 2 || parsed.version === 3) && Array.isArray(parsed.specimens) && typeof parsed.cash === "number" && typeof parsed.research === "number" && typeof parsed.day === "number" && typeof parsed.savedAt === "number") {
         const offlineDays = Math.min(14, Math.floor(Math.max(0, Date.now() - parsed.savedAt) / (10 * 60 * 1000)));
         const days = offlineDays;
         return {
-          version: 1,
+          version: 3,
           specimens: parsed.specimens.map((specimen) => ({ ...specimen, health: Math.min(100, Math.max(0, specimen.health + (specimen.health < 90 ? days * 2 : 0))) })),
+          breedingProjects: Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects : [],
           cash: parsed.cash,
-          research: parsed.research + days * 25,
+          research: parsed.research,
           day: parsed.day + days,
           projectStarted: Boolean(parsed.projectStarted),
           savedAt: Date.now(),
@@ -87,7 +90,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
   } catch {
     // A malformed or unavailable local save falls back to a fresh prototype save.
   }
-  return { version: 2, specimens: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, offlineDays: 0 };
+  return { version: 3, specimens: [], breedingProjects: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, offlineDays: 0 };
 }
 
 function App() {
@@ -106,6 +109,7 @@ function App() {
   }, []);
   const [page, setPage] = useState<Page>("Dashboard");
   const [specimens, setSpecimens] = useState<Specimen[]>(loadedSave.specimens.map((specimen) => ({ ...specimen, genetics: specimen.genetics ?? createSpecimenGenetics(specimen.variegation) })));
+  const [breedingProjects, setBreedingProjects] = useState<BreedingProject[]>(loadedSave.breedingProjects ?? []);
   const [cash, setCash] = useState(loadedSave.cash);
   const [research, setResearch] = useState(loadedSave.research);
   const [greenhouseEnvironment, setGreenhouseEnvironment] = useState<PlantEnvironment>({ ...DEFAULT_ENVIRONMENT });
@@ -308,12 +312,12 @@ function App() {
   }
   useEffect(() => {
     try {
-      const save: GameSave = { version: 2, specimens, cash, research, day, projectStarted, analysisEquipmentLevel, savedAt: Date.now() };
+      const save: GameSave = { version: 3, specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel, savedAt: Date.now() };
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     } catch {
       setNotice("Local save unavailable. Your progress may not persist in this browser.");
     }
-  }, [specimens, cash, research, day, projectStarted, analysisEquipmentLevel]);
+  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel]);
 
   const activeSpecimen = specimens.find((item) => item.id === selected) ?? specimens[0];
   const activeSpecies = activeSpecimen ? findSpecies(activeSpecimen.speciesId) : findSpecies(initialSpecimens[0].speciesId);
