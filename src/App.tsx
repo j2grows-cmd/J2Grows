@@ -80,6 +80,9 @@ function loadGameSave(): GameSave & { offlineDays: number } {
         const savedEnvironment = parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT };
         const progressedSpecimens = parsed.specimens.map((specimen) => {
           let current = { ...specimen };
+          if (current.genetics && typeof current.genetics.genetics.mutationGenePresent !== "boolean") {
+            current.genetics = { ...current.genetics, genetics: { ...current.genetics.genetics, mutationGenePresent: Math.random() < 0.2 } };
+          }
           if (current.dead || current.health <= 0) return { ...current, health: 0, dead: true };
           const genus = findSpecies(current.speciesId).latin.split(" ")[0].toLowerCase();
           const speciesFactor = genus === "anthurium" ? 1.25 : genus === "alocasia" ? 1.1 : ["monstera", "philodendron"].includes(genus) ? 0.9 : 1;
@@ -107,9 +110,9 @@ function loadGameSave(): GameSave & { offlineDays: number } {
           cash: parsed.cash,
           research: parsed.research,
           day: parsed.day + days,
-          projectStarted: Boolean(parsed.projectStarted),
-          analysisTargetSpecimenId: typeof parsed.analysisTargetSpecimenId === "string" ? parsed.analysisTargetSpecimenId : undefined,
-          analysisStartedDay: typeof parsed.analysisStartedDay === "number" ? parsed.analysisStartedDay : undefined,
+          projectStarted: Boolean(parsed.projectStarted && typeof parsed.analysisTargetSpecimenId === "string" && typeof parsed.analysisStartedDay === "number" && parsed.day + days - parsed.analysisStartedDay < 3),
+          analysisTargetSpecimenId: typeof parsed.analysisTargetSpecimenId === "string" && parsed.day + days - (parsed.analysisStartedDay ?? parsed.day) < 3 ? parsed.analysisTargetSpecimenId : undefined,
+          analysisStartedDay: typeof parsed.analysisStartedDay === "number" && parsed.day + days - parsed.analysisStartedDay < 3 ? parsed.analysisStartedDay : undefined,
           savedAt: Date.now(),
           analysisEquipmentLevel: typeof parsed.analysisEquipmentLevel === "number" ? parsed.analysisEquipmentLevel : 0,
           greenhouseEnvironment: parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT },
@@ -737,6 +740,10 @@ function App() {
   }
 
   function sellSpecimen(specimen: Specimen) {
+    if (projectStarted && analysisTargetSpecimenId === specimen.id) {
+      announce("This specimen is reserved for Mutation Analysis and cannot be sold until the project finishes.");
+      return;
+    }
     if (specimen.protected) {
       announce("This specimen is protected. Remove its protection before selling.");
       return;
