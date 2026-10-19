@@ -567,7 +567,7 @@ body{
 .dash-plant-add strong{font-family:"Playfair Display",Georgia,serif;font-size:15px;font-weight:500}
 .dash-plant-add small{font-size:10px;color:#8f9b84;line-height:1.5}
 .dash-plant-add>svg{color:#d5bb6b}
-@media(max-width:1450px){
+@media(max-width:1100px){
  .dash-three-columns{grid-template-columns:repeat(2,minmax(0,1fr))}
  .dash-finance-widget{grid-column:span 2}
  .dash-featured-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -592,4 +592,66 @@ body{
  .dash-resource-card strong{font-size:20px}
  .dash-feature-copy{padding:23px 20px}
  .dash-condition-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+
+/* Desktop density pass: keep the dashboard's key panels visible sooner */
+@media(min-width:1101px){
+  .page-content{padding-top:15px;padding-bottom:18px}
+  .dash-welcome{margin-bottom:10px}
+  .dash-welcome-copy h2{font-size:clamp(28px,2.1vw,36px);margin:5px 0}
+  .dash-welcome-copy p{font-size:12px}
+  .dash-welcome-actions .button{padding:9px 12px;font-size:11px}
+  .dash-resource-grid{gap:8px;margin-bottom:10px}
+  .dash-resource-card{padding:10px;gap:9px}
+  .dash-resource-icon{width:34px;height:34px;flex-basis:34px}
+  .dash-resource-card strong{font-size:22px}
+  .dash-resource-card small,.dash-resource-card>div>span{font-size:9px}
+  .dash-feature-hero{min-height:205px;margin-bottom:10px}
+  .dash-feature-copy{padding:20px 23px}
+  .dash-feature-copy h2{font-size:clamp(31px,2.6vw,43px);margin:11px 0 8px}
+  .dash-feature-copy p{font-size:12px;line-height:1.55;margin-bottom:12px}
+  .dash-feature-photo{min-height:205px}
+  .dash-three-columns{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:10px}
+  .dash-widget{padding:12px}
+  .dash-widget .section-header{margin-bottom:8px}
+  .dash-widget .section-header h2{font-size:16px}
+  .dash-condition-grid{gap:6px}
+  .dash-condition{padding:8px 7px;gap:7px}
+  .condition-icon{width:27px;height:27px;flex-basis:27px}
+  .dash-condition strong{font-size:15px}
+  .dash-condition small,.dash-condition span:last-child{font-size:8px}
+  .dash-activity-row{padding:8px 0;gap:7px}
+  .dash-activity-icon{width:27px;height:27px;flex-basis:27px}
+  .dash-activity-copy strong{font-size:10px}
+  .dash-activity-copy small{font-size:9px}
+  .dash-finance-total{padding:12px}
+  .dash-finance-total strong{font-size:27px}
+  .dash-finance-note{padding-top:8px}
+  .dash-widget-link{margin-top:8px;padding-top:8px}
+  .dash-featured-panel{padding:12px;margin-bottom:10px}
+  .dash-featured-panel .section-header{margin-bottom:8px}
+  .dash-featured-grid{gap:8px}
+  .dash-plant-image{height:clamp(86px,8vw,118px)}
+  .dash-plant-copy{padding:8px;gap:3px}
+  .dash-plant-copy>strong{font-size:12px}
+  .dash-plant-copy>div{margin-top:4px;padding-top:5px}
+  .dash-plant-add{padding:10px;gap:7px}
+}
+@media(min-width:1101px) and (max-height:950px){
+  .dash-feature-hero{min-height:180px}
+  .dash-feature-photo{min-height:180px}
+  .dash-feature-copy h2{font-size:clamp(29px,2.4vw,39px)}
+  .dash-feature-copy p{line-height:1.45;margin-bottom:9px}
+  .dash-plant-image{height:88px}
+  .dash-condition{padding:7px 6px}
+  .dash-activity-row{padding:6px 0}
+}
+@media(max-width:1100px){
+  .dash-three-columns{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dash-finance-widget{grid-column:span 2}
+}
+@media(max-width:760px){
+  .dash-three-columns{grid-template-columns:minmax(0,1fr)}
+  .dash-finance-widget{grid-column:auto}
 }
