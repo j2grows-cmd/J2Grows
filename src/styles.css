@@ -1528,3 +1528,83 @@ body{
  .profile-chip{min-width:140px}
  .profile-chip strong{font-size:15px}
 }
+
+
+/* Fix header collisions at the reference desktop width */
+.topbar{
+  position:relative;
+  display:flex;
+  align-items:center;
+  flex-wrap:nowrap;
+  min-width:0;
+  overflow:hidden;
+  gap:10px;
+  padding:0 18px;
+}
+.top-institution{
+  flex:0 0 130px;
+  min-width:130px;
+  width:130px;
+  overflow:hidden;
+}
+.top-resource{
+  flex:0 0 150px;
+  width:150px;
+  min-width:0;
+  box-sizing:border-box;
+}
+.top-resource.research-resource{flex-basis:150px;width:150px}
+.top-level{
+  flex:0 0 215px;
+  width:215px;
+  min-width:215px;
+  max-width:215px;
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  overflow:hidden;
+}
+.top-level .level-star{flex:0 0 30px}
+.top-level .level-info{flex:1 1 auto;min-width:0;width:100%;overflow:hidden}
+.top-level .level-info>div:first-child{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  width:100%;
+  min-width:0;
+}
+.top-level .level-info strong{
+  flex:1 1 auto;
+  min-width:0;
+  white-space:normal;
+  overflow-wrap:normal;
+}
+.top-level .level-info span{
+  flex:0 0 auto;
+  white-space:nowrap;
+}
+.top-level .level-info .progress-track{width:100%;margin:0}
+.topbar>.icon-button{flex:0 0 40px}
+.topbar>.profile-chip{
+  flex:1 1 190px;
+  width:auto;
+  min-width:175px;
+  max-width:245px;
+  overflow:hidden;
+}
+.topbar>.profile-chip>div:nth-child(2){flex:1 1 auto;overflow:hidden}
+@media(max-width:1450px){
+ .topbar{gap:8px;padding:0 12px}
+ .top-institution{flex-basis:118px;width:118px;min-width:118px}
+ .top-resource,.top-resource.research-resource{flex-basis:135px;width:135px}
+ .top-level{flex-basis:205px;width:205px;min-width:205px}
+ .topbar>.profile-chip{min-width:160px}
+}
+@media(max-width:1180px){
+ .top-institution{flex-basis:105px;width:105px;min-width:105px}
+ .top-resource,.top-resource.research-resource{flex-basis:125px;width:125px}
+ .top-level{flex-basis:190px;width:190px;min-width:190px}
+ .topbar>.profile-chip{min-width:145px}
+}
