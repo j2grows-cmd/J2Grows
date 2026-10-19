@@ -60,10 +60,13 @@ test("observation earns research and genetic analysis spends it", () => {
     expression: 70, environment: { light: 65, nutrition: 65, humidity: 65, health: 100 },
     observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: [] },
   };
-  const observed = observePlant(record);
-  assert.equal(observed.research.points, 2);
-  assert.equal(observed.research.observationCount, 1);
-  assert.equal(analyseGenetics(observed, 25), null);
+  const observedOnce = observePlant(record);
+  assert.equal(observedOnce.research.points, 2);
+  assert.equal(observedOnce.research.observationCount, 1);
+  assert.equal(analyseGenetics(observedOnce, 25), null);
+  const observedTwice = observePlant(observedOnce);
+  const observed = observePlant(observedTwice);
+  assert.equal(observed.research.observationCount, 3);
   const funded = { ...observed, research: { ...observed.research, points: 30 } };
   const analysed = analyseGenetics(funded, 25);
   assert.ok(analysed);
