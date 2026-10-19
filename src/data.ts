@@ -1,5 +1,5 @@
-import { getSpeciesEconomy, normalizeSpeciesName, SPECIES_ECONOMY, type RarityTier } from "./game/catalog";
-import type { SpecimenGenetics } from "./game/genetics";
+import { getSpeciesEconomy, normalizeSpeciesName, SPECIES_ECONOMY, type RarityTier } from "./game/catalog.ts";
+import type { SpecimenGenetics } from "./game/genetics.ts";
 
 export type Species = {
   id: string;
