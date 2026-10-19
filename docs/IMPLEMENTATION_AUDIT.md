@@ -78,13 +78,13 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **Tests:** Added `tests/supabase-catalog.test.mjs` for valid rows, missing/null fields, invalid IDs/names, unsafe image paths, unexpected enums, mixed malformed rows and duplicate IDs.
 - **Verification:** GitHub Actions passed `npm test`, `npm run typecheck` and `npm run build` on implementation commit `142d166162175fa9f9d1186365fea8aa9737e25c`.
 - **Remaining check:** Browser-test the fallback behaviour against malformed table responses and Storage errors; no live Supabase data or configuration was changed.
-### A11. Catalogue labels overstate what was loaded
-- **Evidence:** The library header always reports “species folders”, even when rows came from the `species` table. The “Supabase connected” label reflects a successful metadata path, not validation that every image loaded.
-- **Impact:** Users can misdiagnose missing metadata/images and misunderstand the source.
-- **Recommended fix:** Report the actual source (table, Storage-folder fallback, or local data) and distinguish metadata connection from image availability.
-
-## P2 — Product and documentation gaps
-
+### A11. Catalogue labels overstate what was loaded — implemented on the development branch
+- **Previous evidence:** The library always said “species folders” and “Connected”, even when the data came from the `species` table; neither label communicated image load failures.
+- **Current state:** `loadSpeciesCatalog` now returns a precise source: `supabase-table`, `storage-folders`, or `local`. The Species Library displays that source and labels remote catalogue status as “Metadata loaded” rather than implying all images succeeded. Settings uses the same accurate source names.
+- **Image status:** The library reports remote images loaded, fallback artwork in use, and images still loading. The existing image error handler switches broken URLs to genus-matched CSS artwork and reports that state to the library.
+- **Tests:** Added `src/game/catalogue-status.ts` and `tests/catalogue-status.test.mjs` to cover all source labels and counts for loaded, pending, broken and local/fallback artwork.
+- **Verification:** CI is being checked for this change before closing the audit item.
+- **Remaining check:** Browser-test real catalogue entries and broken image URLs to confirm the status display updates correctly. No live Supabase data or configuration was changed.
 ### A12. Tutorial promises actions the game does not yet support
 - **Evidence:** The guide discusses managing plants, breeding and research, but a fresh save starts with no specimens and has no acquisition flow. The greenhouse and research steps also describe controls/projects whose outcomes are placeholders.
 - **Impact:** Players can follow the guide and still hit dead ends.
