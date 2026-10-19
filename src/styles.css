@@ -1472,3 +1472,59 @@ body{
  .icon-button{width:36px;height:36px;flex-basis:36px}
  .profile-avatar{width:32px;height:32px;flex-basis:32px}
 }
+
+
+/* Header refinement: align the institutional identity, indicators and manager profile */
+.topbar{
+  height:72px;
+  display:flex;
+  gap:10px;
+  padding:0 22px;
+}
+.top-institution{
+  flex:0 0 138px;
+  min-width:138px;
+  padding-right:12px;
+}
+.top-institution strong{white-space:nowrap}
+.top-resource{
+  flex:0 0 158px;
+  min-width:0;
+  min-height:52px;
+  padding:8px 11px;
+}
+.top-resource>div{min-width:0}
+.top-resource strong,.top-resource small{white-space:nowrap}
+.top-level{
+  flex:0 1 218px;
+  min-width:210px;
+  max-width:230px;
+  min-height:52px;
+  padding:8px 11px;
+}
+.level-info{min-width:0}
+.level-info>div:first-child{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:9px}
+.level-info strong{white-space:nowrap}
+.level-info span{white-space:nowrap}
+.profile-chip{
+  flex:0 1 225px;
+  min-width:175px;
+  margin-left:0;
+  padding-left:12px;
+}
+.profile-chip>div:nth-child(2){min-width:0}
+.profile-chip strong,.profile-chip span{white-space:nowrap}
+@media(max-width:1320px){
+ .topbar{gap:8px;padding:0 13px}
+ .top-institution{flex-basis:125px;min-width:125px;padding-right:8px}
+ .top-resource{flex-basis:145px;padding:8px}
+ .top-level{flex-basis:205px;min-width:195px;padding:8px}
+ .profile-chip{flex:1 1 185px;min-width:165px;padding-left:9px}
+}
+@media(max-width:1050px){
+ .topbar{gap:7px}
+ .top-resource{flex:1 1 125px}
+ .top-level{min-width:180px;flex-basis:190px}
+ .profile-chip{min-width:140px}
+ .profile-chip strong{font-size:15px}
+}
