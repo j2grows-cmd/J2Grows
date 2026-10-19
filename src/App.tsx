@@ -109,9 +109,9 @@ function App() {
   const tutorialSteps: { page: Page; title: string; body: string; tip: string }[] = [
     { page: "Dashboard", title: "Name your institute", body: "Every great botanical institution starts with a name. Choose one that will appear throughout your nursery.", tip: "You can change this later by replaying the introduction or through the institution settings." },
     { page: "Plant Catalogue", title: "Acquire your first plant", body: "Choose a starter species for £250. This is your first living specimen and the source of your first cutting.", tip: "You start with £1,000, so you will have funds left for propagation." },
-    { page: "Specimen Record", title: "Take your first cutting", body: "Create your first new specimen using a propagation method that fits your chosen plant. It costs £100 in this guided prototype.", tip: "Most aroids can be propagated in several ways, but Alocasia uses corms rather than stem cuttings here." },
-    { page: "Greenhouse", title: "Give the cutting time to establish", body: "Advance one simulated day to let the cutting establish. This tutorial uses a scripted outcome so you can learn the discovery loop.", tip: "The full growth and environmental simulation is still being developed." },
-    { page: "Specimen Record", title: "Discover your first mutation", body: "Your cutting develops a new variegation expression. The mutation is recorded on the specimen so you can inspect and protect this discovery.", tip: "This first mutation is scripted for onboarding; later genetics will use the game's inheritance and mutation rules." },
+    { page: "Specimen Record", title: "Propagate your first plant", body: "Create your first new specimen using a propagation method that fits your chosen plant. It costs £100 in this guided prototype.", tip: "Most aroids can be propagated in several ways, but Alocasia uses corms rather than stem cuttings here." },
+    { page: "Greenhouse", title: "Give your new plant time to establish", body: "Advance one simulated day to let your new specimen establish. This tutorial uses a scripted outcome so you can learn the discovery loop.", tip: "The full growth and environmental simulation is still being developed." },
+    { page: "Specimen Record", title: "Discover your first mutation", body: "Your propagated plant develops a new variegation expression. The mutation is recorded on the specimen so you can inspect and protect this discovery.", tip: "This first mutation is scripted for onboarding; later genetics will use the game's inheritance and mutation rules." },
   ];
   const [tutorialStep, setTutorialStep] = useState(0);
   const [tutorialOpen, setTutorialOpen] = useState(() => {
@@ -182,11 +182,11 @@ function App() {
     setSelected(cutting.id);
     setTutorialStep(4);
     setPage("Specimen Record");
-    announce("One day passed. Your cutting is ready for its guided mutation discovery.");
+    announce("One day passed. Your propagated specimen is ready for its guided mutation discovery.");
   }
 
   function discoverTutorialMutation() {
-    const cutting = specimens.find((item) => item.nickname === "First Cutting" || item.nickname === "First Mutation");
+    const cutting = specimens.find((item) => ["First Cutting", "First Corm", "First Mutation"].includes(item.nickname));
     if (!cutting) { announce("Propagate your first plant before discovering a mutation."); return; }
     setSpecimens((current) => current.map((item) => item.id === cutting.id
       ? { ...item, nickname: "First Mutation", variegation: Math.max(65, item.variegation), discovered: true, value: Math.max(item.value, 180) }
