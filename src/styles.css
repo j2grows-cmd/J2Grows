@@ -1978,3 +1978,43 @@ body{
 @media(max-width:850px){
   .sidebar .brand-logo-image{transform:translateX(7px)}
 }
+
+
+/* Guided tutorial: keep the game visible and spotlight the current action. */
+.tutorial-backdrop{
+  display:block;
+  padding:0;
+  background:rgba(5,8,5,.58);
+  backdrop-filter:none;
+  pointer-events:none;
+}
+.tutorial-dialog{
+  position:fixed;
+  z-index:1003;
+  right:clamp(16px,3vw,42px);
+  bottom:clamp(16px,3vh,34px);
+  width:min(440px,calc(100vw - 32px));
+  max-height:min(82vh,760px);
+  overflow:auto;
+  border-color:rgba(174,205,112,.6);
+  box-shadow:0 20px 70px rgba(0,0,0,.48),0 0 28px rgba(142,183,83,.14);
+  pointer-events:auto;
+  animation:tutorialCoachIn .2s ease-out;
+}
+.tutorial-spotlight-target{
+  position:relative!important;
+  z-index:1001!important;
+  border-radius:12px;
+  outline:3px solid #c8e889!important;
+  outline-offset:5px;
+  box-shadow:0 0 0 9px rgba(151,190,93,.2),0 0 34px rgba(194,229,126,.56)!important;
+  transition:box-shadow .18s ease,outline-color .18s ease;
+}
+.tutorial-close{pointer-events:auto}
+@keyframes tutorialCoachIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:680px){
+  .tutorial-dialog{right:12px;bottom:12px;width:calc(100vw - 24px);max-height:66vh}
+  .tutorial-content{padding:18px 20px}
+  .tutorial-progress-label{padding:14px 20px 8px}
+  .tutorial-progress-track{margin:0 20px}
+}
