@@ -129,7 +129,7 @@ function App() {
   const tutorialSteps: { page: Page; title: string; body: string; tip: string }[] = [
     { page: "Dashboard", title: "Name your institute", body: "Every great botanical institution starts with a name. Choose one that will appear throughout your nursery.", tip: "You can change this later by replaying the introduction or through the institution settings." },
     { page: "Plant Catalogue", title: "Acquire your first plant", body: "Choose an affordable starter species using its base price. This is your first living specimen and the source of your first propagation.", tip: "You start with £100 and can buy a common starter plant for around £10–£20." },
-    { page: "Specimen Record", title: "Propagate your first plant", body: "Create your first new specimen using a propagation method that fits your chosen plant. Costs vary by method and species rarity.", tip: "Most aroids can be propagated in several ways, but Alocasia uses corms rather than stem cuttings here." },
+    { page: "Specimen Record", title: "Practise propagation", body: "Use the protected mature demonstration plant to practise propagation straight away. Your ordinary shop purchase remains juvenile, and every normal corm or cutting still requires a mature parent.", tip: "Stem cuttings reset their parent to juvenile and trigger recovery. The demonstration plant is protected so it cannot be accidentally sold." },
     { page: "Greenhouse", title: "Give your new plant time to establish", body: "Advance one simulated day to let your new specimen establish and record its first growth cycle.", tip: "Growing conditions affect new growth, but they do not guarantee a particular outcome." },
     { page: "Specimen Record", title: "Record your first observation", body: "Record the new growth on your propagated plant. Observations build research evidence and help reveal variegation stability over time.", tip: "Mutations are rare and not guaranteed. Research improves your understanding rather than forcing a result." },
   ];
@@ -180,13 +180,35 @@ function App() {
     };
     specimen.value = specimenValue(specimen, plant.name);
     setCash((current) => current - cost);
-    setSpecimens((current) => [...current, specimen]);
-    setSelected(id);
     if (starter) {
+      // A protected mature demonstration specimen lets the tutorial teach propagation
+      // without bypassing the normal maturity requirement for ordinary shop plants.
+      const demoId = `J2G-DEMO-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+      const demonstration: Specimen = {
+        ...specimen,
+        id: demoId,
+        nickname: `Tutorial Demonstration · ${plant.name}`,
+        location: "Tutorial Greenhouse",
+        health: 100,
+        stage: "Mature",
+        stageDays: 21,
+        value: 0,
+        purchasePrice: undefined,
+        protected: true,
+        propagation: undefined,
+        genetics: createSpecimenGenetics(0),
+      };
+      demonstration.value = specimenValue(demonstration, plant.name);
+      setSpecimens((current) => [...current, specimen, demonstration]);
+      setSelected(demoId);
       setTutorialStep(2);
       setPage("Specimen Record");
+      announce(`${plant.name} acquired. A protected mature demonstration plant is ready for the tutorial; normal shop plants remain juvenile.`);
+    } else {
+      setSpecimens((current) => [...current, specimen]);
+      setSelected(id);
+      announce(`${plant.name} acquired for ${money(cost)}. Its base price is ${money(cost)}; individual value will change with growth and genetics.`);
     }
-    announce(`${plant.name} acquired for ${money(cost)}. Its base price is ${money(cost)}; individual value will change with growth and genetics.`);
   }
 
   function acquireStarterPlant() {
@@ -221,7 +243,18 @@ function App() {
     };
     offspring.value = specimenValue(offspring);
     setCash((current) => current - cost);
-    setSpecimens((current) => [...current, offspring]);
+    setSpecimens((current) => {
+      const updated = current.map((item) => item.id !== parent.id ? item : isAlocasia ? item : {
+        ...item,
+        stage: "Juvenile" as const,
+        stageDays: 0,
+        health: Math.max(35, item.health - 15),
+        location: "Recovery · Greenhouse",
+      });
+      const recoveringParent = updated.find((item) => item.id === parent.id);
+      if (recoveringParent && !isAlocasia) recoveringParent.value = specimenValue(recoveringParent);
+      return [...updated, offspring];
+    });
     setSelected(offspring.id);
     setTutorialStep(3);
     setPage("Greenhouse");
