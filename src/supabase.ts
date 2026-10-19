@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { makeStorageSpecies, species as prototypeSpecies, type Species } from "./data";
 import { getSpeciesEconomy } from "./game/catalog";
+import { normalizeSpeciesRows, type ValidatedSpeciesRow } from "./game/supabase-catalog";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -13,20 +14,7 @@ export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
-type SpeciesRow = {
-  id: string;
-  name: string;
-  scientific_name: string | null;
-  family: string | null;
-  difficulty: Species["difficulty"] | null;
-  rarity: Species["rarity"] | null;
-  image_path: string;
-  summary: string | null;
-  light: string | null;
-  humidity: string | null;
-  water: string | null;
-  traits: string[];
-};
+type SpeciesRow = ValidatedSpeciesRow;
 
 function fromSpeciesRow(row: SpeciesRow): Species {
   const local = prototypeSpecies.find((plant) => plant.id === row.id);
@@ -60,7 +48,12 @@ export async function loadSpeciesCatalog(): Promise<{ species: Species[]; source
     .order("name");
 
   if (!tableError && rows?.length) {
-    return { species: (rows as SpeciesRow[]).map(fromSpeciesRow), source: "supabase" };
+    const validatedRows = normalizeSpeciesRows(rows);
+    if (validatedRows.length) {
+      if (validatedRows.length !== rows.length) console.warn(`Skipped ${rows.length - validatedRows.length} invalid or duplicate Supabase species row(s).`);
+      return { species: validatedRows.map(fromSpeciesRow), source: "supabase" };
+    }
+    console.warn("Supabase returned no valid species rows; falling back to Storage folders.");
   }
   if (tableError) console.warn("Could not load the species table; falling back to Storage folders.", tableError.message);
 
@@ -88,8 +81,8 @@ export async function loadSpeciesCatalog(): Promise<{ species: Species[]; source
         const { data: files, error: listError } = await supabase.storage.from("plant-images").list(folderPath, { limit: 100 });
         if (listError) return makeStorageSpecies(name, "");
 
-        const imageFile = files?.find((file) => file.name === "hero.png")
-          ?? files?.find((file) => /\.(png|jpe?g|webp|avif)$/i.test(file.name));
+        const imageFile = files?.find((file) => file.id !== null && file.name === "hero.png" && /\.(png|jpe?g|webp|avif)$/i.test(file.name))
+          ?? files?.find((file) => file.id !== null && /\.(png|jpe?g|webp|avif)$/i.test(file.name));
         imagePath = imageFile ? `${folderPath}/${imageFile.name}` : "";
       }
       const imageUrl = imagePath ? supabase.storage.from("plant-images").getPublicUrl(imagePath).data.publicUrl : "";
