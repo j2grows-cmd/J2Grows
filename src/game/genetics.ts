@@ -206,7 +206,7 @@ export function calculateSpecimenValue(input: {
   discoveryBonus?: number;
 }): number {
   const strengthFactor = 1 + clamp(input.variegationStrength) / 100 * 1.25;
-  const stabilityFactor = 0.7 + clamp(input.stability) / 100 * 0.8;
+  const stabilityFactor = clamp(input.variegationStrength) > 0 ? 0.7 + clamp(input.stability) / 100 * 0.8 : 1;
   const geneticsFactor = Math.min(2, Math.max(1, input.geneticsBonus ?? 1));
   const discoveryFactor = Math.max(1, input.discoveryBonus ?? 1);
   const raw = input.basePrice * calculateHealthFactor(input.health) * calculateMaturityFactor(input.stage)
