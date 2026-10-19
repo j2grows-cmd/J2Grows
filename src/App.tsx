@@ -10,6 +10,7 @@ import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeS
 import { createUniqueSpecimenId } from "./game/specimen-id.ts";
 import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, normalizeFacilityLevels, propagationDaysRequired, weeklyFacilityOperatingCost, type FacilityLevels, type FacilityName } from "./game/facilities.ts";
 import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, startStaffTraining, STAFF_TRAINING_COST, weeklyStaffOperatingCost, type StaffState } from "./game/staff.ts";
+import { getOfflineProgressDays } from "./game/offline-progress.ts";
 import { loadSpeciesCatalog } from "./supabase";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
 import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, observePlant, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
@@ -55,7 +56,7 @@ function Metric({ label, value, detail, icon: Icon, tone = "green" }: { label: s
 }
 
 type GameSave = {
-  version: 1 | 2 | 3 | 4 | 5 | 6;
+  version: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   specimens: Specimen[];
   breedingProjects: BreedingProject[];
   cash: number;
@@ -70,6 +71,7 @@ type GameSave = {
   researchUnlocks?: string[];
   facilityLevels?: FacilityLevels;
   staffState?: StaffState;
+  offlineProgressEnabled?: boolean;
 };
 
 const SAVE_KEY = "j2grows.prototype.save.v1";
@@ -79,17 +81,12 @@ function loadGameSave(): GameSave & { offlineDays: number } {
     const raw = localStorage.getItem(SAVE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<GameSave>;
-      if ((parsed.version === 1 || parsed.version === 2 || parsed.version === 3 || parsed.version === 4 || parsed.version === 5 || parsed.version === 6) && Array.isArray(parsed.specimens) && typeof parsed.cash === "number" && typeof parsed.research === "number" && typeof parsed.day === "number" && typeof parsed.savedAt === "number") {
-        const offlineDays = Math.min(14, Math.floor(Math.max(0, Date.now() - parsed.savedAt) / (10 * 60 * 1000)));
-        const days = offlineDays;
-        const savedEnvironment = parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT };
+      if ((parsed.version === 1 || parsed.version === 2 || parsed.version === 3 || parsed.version === 4 || parsed.version === 5 || parsed.version === 6 || parsed.version === 7) && Array.isArray(parsed.specimens) && typeof parsed.cash === "number" && typeof parsed.research === "number" && typeof parsed.day === "number" && typeof parsed.savedAt === "number") {
+        const offlineProgressEnabled = parsed.offlineProgressEnabled !== false;
+        const offlineDays = getOfflineProgressDays(parsed.savedAt, Date.now(), offlineProgressEnabled);
         const savedFacilityLevels = normalizeFacilityLevels(parsed.facilityLevels);
         const savedStaffState = normalizeStaffState(parsed.staffState);
-        const progressedEnvironment = applyEnvironmentalController(savedEnvironment, savedFacilityLevels.environmentalController);
-        const offlineStaffStates: StaffState[] = [];
-        let progressedStaffState = savedStaffState;
-        for (let elapsed = 0; elapsed < days; elapsed += 1) { progressedStaffState = advanceStaffDay(progressedStaffState); offlineStaffStates.push(progressedStaffState); }
-        const progressedSpecimens = parsed.specimens.map((specimen) => {
+        const normalizedSpecimens = parsed.specimens.map((specimen) => {
           let current = { ...specimen };
           if (current.genetics && typeof current.genetics.genetics.mutationGenePresent !== "boolean") {
             current.genetics = { ...current.genetics, genetics: { ...current.genetics.genetics, mutationGenePresent: Math.random() < 0.2 } };
@@ -97,41 +94,25 @@ function loadGameSave(): GameSave & { offlineDays: number } {
           if (current.genetics) {
             current.genetics = { ...current.genetics, research: { ...current.genetics.research, mutations: current.genetics.research.mutations.map((mutation) => ({ ...mutation, strength: typeof mutation.strength === "number" ? mutation.strength : 20 })) } };
           }
-          if (current.dead || current.health <= 0) return { ...current, health: 0, dead: true };
-          const genus = findSpecies(current.speciesId).latin.split(" ")[0].toLowerCase();
-          const speciesFactor = genus === "anthurium" ? 1.25 : genus === "alocasia" ? 1.1 : ["monstera", "philodendron"].includes(genus) ? 0.9 : 1;
-          for (let elapsed = 0; elapsed < days; elapsed += 1) {
-            const staffCondition = effectiveStaffCareCondition(progressedEnvironment, offlineStaffStates[elapsed] ?? savedStaffState);
-            const effectiveCondition = progressedEnvironment.autoCare ? Math.max(60, staffCondition) : staffCondition;
-            const health = Math.max(0, Math.min(100, effectiveCondition < 35 ? current.health - 5 : effectiveCondition < 50 ? current.health - 2 : effectiveCondition >= 75 && current.health < 100 ? current.health + 2 : current.health));
-            if (health <= 0) { current = { ...current, health: 0, dead: true }; break; }
-            let stage = current.stage;
-            let stageDays = (current.stageDays ?? 0) + 1;
-            const conditionFactor = effectiveCondition < 45 ? 1.5 : effectiveCondition < 65 ? 1.2 : effectiveCondition >= 85 ? 0.85 : 1;
-            if (stage === "Corm / Seedling" && health >= 40 && stageDays >= 5) { stage = "Juvenile"; stageDays = 0; }
-            else if (stage === "Juvenile" && health >= 40 && stageDays >= Math.ceil(10 * speciesFactor * conditionFactor)) { stage = "Growing"; stageDays = 0; }
-            else if (stage === "Growing" && health >= 50 && stageDays >= Math.ceil(21 * speciesFactor * conditionFactor)) { stage = "Mature"; stageDays = 0; }
-            else if (stage === "Mature" && health >= 70 && stageDays >= Math.ceil(14 * speciesFactor * conditionFactor)) { stage = "Breeding-ready"; stageDays = 0; }
-            current = { ...current, health, stage, stageDays };
-          }
           return current;
         });
         return {
-          version: 6,
-          specimens: progressedSpecimens,
+          version: 7,
+          specimens: normalizedSpecimens,
           breedingProjects: Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects : [],
           researchUnlocks: Array.isArray(parsed.researchUnlocks) ? parsed.researchUnlocks.filter((item): item is string => typeof item === "string") : [],
           cash: parsed.cash,
           research: parsed.research,
-          day: parsed.day + days,
-          projectStarted: Boolean(parsed.projectStarted && typeof parsed.analysisTargetSpecimenId === "string" && typeof parsed.analysisStartedDay === "number" && parsed.day + days - parsed.analysisStartedDay < 3),
-          analysisTargetSpecimenId: typeof parsed.analysisTargetSpecimenId === "string" && parsed.day + days - (parsed.analysisStartedDay ?? parsed.day) < 3 ? parsed.analysisTargetSpecimenId : undefined,
-          analysisStartedDay: typeof parsed.analysisStartedDay === "number" && parsed.day + days - parsed.analysisStartedDay < 3 ? parsed.analysisStartedDay : undefined,
+          day: parsed.day,
+          projectStarted: Boolean(parsed.projectStarted && typeof parsed.analysisTargetSpecimenId === "string" && typeof parsed.analysisStartedDay === "number" && parsed.day - parsed.analysisStartedDay < 3),
+          analysisTargetSpecimenId: typeof parsed.analysisTargetSpecimenId === "string" && parsed.day - (parsed.analysisStartedDay ?? parsed.day) < 3 ? parsed.analysisTargetSpecimenId : undefined,
+          analysisStartedDay: typeof parsed.analysisStartedDay === "number" && parsed.day - parsed.analysisStartedDay < 3 ? parsed.analysisStartedDay : undefined,
           savedAt: Date.now(),
           analysisEquipmentLevel: typeof parsed.analysisEquipmentLevel === "number" ? Math.max(0, Math.min(3, Math.floor(parsed.analysisEquipmentLevel))) : 0,
           greenhouseEnvironment: parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT },
           facilityLevels: savedFacilityLevels,
-          staffState: progressedStaffState,
+          staffState: savedStaffState,
+          offlineProgressEnabled,
           offlineDays,
         };
       }
@@ -139,9 +120,8 @@ function loadGameSave(): GameSave & { offlineDays: number } {
   } catch {
     // A malformed or unavailable local save falls back to a fresh prototype save.
   }
-  return { version: 6, specimens: [], breedingProjects: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, greenhouseEnvironment: { ...DEFAULT_ENVIRONMENT }, facilityLevels: { propagationBench: 0, environmentalController: 0 }, staffState: { ...DEFAULT_STAFF_STATE }, offlineDays: 0 };
+  return { version: 7, specimens: [], breedingProjects: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, greenhouseEnvironment: { ...DEFAULT_ENVIRONMENT }, facilityLevels: { propagationBench: 0, environmentalController: 0 }, staffState: { ...DEFAULT_STAFF_STATE }, offlineProgressEnabled: true, offlineDays: 0 };
 }
-
 function App() {
   const loadedSave = useMemo(() => loadGameSave(), []);
   const [catalogSpecies, setCatalogSpecies] = useState<Species[]>(prototypeSpecies);
@@ -165,6 +145,8 @@ function App() {
   const [greenhouseEnvironment, setGreenhouseEnvironment] = useState<PlantEnvironment>(loadedSave.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
   const [facilityLevels, setFacilityLevels] = useState<FacilityLevels>(loadedSave.facilityLevels ?? { propagationBench: 0, environmentalController: 0 });
   const [staffState, setStaffState] = useState<StaffState>(normalizeStaffState(loadedSave.staffState));
+  const [offlineProgressEnabled, setOfflineProgressEnabled] = useState(loadedSave.offlineProgressEnabled !== false);
+  const [offlineDaysRemaining, setOfflineDaysRemaining] = useState(loadedSave.offlineDays);
   const [saveSlots, setSaveSlots] = useState<Record<string, GameSave | null>>(() => {
     try { return JSON.parse(localStorage.getItem("j2grows.manual-save-slots.v1") || '{"1":null,"2":null,"3":null}') as Record<string, GameSave | null>; }
     catch { return { "1": null, "2": null, "3": null }; }
@@ -372,20 +354,29 @@ function App() {
   }
   useEffect(() => {
     try {
-      const save: GameSave = { version: 6, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, savedAt: Date.now() };
+      const save: GameSave = { version: 7, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, offlineProgressEnabled, savedAt: Date.now() };
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     } catch {
       setNotice("Local save unavailable. Your progress may not persist in this browser.");
     }
-  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState]);
+  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, offlineProgressEnabled]);
 
   useEffect(() => {
     try { localStorage.setItem("j2grows.manual-save-slots.v1", JSON.stringify(saveSlots)); }
     catch { setNotice("Manual save slots could not be written to browser storage."); }
   }, [saveSlots]);
 
+  function toggleOfflineProgress() {
+    setOfflineProgressEnabled((enabled) => {
+      const nextEnabled = !enabled;
+      if (!nextEnabled) setOfflineDaysRemaining(0);
+      announce(nextEnabled ? "Offline progress enabled: one in-game day per real-life hour, capped at 14 days." : "Offline progress disabled. No days will pass while you are away.");
+      return nextEnabled;
+    });
+  }
+
   function saveToSlot(slot: string) {
-    const save: GameSave = { version: 6, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, savedAt: Date.now() };
+    const save: GameSave = { version: 7, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, offlineProgressEnabled, savedAt: Date.now() };
     setSaveSlots((current) => ({ ...current, [slot]: save }));
     announce(`Saved the current game to slot ${slot}.`);
   }
@@ -401,6 +392,8 @@ function App() {
     setGreenhouseEnvironment(save.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
     setFacilityLevels(normalizeFacilityLevels(save.facilityLevels));
     setStaffState(normalizeStaffState(save.staffState));
+    setOfflineProgressEnabled(save.offlineProgressEnabled !== false);
+    setOfflineDaysRemaining(0);
     setSelected(save.specimens[0]?.id ?? "");
     announce(`Loaded save slot ${slot}.`);
   }
@@ -434,6 +427,8 @@ function App() {
     setAnalysisEquipmentLevel(0);
     setFacilityLevels({ propagationBench: 0, environmentalController: 0 });
     setStaffState({ ...DEFAULT_STAFF_STATE });
+    setOfflineProgressEnabled(true);
+    setOfflineDaysRemaining(0);
     setSelected("");
     setInstituteName("");
     setInstituteNameDraft("");
@@ -651,6 +646,20 @@ function App() {
     const timer = window.setInterval(() => advanceDay(), 10 * 60 * 1000);
     return () => window.clearInterval(timer);
   }, [day, specimens, greenhouseEnvironment, breedingProjects, research, analysisEquipmentLevel, researchUnlocks, projectStarted, facilityLevels, staffState]);
+
+  // Offline catch-up calls the exact same daily simulation as normal play.
+  // Process one queued day per render so each iteration sees the previous day's state.
+  useEffect(() => {
+    if (!offlineProgressEnabled || offlineDaysRemaining <= 0) return;
+    advanceDay();
+    setOfflineDaysRemaining((remaining) => Math.max(0, remaining - 1));
+  }, [offlineProgressEnabled, offlineDaysRemaining, day, specimens, greenhouseEnvironment, breedingProjects, research, analysisEquipmentLevel, researchUnlocks, projectStarted, facilityLevels, staffState]);
+
+  useEffect(() => {
+    if (offlineProgressEnabled && offlineDaysRemaining === 0 && loadedSave.offlineDays > 0) {
+      announce(`Welcome back. ${loadedSave.offlineDays} simulated day(s) of offline progress applied (maximum 14 days).`);
+    }
+  }, [offlineProgressEnabled, offlineDaysRemaining, loadedSave.offlineDays]);
 
   function observeSelectedSpecimen() {
     if (!activeSpecimen) return;
@@ -918,7 +927,7 @@ function App() {
         {page === "Staff" && <StaffPage cash={cash} staffState={staffState} onToggleCare={() => setStaffState((current) => ({ ...current, routineCareEnabled: !current.routineCareEnabled }))} onStartTraining={() => { if (!canStartStaffTraining(cash, staffState)) { announce(cash < STAFF_TRAINING_COST ? `Training costs ${money(STAFF_TRAINING_COST)}.` : staffState.trainingLevel >= 3 ? "Your assistant has reached the maximum training level." : "Training is already in progress."); return; } const next = startStaffTraining(staffState); if (!next) return; setCash((current) => current - STAFF_TRAINING_COST); setStaffState(next); announce(`Basic plant-care training started for ${money(STAFF_TRAINING_COST)}. It completes after ${next.trainingDaysRemaining} simulated days.`); }} /> }
         {page === "Shop" && <ShopPage specimens={specimens} species={catalogSpecies} cash={cash} day={day} onBuy={purchaseSpecies} onSell={sellSpecimen} />}
         {page === "Finances" && <FinancesPage cash={cash} specimens={specimens} />}
-        {page === "Settings" && <SettingsPage onReplayTutorial={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} onResetGame={resetGame} day={day} specimensCount={specimens.length} catalogSource={catalogSource} saveSlots={saveSlots} onSaveSlot={saveToSlot} onLoadSlot={loadFromSlot} />}
+        {page === "Settings" && <SettingsPage onReplayTutorial={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} onResetGame={resetGame} day={day} specimensCount={specimens.length} catalogSource={catalogSource} saveSlots={saveSlots} onSaveSlot={saveToSlot} onLoadSlot={loadFromSlot} offlineProgressEnabled={offlineProgressEnabled} onToggleOfflineProgress={toggleOfflineProgress} />}
       </div>
       <footer className="app-footer"><span>J2Grows <span className="footer-separator">/</span> Prototype 0.1</span><span>All specimen and economic values are early prototype data.</span><span><span className="online-dot" /> Offline-first</span></footer>
     </main>
@@ -1037,12 +1046,13 @@ function FinancesPage({ cash, specimens }: { cash: number; specimens: Specimen[]
 export default App;
 
 
-function SettingsPage({ onReplayTutorial, onResetGame, day, specimensCount, catalogSource, saveSlots, onSaveSlot, onLoadSlot }: { onReplayTutorial: () => void; onResetGame: () => void; day: number; specimensCount: number; catalogSource: "supabase" | "local"; saveSlots: Record<string, GameSave | null>; onSaveSlot: (slot: string) => void; onLoadSlot: (slot: string) => void }) {
+function SettingsPage({ onReplayTutorial, onResetGame, day, specimensCount, catalogSource, saveSlots, onSaveSlot, onLoadSlot, offlineProgressEnabled, onToggleOfflineProgress }: { onReplayTutorial: () => void; onResetGame: () => void; day: number; specimensCount: number; catalogSource: "supabase" | "local"; saveSlots: Record<string, GameSave | null>; onSaveSlot: (slot: string) => void; onLoadSlot: (slot: string) => void; offlineProgressEnabled: boolean; onToggleOfflineProgress: () => void }) {
   return <div className="settings-layout">
     <section className="panel settings-panel"><div className="settings-heading"><div className="settings-icon"><Settings size={21} /></div><div><h2>Game settings</h2><p>Manage your J2Grows prototype experience.</p></div></div>
       <div className="settings-row"><div><strong>Getting started guide</strong><p>Replay the seven-step introduction to the nursery, collection and gameplay systems.</p></div><button className="button button-quiet" onClick={onReplayTutorial}><BookOpen size={15} /> Replay tutorial</button></div>
       <div className="settings-row"><div><strong>Species catalogue</strong><p>Current catalogue source: <span className="settings-status">{catalogSource === "supabase" ? "Supabase connected" : "Local prototype data"}</span></p></div><span className={`pill ${catalogSource === "supabase" ? "" : "subtle-pill"}`}>{catalogSource === "supabase" ? "Connected" : "Fallback mode"}</span></div>
       <div className="settings-row"><div><strong>Local save</strong><p>Your progress is stored in this browser. It is not currently synced between devices.</p></div><span className="settings-status"><span className="online-dot" /> Autosaving</span></div>
+      <div className="settings-row"><div><strong>Offline progression</strong><p>When enabled, one in-game day passes for each real-life hour away, up to 14 days (336 hours). Growth, propagation, breeding, mutation events, analysis, staff training and weekly costs use the same daily simulation as when you are playing. Turning this off pauses all progress while you are away.</p></div><button className={`button ${offlineProgressEnabled ? "button-primary" : "button-quiet"}`} aria-pressed={offlineProgressEnabled} onClick={onToggleOfflineProgress}>{offlineProgressEnabled ? "Enabled · Turn off" : "Disabled · Turn on"}</button></div>
       <div className="settings-row"><div><strong>Manual save slots</strong><p>Keep up to three named progression snapshots in this browser, including greenhouse settings and active breeding projects.</p></div><div className="save-slots">{["1","2","3"].map((slot) => <div className="save-slot" key={slot}><span>Slot {slot} · {saveSlots[slot] ? `Day ${saveSlots[slot]!.day}` : "Empty"}</span><button className="button button-quiet" onClick={() => onSaveSlot(slot)}>Save</button><button className="button button-quiet" disabled={!saveSlots[slot]} onClick={() => onLoadSlot(slot)}>Load</button></div>)}</div></div>
       <div className="settings-row"><div><strong>Current session</strong><p>Simulation day {day} · {specimensCount} individual specimens</p></div><span className="pill">Prototype 0.1</span></div>
     </section>
