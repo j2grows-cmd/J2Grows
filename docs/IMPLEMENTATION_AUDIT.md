@@ -47,10 +47,11 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **CI:** Passed on code commit `bc358b86` (`npm test`, `npm run typecheck`, `npm run build`).
 - **Remaining check:** Browser-test greenhouse edit → navigate away/reload → settings retained, plus training completion and weekly costs.
 
-### A07. “Advance day” has no coherent time/economy model
-- **Evidence:** Every click adds 25 research and improves some plant health; it does not apply growth stages, costs, research completion, plant needs or greenhouse conditions. Offline progress separately grants the same research and health increments.
-- **Impact:** Repeated clicks are a free resource exploit; the displayed simulation is not connected to most management systems.
-- **Recommended fix:** Centralise day progression in a simulation function with explicit rules and tests. Separate research points from cash costs, define health/growth rules, and make manual/offline progression use the same rules.
+### A07. Online and offline day progression are not equivalent — unresolved
+- **Current online behaviour:** `advanceDay` processes health, growth stages, propagation phases, mutation events, breeding completion/failure, Mutation Analysis completion, staff training, and weekly operating costs.
+- **Current offline behaviour:** `loadGameSave` separately advances health and ordinary growth stages and progresses staff training. It does not simulate propagation phases, breeding completion/failure, mutations, Mutation Analysis completion or weekly operating costs for the elapsed offline days.
+- **Impact:** Reloading after elapsed time can produce different outcomes from advancing the same number of days manually. Projects may remain overdue, propagation may stall during offline time, and costs/events can be skipped.
+- **Recommended fix:** Either centralise daily simulation so online and capped offline progression share the same rules, or explicitly restrict offline progression to a documented subset and reconcile/report all skipped systems.
 
 ### A08. Save validation is too shallow
 - **Evidence:** `loadGameSave` checks top-level types and `Array.isArray(specimens)`, then trusts each specimen's fields and numeric ranges. Malformed but parseable local data can introduce missing health, invalid species IDs or bad values into the UI.
@@ -108,7 +109,7 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 
 1. **A01** — first plant acquisition; otherwise the new-game state is a softlock.
 2. **A02, A03, A04** — correct breeding, research and identity rules.
-3. **A07, A08** — coherent simulation and save validation.
+3. **A07, A08** — reconcile offline simulation and validate imported save state.
 4. **A09, A10, A11** — catalogue robustness and truthful connection status.
 5. **A12, A13, A15, A16, A17** — tutorial/UI/documentation and regression coverage.
 
