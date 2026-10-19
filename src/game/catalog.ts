@@ -141,4 +141,8 @@ export const SHOP_APPEARANCE_CHANCE: Record<RarityTier, number> = {
   Mythic: 0.01,
 };
 
+export function getShopAvailability(rarity: RarityTier, random: () => number = Math.random): boolean {
+  return random() < SHOP_APPEARANCE_CHANCE[rarity];
+}
+
 export const STARTING_CASH = 100;
