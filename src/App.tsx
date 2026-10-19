@@ -111,8 +111,8 @@ function loadGameSave(): GameSave & { offlineDays: number; recoveryNotice: strin
     const droppedProjects = Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects.length - validProjects.length : 0;
     const offlineProgressEnabled = parsed.offlineProgressEnabled !== false;
     const offlineDays = getOfflineProgressDays(parsed.savedAt as number, Date.now(), offlineProgressEnabled);
-    const savedFacilityLevels = normalizeFacilityLevels(parsed.facilityLevels);
-    const savedStaffState = normalizeStaffState(parsed.staffState);
+    const savedFacilityLevels = normalizeFacilityLevels(parsed.facilityLevels as Partial<FacilityLevels> | null | undefined);
+    const savedStaffState = normalizeStaffState(parsed.staffState as Partial<StaffState> | null | undefined);
     const noticeParts: string[] = [];
     if (recovered.dropped || recovered.repaired || droppedProjects) {
       backupRawSave(raw, `Recovered save: skipped ${recovered.dropped} invalid/duplicate specimen(s), repaired ${recovered.repaired} specimen(s), and skipped ${droppedProjects} invalid breeding project(s).`);
