@@ -1,14 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { SPECIES_ECONOMY, getSpeciesEconomy, STARTING_CASH } from "../src/game/catalog.ts";
+import { species } from "../src/data.ts";
 import { calculateHealthFactor, calculateMaturityFactor, calculateSpecimenValue, environmentalSuitability, getShopAvailability, growVariegation, inheritGenetics, observePlant, analyseGenetics } from "../src/game/genetics.ts";
 
 test("catalogue has exactly 99 unique species and positive prices", () => {
   assert.equal(SPECIES_ECONOMY.length, 99);
+  assert.equal(species.length, 99, "offline catalogue should expose all 99 priced species");
   assert.equal(new Set(SPECIES_ECONOMY.map((item) => item.name.toLowerCase())).size, 99);
   assert.ok(SPECIES_ECONOMY.every((item) => item.basePrice > 0));
   assert.equal(STARTING_CASH, 100);
   assert.equal(getSpeciesEconomy("Alocasia Amazonica")?.basePrice, 15);
+  assert.equal(getSpeciesEconomy("philodendron-luxurians")?.basePrice, 45);
 });
 
 test("health and maturity valuation bands follow the proposed rules", () => {
@@ -28,6 +31,7 @@ test("strong stable variegation is worth more than weak unstable variegation", (
   const strong = calculateSpecimenValue({ ...base, variegationStrength: 80, stability: 90 });
   const weak = calculateSpecimenValue({ ...base, variegationStrength: 15, stability: 25 });
   assert.ok(strong > weak);
+  assert.equal(calculateSpecimenValue({ ...base, variegationStrength: 0, stability: 20 }), 20, "base price is neutral for a non-variegated juvenile");
   assert.equal(calculateSpecimenValue({ ...base, variegationStrength: 80, stability: 90, health: 0 }), 0);
 });
 
