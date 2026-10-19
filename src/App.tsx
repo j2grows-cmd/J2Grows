@@ -418,7 +418,7 @@ function App() {
   }
 
   function saveToSlot(slot: string) {
-    const save: GameSave = { version: 7, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, offlineProgressEnabled, savedAt: Date.now() };
+    const save: GameSave = { version: 8, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, offlineProgressEnabled, savedAt: Date.now() };
     setSaveSlots((current) => ({ ...current, [slot]: save }));
     announce(`Saved the current game to slot ${slot}.`);
   }
