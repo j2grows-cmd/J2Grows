@@ -10,7 +10,7 @@ import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeS
 import { loadSpeciesCatalog } from "./supabase";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
 import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, observePlant, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
-import { breedingDurationDays, breedingFailureChance, calculateBreedingCost, canBreed, inheritTraits, mutationOccurs, type BreedingProject, RESEARCH_TREE, canUnlockResearch, unlockResearch } from "./game/progression";
+import { applyTraitTargeting, breedingDurationDays, breedingFailureChance, calculateBreedingCost, calculateTargetedBreedingCost, calculateTargetedFailureChance, canBreed, inheritTraits, mutationOccurs, type BreedingProject, type TargetableTrait, RESEARCH_TREE, canUnlockResearch, unlockResearch } from "./game/progression";
 
 type PropagationMethod = "cutting" | "division" | "corm" | "tissue-culture";
 
@@ -532,7 +532,7 @@ function App() {
       }
       const recordA = parentA.genetics ?? createSpecimenGenetics(parentA.variegation);
       const recordB = parentB.genetics ?? createSpecimenGenetics(parentB.variegation);
-      const inherited = inheritTraits(recordA.genetics, recordB.genetics);
+      const inherited = applyTraitTargeting(inheritTraits(recordA.genetics, recordB.genetics), recordA.genetics, recordB.genetics, project.targetTrait);
       const generation = Math.max(parentA.generation ?? 0, parentB.generation ?? 0) + 1;
       const inheritedMutationIds = inherited.mutationIds;
       const stabilityGenerations = Object.fromEntries(inheritedMutationIds.map((mutationId) => [mutationId, Math.max(parentA.stabilityGenerations?.[mutationId] ?? 0, parentB.stabilityGenerations?.[mutationId] ?? 0) + 1]));
@@ -559,7 +559,7 @@ function App() {
       completedChildren.push(child);
       if (researchUnlocks.includes("batch-breeding")) {
         for (let batchIndex = 2; batchIndex <= 3; batchIndex += 1) {
-          const batchProfile = inheritTraits(recordA.genetics, recordB.genetics);
+          const batchProfile = applyTraitTargeting(inheritTraits(recordA.genetics, recordB.genetics), recordA.genetics, recordB.genetics, project.targetTrait);
           const batchChild: Specimen = {
             ...child,
             id: `${childId}-B${batchIndex}`,
@@ -775,7 +775,7 @@ function App() {
     announce(`${specimen.nickname} sold for ${money(specimen.value)}.`);
   }
 
-  function runCross(parentAId: string, parentBId: string, targetTrait?: "variegationPotential" | "stability" | "growthPotential" | "hiddenPotential") {
+  function runCross(parentAId: string, parentBId: string, targetTrait?: TargetableTrait) {
     const parentA = specimens.find((item) => item.id === parentAId);
     const parentB = specimens.find((item) => item.id === parentBId);
     if (!parentA || !parentB || parentA.id === parentB.id) {
@@ -796,7 +796,9 @@ function App() {
     }
     const rarityA = (getSpeciesEconomy(speciesA.id)?.rarity ?? speciesA.rarity) as RarityTier;
     const rarityB = (getSpeciesEconomy(speciesB.id)?.rarity ?? speciesB.rarity) as RarityTier;
-    const cost = calculateBreedingCost(rarityA, rarityB, 1, researchUnlocks.includes("selective-breeding") ? 10 : 0);
+    const targeted = Boolean(targetTrait && researchUnlocks.includes("inheritance-mapping"));
+    const baseCost = calculateBreedingCost(rarityA, rarityB, 1, researchUnlocks.includes("selective-breeding") ? 10 : 0);
+    const cost = calculateTargetedBreedingCost(baseCost, targeted);
     if (cash < cost) {
       announce(`This breeding project costs ${money(cost)}. You currently have ${money(cash)}.`);
       return;
@@ -807,9 +809,9 @@ function App() {
       id, parentAId, parentBId, startedDay: day,
       completesOnDay: day + breedingDurationDays(5, researchUnlocks.includes("selective-breeding") ? 15 : 0),
       cost, status: "active",
-      failureChance: breedingFailureChance(researchUnlocks.includes("selective-breeding") ? 3 : 0, condition),
+      failureChance: calculateTargetedFailureChance(breedingFailureChance(researchUnlocks.includes("selective-breeding") ? 3 : 0, condition), targeted),
       lineId: `LINE-${Date.now().toString(36).toUpperCase()}`,
-      targetTrait: researchUnlocks.includes("inheritance-mapping") ? targetTrait : undefined,
+      targetTrait: targeted ? targetTrait : undefined,
     };
     setCash((current) => current - cost);
     setBreedingProjects((current) => [...current, project]);
@@ -948,13 +950,15 @@ function BreedingPage({ specimens, researchUnlocks, projects, day, traitTargetin
   const selectedB = specimens.find((item) => item.id === parentB);
   const compatible = eligible.filter((item) => item.id !== parentA && genus(item.id) === genus(parentA));
   const rarityOf = (item: Specimen | undefined) => item ? (getSpeciesEconomy(item.speciesId)?.rarity ?? findSpecies(item.speciesId).rarity) as RarityTier : "Common" as RarityTier;
-  const cost = selectedA && selectedB ? calculateBreedingCost(rarityOf(selectedA), rarityOf(selectedB), 1, researchUnlocks.includes("selective-breeding") ? 10 : 0) : 0;
+  const baseCost = selectedA && selectedB ? calculateBreedingCost(rarityOf(selectedA), rarityOf(selectedB), 1, researchUnlocks.includes("selective-breeding") ? 10 : 0) : 0;
+  const targetingEnabled = traitTargetingUnlocked && Boolean(selectedA && selectedB);
+  const cost = calculateTargetedBreedingCost(baseCost, traitTargetingUnlocked);
   const duration = breedingDurationDays(5, researchUnlocks.includes("selective-breeding") ? 15 : 0);
   return <div className="two-column-layout"><section className="panel"><SectionHeader title="Breeding workbench" subtitle="Only healthy, available breeding-ready plants can be committed to a timed project." />
     {eligible.length < 2 && <p className="muted-copy">You need at least two healthy breeding-ready specimens from the same genus. Grow plants through Mature and into Breeding-ready first.</p>}
     <div className="breeding-parent-grid">{[{ label: "Parent A", value: parentA, set: setParentA, options: eligible }, { label: "Parent B", value: parentB, set: setParentB, options: compatible }].map((parent) => <div className="parent-picker" key={parent.label}><span className="filter-heading">{parent.label.toUpperCase()}</span><select value={parent.value} onChange={(event) => parent.set(event.target.value)}><option value="">Choose a parent</option>{parent.options.map((item) => <option key={item.id} value={item.id}>{item.nickname} · {findSpecies(item.speciesId).name} · {item.stage}</option>)}</select>{parent.value && specimens.find((item) => item.id === parent.value) && <PlantArt type={findSpecies(specimens.find((item) => item.id === parent.value)!.speciesId).image} large />}</div>)}</div>
-    <div className="experiment-summary"><div><span>Method</span><strong>Timed genetic cross</strong></div><div><span>Project cost</span><strong>{money(cost)}</strong></div><div><span>Duration</span><strong>{duration} simulation days</strong></div></div>
-    <p className="muted-copy">Traits follow defined inheritance rules with bounded variation. Mutations are rare, and discoveries require recorded evidence. Parents remain reserved until the project finishes.</p>{traitTargetingUnlocked ? <div className="control-row"><label htmlFor="trait-target">Research-unlocked target trait</label><select id="trait-target" value={targetTrait} onChange={(event) => setTargetTrait(event.target.value as typeof targetTrait)}><option value="variegationPotential">Variegation potential</option><option value="stability">Trait stability</option><option value="growthPotential">Growth potential</option><option value="hiddenPotential">Hidden potential</option></select><small>Targeting improves the selected inherited trait by a modest amount.</small></div> : <p className="muted-copy">Trait targeting unlocks through Inheritance Mapping research.</p>}
+    <div className="experiment-summary"><div><span>Method</span><strong>Timed genetic cross</strong></div><div><span>Project cost</span><strong>{money(cost)}</strong></div><div><span>Duration</span><strong>{duration} simulation days</strong></div>{targetingEnabled && <div><span>Targeting trade-off</span><strong>+25% cost · +8pp risk</strong></div>}</div>
+    <p className="muted-copy">Traits follow defined inheritance rules with bounded variation. Mutations are rare, and discoveries require recorded evidence. Parents remain reserved until the project finishes.</p>{traitTargetingUnlocked ? <div className="control-row"><label htmlFor="trait-target">Research-unlocked target trait</label><select id="trait-target" value={targetTrait} onChange={(event) => setTargetTrait(event.target.value as typeof targetTrait)}><option value="variegationPotential">Variegation potential</option><option value="stability">Trait stability</option><option value="growthPotential">Growth potential</option><option value="hiddenPotential">Hidden potential</option></select><small>Targeting nudges the chosen trait upward in 70% of successful crosses, but never guarantees improvement. Trade-off: +25% project cost and +8 percentage points of failure risk.</small></div> : <p className="muted-copy">Trait targeting unlocks through Inheritance Mapping research.</p>}
     <button className="button button-primary" disabled={!selectedA || !selectedB || selectedA.id === selectedB.id || genus(parentA) !== genus(parentB) || eligible.length < 2} onClick={() => onCross(parentA, parentB, traitTargetingUnlocked ? targetTrait : undefined)}>Start breeding project · {money(cost)} <ArrowRight size={15} /></button>
   </section><section className="panel"><SectionHeader title="Genetic lineage" subtitle="Each completed cross creates a distinct line linked to both parents." /><div className="lineage-list">{specimens.filter((item) => item.lineParentIds?.length).map((item) => <div className="lineage-item" key={item.id}><strong>{item.nickname}</strong><span>Generation {item.generation ?? 1} · {item.lineParentIds!.map((id) => specimens.find((parent) => parent.id === id)?.nickname ?? id).join(" × ")}</span>{item.stableMutationIds?.length ? <small>Stable mutations: {item.stableMutationIds.length}</small> : null}</div>)}</div>{researchUnlocks.includes("batch-breeding") && <p className="muted-copy">Batch breeding unlocked: successful projects produce three offspring.</p>}<div className="active-projects"><h3>Breeding projects</h3>{projects.filter((project) => project.status === "active").length === 0 ? <p className="muted-copy">No active breeding projects.</p> : projects.filter((project) => project.status === "active").map((project) => <div className="lineage-item" key={project.id}><strong>{specimens.find((item) => item.id === project.parentAId)?.nickname ?? "Parent"} × {specimens.find((item) => item.id === project.parentBId)?.nickname ?? "Parent"}</strong><span>Completes on day {project.completesOnDay} · {Math.max(0, project.completesOnDay - day)} day(s) remaining</span></div>)}</div></section></div>;
 }
