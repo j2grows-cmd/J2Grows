@@ -8,6 +8,8 @@ export type GeneticProfile = {
   /** Latent trait potential gradually revealed by research, 0–100. */
   hiddenPotential: number;
   growthPotential: number;
+  /** Whether this plant carries the latent mutation gene that Mutation Analysis can detect. */
+  mutationGenePresent: boolean;
   mutationIds: string[];
 };
 
@@ -79,6 +81,7 @@ export function createGeneticProfile(random: () => number = Math.random): Geneti
     stability: clamp(35 + random() * 45),
     hiddenPotential: clamp(20 + random() * 70),
     growthPotential: clamp(30 + random() * 60),
+    mutationGenePresent: random() < 0.2,
     mutationIds: [],
   };
 }
@@ -92,6 +95,7 @@ export function inheritGenetics(parentA: GeneticProfile, parentB: GeneticProfile
     stability: varied(average(parentA.stability, parentB.stability), random, 10),
     hiddenPotential: varied(average(parentA.hiddenPotential, parentB.hiddenPotential), random, 18),
     growthPotential: varied(average(parentA.growthPotential, parentB.growthPotential), random, 12),
+    mutationGenePresent: random() < 0.5 ? parentA.mutationGenePresent : parentB.mutationGenePresent,
     mutationIds,
   };
   if (random() < 0.025) {
