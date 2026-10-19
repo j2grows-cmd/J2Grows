@@ -393,7 +393,7 @@ function App() {
       const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation);
       const environment = { ...greenhouseEnvironment, health };
       const growth = growVariegation(record.genetics, environment, specimen.variegation);
-      let nextRecord: SpecimenGenetics = observePlant({ ...record, environment, expression: growth.expression }, growth.expression);
+      let nextRecord: SpecimenGenetics = { ...record, environment, expression: growth.expression };
       let nextVariegation = growth.expression;
       let discovered = specimen.discovered;
       if (mutationOccurs("growth", environment, Math.floor(research / 50), analysisEquipmentLevel * 0.001)) {
