@@ -23,7 +23,15 @@ export type Specimen = {
   nickname: string;
   location: string;
   health: number;
-  stage: "Juvenile" | "Growing" | "Mature";
+  stage: "Corm / Seedling" | "Juvenile" | "Growing" | "Mature" | "Breeding-ready";
+  /** Stable genetic-line identity; offspring retain both parents in lineParentIds. */
+  geneticLineId?: string;
+  lineParentIds?: string[];
+  generation?: number;
+  /** Reserved by an active breeding project; prevents sale or reuse. */
+  reservedByProjectId?: string;
+  /** Dead specimens remain in the collection record but cannot be used. */
+  dead?: boolean;
   /** Simulated days spent in the current established growth stage. */
   stageDays?: number;
   /** Last simulation day this specimen was observed; prevents repeated research farming. */
