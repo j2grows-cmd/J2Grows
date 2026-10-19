@@ -3,33 +3,32 @@
 **Reviewed:** 2026-10-19  
 **Branch:** `agent/first-playable-foundation`  
 **Scope:** Static review of `src/App.tsx`, `src/data.ts`, `src/supabase.ts`, app configuration, README and design/roadmap documents.  
-**Verification:** GitHub Actions `Prototype checks` passed for commit `786c6b812a96c927b0480f07822cef32542324a6` (TypeScript typecheck and production build). This is not a substitute for browser/runtime, gameplay or Supabase integration tests.
+**Verification:** The development branch has added gameplay unit tests and UUID-specific regression tests. The latest workflow status must be checked against the current branch head; a green typecheck/build is not a substitute for browser/runtime or Supabase integration tests.
 
 This is a findings log, not a claim that all issues are fixed. Priority means: **P0** blocks the intended core loop; **P1** materially breaks or contradicts a feature; **P2** quality, robustness or documentation debt.
 
 ## P0 — Core gameplay blocker
 
-### A01. New game has no way to acquire its first plant
-- **Evidence:** Fresh saves and Reset Game now correctly create `specimens: []`, £1,000, 0 research and Day 1. The Catalogue's species library only renders information cards. There is no buy/acquire action or starter plant grant. Breeding requires two existing specimens and selling requires one.
-- **Impact:** The player can advance days and gain research, but cannot enter the plant-care, specimen, breeding or sales loop. The tutorial's specimen step redirects to the catalogue, which still has no acquisition action.
-- **Recommended fix:** Add an explicit, affordable starter-plant acquisition flow (with a real cash deduction, unique specimen ID and starting specimen defaults) or a first-run choice that grants/lets the player buy one. Add an empty-state call to action and test the full new-game loop.
+### A01. First-plant acquisition — resolved on the development branch
+- **Previous evidence:** The catalogue appeared to expose species cards without an acquisition action.
+- **Current state:** The Shop calls `purchaseSpecies` → `acquireSpecies`, which checks funds, deducts the actual species price and creates a juvenile specimen. The tutorial starter path also creates a protected mature demonstration specimen.
+- **Remaining check:** Browser-test a fresh game and reset flow end-to-end; static inspection alone does not prove every UI route is reachable.
 
-## P1 — Gameplay logic, state and UI inconsistencies
+### A02. Breeding cost and duration — materially resolved on the development branch
+- **Previous evidence:** The UI showed conflicting costs and implied immediate offspring despite a displayed duration.
+- **Current state:** `runCross` charges the calculated cost, reserves both parents and queues a `BreedingProject` for a completion day. Offspring are created when day progression processes the completed project. Targeted breeding's added cost and failure risk are applied in the project logic.
+- **Remaining check:** Browser-test cancellation, completion and batch breeding, and keep the displayed cost/duration aligned with the shared helpers.
 
-### A02. Breeding UI cost and duration disagree with actual behaviour
-- **Evidence:** `BreedingPage` displays “Research cost 250 cash” and “Duration 1 simulated day”; the button says £100; `runCross` deducts £100 and creates the offspring immediately.
-- **Impact:** The player is shown conflicting prices and a misleading duration.
-- **Recommended fix:** Define one source of truth for cost and duration. For this prototype, label the £100 as the actual cost and remove the unused duration claim, or implement a queued experiment with the displayed cost and duration.
+### A03. Mutation Analysis completion — resolved on the development branch
+- **Previous evidence:** Mutation Analysis could remain marked in progress indefinitely.
+- **Current state:** The project stores its target and start day; day progression completes it after three simulated days, records the result, and clears the active project state. The load path preserves a still-active project and its target when eligible.
+- **Remaining check:** Browser-test completion and offline-save edge cases.
 
-### A03. Research projects never finish
-- **Evidence:** `startResearch` deducts £250 and sets `projectStarted=true`. `advanceDay` adds research data but never advances/completes Mutation Analysis. The button remains “Project in progress” indefinitely; the flag is only reset by a new game.
-- **Impact:** The core research interaction has no outcome, completion, unlock or meaningful progression.
-- **Recommended fix:** Represent a project with explicit status/progress/start day/cost and a completion condition; update the research tree and show a result when complete. Until then, describe it as a one-time placeholder rather than a timed project.
-
-### A04. Specimen IDs can collide after selling and breeding
-- **Evidence:** New offspring IDs use `specimens.length + 1` as their numeric suffix. Collection length is not a monotonic ID counter; selling a plant can make the same suffix be generated again.
-- **Impact:** Duplicate IDs can break React keys, specimen selection and identity/provenance.
-- **Recommended fix:** Use `crypto.randomUUID()` or a persisted monotonic counter, with collision validation and a migration strategy.
+### A04. Specimen ID collisions — resolved on the development branch
+- **Previous evidence:** IDs were assembled from timestamps, random fragments or the number of specimens, so collisions were possible, particularly across rapid batch creation and after sales.
+- **Current state:** All interactive specimen creation paths now call `createUniqueSpecimenId`, which generates validated UUIDs and retries collisions. This covers shop acquisition, tutorial propagation, normal propagation (including multi-cutting batches), breeding offspring and batch-breeding offspring.
+- **Save compatibility:** Existing specimen IDs and lineage references are not rewritten. The existing save/load and manual-slot paths continue to serialise and restore those fields as stored.
+- **Tests:** Added tests for UUID format, collision retry, bounded failure and preserving legacy IDs.
 
 ### A05. Facility upgrades charge money but do not persist or affect the facility
 - **Evidence:** Facilities' purchase callback only subtracts cash and announces success. No purchased-upgrade state is stored, displayed or included in `GameSave`.
@@ -93,10 +92,10 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **Impact:** The repository's own documentation gives contradictory project status.
 - **Recommended fix:** Mark the design documents as the approved baseline for implementation, separate design approval status from code status, and link this audit as the current implementation review.
 
-### A17. Automated checks do not cover gameplay
-- **Evidence:** CI runs TypeScript typecheck and a Vite production build only; there is no test runner or unit/integration/browser test suite.
-- **Impact:** Build success cannot catch duplicate IDs, reset/new-game dead ends, wrong costs, non-persistent controls or research that never completes.
-- **Recommended fix:** Add tests for new game/reset, acquisition, unique IDs, sale, breeding cost/compatibility, research completion, save validation/migration and reload persistence. Add a browser smoke test for the first playable loop.
+### A17. Automated checks — partially addressed
+- **Previous evidence:** CI relied only on TypeScript typechecking and a production build.
+- **Current state:** Node's test runner is configured and regression tests now cover genetics, observation thresholds, trait targeting and specimen UUID generation/collision handling.
+- **Remaining gap:** No browser-level end-to-end smoke test yet covers fresh game → acquire → propagate → save/reload, and some findings still require integration/runtime coverage.
 
 ## Suggested repair order
 
