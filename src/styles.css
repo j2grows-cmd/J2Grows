@@ -832,3 +832,9 @@ body{
 .species-library-card.rarity-epic .species-rarity{border-color:rgba(190,141,231,.38);background:rgba(139,76,179,.16);color:#d8b8f4}
 .species-library-card.rarity-legendary .species-rarity{border-color:rgba(224,183,88,.4);background:rgba(164,121,38,.17);color:#f0d48b}
 .species-library-card:hover{transform:translateY(-3px);border-color:rgba(219,193,119,.65);box-shadow:inset 0 1px rgba(255,255,255,.04),0 14px 26px rgba(0,0,0,.27)}
+
+
+/* Ensure rarity labels remain visible despite legacy subtitle-hiding rules */
+.species-library-card .species-rarity{display:inline-flex!important;visibility:visible;opacity:1;white-space:nowrap;overflow:visible;text-overflow:clip;margin-top:0}
+.species-library-card .species-library-card-copy{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px 12px 13px}
+.species-library-card .species-library-card-copy>strong{display:block;width:100%;white-space:normal;overflow:visible;text-overflow:clip}
