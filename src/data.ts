@@ -26,6 +26,8 @@ export type Specimen = {
   stage: "Juvenile" | "Growing" | "Mature";
   /** Simulated days spent in the current established growth stage. */
   stageDays?: number;
+  /** Original shop price; used to prevent instant buy-and-resell arbitrage while allowing value to rise with growth. */
+  purchasePrice?: number;
   /** Development state for a newly propagated specimen; omitted for established plants. */
   propagation?: { method: "corm" | "cutting" | "division" | "tissue-culture"; phase: "Corm" | "Sprouting" | "Establishing"; daysInPhase: number; daysToSprout: number; daysToEstablish: number };
   value: number;
