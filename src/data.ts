@@ -1,10 +1,14 @@
+import { getSpeciesEconomy, type RarityTier } from "./game/catalog";
+import type { SpecimenGenetics } from "./game/genetics";
+
 export type Species = {
   id: string;
   name: string;
   latin: string;
   family: string;
   difficulty: "Easy" | "Moderate" | "Advanced";
-  rarity: "Common" | "Uncommon" | "Rare" | "Very rare";
+  rarity: RarityTier;
+  basePrice?: number;
   image: string;
   summary: string;
   light: string;
@@ -24,6 +28,7 @@ export type Specimen = {
   protected: boolean;
   variegation: number;
   discovered?: boolean;
+  genetics?: SpecimenGenetics;
 };
 
 const prototypeSpecies: Species[] = [
@@ -181,13 +186,15 @@ export function makeStorageSpecies(slug: string, image: string): Species {
   const local = prototypeSpecies.find((plant) => plant.id === slug);
   if (local) return { ...local, image: image || local.image };
   const name = slug.split("-").map((word) => word[0]?.toUpperCase() + word.slice(1)).join(" ");
+  const economy = getSpeciesEconomy(name) ?? getSpeciesEconomy(slug);
   return {
     id: slug,
     name: name || slug,
     latin: "Species details not yet recorded",
     family: "Araceae",
     difficulty: "Moderate",
-    rarity: "Common",
+    rarity: economy?.rarity ?? "Common",
+    basePrice: economy?.basePrice ?? 15,
     image: image || "hero",
     summary: "Species details are not stored in the image catalogue yet.",
     light: "Not recorded",
