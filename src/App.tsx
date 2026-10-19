@@ -615,7 +615,7 @@ function App() {
     }
     const rarityA = (getSpeciesEconomy(speciesA.id)?.rarity ?? speciesA.rarity) as RarityTier;
     const rarityB = (getSpeciesEconomy(speciesB.id)?.rarity ?? speciesB.rarity) as RarityTier;
-    const cost = calculateBreedingCost(rarityA, rarityB, 1, research >= 100 ? 5 : 0);
+    const cost = calculateBreedingCost(rarityA, rarityB, 1, researchUnlocks.includes("selective-breeding") ? 10 : 0);
     if (cash < cost) {
       announce(`This breeding project costs ${money(cost)}. You currently have ${money(cash)}.`);
       return;
@@ -624,9 +624,9 @@ function App() {
     const condition = (greenhouseEnvironment.light + greenhouseEnvironment.nutrition + greenhouseEnvironment.humidity + parentA.health + parentB.health) / 5;
     const project: BreedingProject = {
       id, parentAId, parentBId, startedDay: day,
-      completesOnDay: day + breedingDurationDays(5, analysisEquipmentLevel * 5),
+      completesOnDay: day + breedingDurationDays(5, researchUnlocks.includes("selective-breeding") ? 15 : 0),
       cost, status: "active",
-      failureChance: breedingFailureChance(Math.floor(research / 50), condition),
+      failureChance: breedingFailureChance(researchUnlocks.includes("selective-breeding") ? 3 : 0, condition),
       lineId: `LINE-${Date.now().toString(36).toUpperCase()}`,
     };
     setCash((current) => current - cost);
