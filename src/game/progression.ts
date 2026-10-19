@@ -115,6 +115,7 @@ export function inheritTraits(parentA: GeneticProfile, parentB: GeneticProfile, 
     stability: inherit(parentA.stability, parentB.stability, 4),
     hiddenPotential: inherit(parentA.hiddenPotential, parentB.hiddenPotential, 6),
     growthPotential: inherit(parentA.growthPotential, parentB.growthPotential, 5),
+    mutationGenePresent: random() < 0.5 ? parentA.mutationGenePresent : parentB.mutationGenePresent,
     mutationIds: [...new Set([...parentA.mutationIds, ...parentB.mutationIds])],
   };
 }
