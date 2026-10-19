@@ -9,8 +9,8 @@ import {
 import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeSpecies, type Species, type Specimen } from "./data";
 import { loadSpeciesCatalog } from "./supabase";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
-import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, inheritGenetics, observePlant, shouldDiscoverMutation, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
-import { breedingDurationDays, breedingFailureChance, calculateBreedingCost, canBreed, inheritTraits, mutationOccurs, stableAcrossGenerations, type BreedingProject } from "./game/progression";
+import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, observePlant, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
+import { breedingDurationDays, breedingFailureChance, calculateBreedingCost, canBreed, inheritTraits, mutationOccurs, type BreedingProject } from "./game/progression";
 
 type PropagationMethod = "cutting" | "division" | "corm" | "tissue-culture";
 
@@ -467,12 +467,12 @@ function App() {
       announce(`${activeSpecimen.nickname} has completed all available genetic analysis levels.`);
       return;
     }
-    if (research < 25) { announce("Genetic analysis costs 25 research data."); return; }
+    if (research < 25) { announce("Genetic analysis requires at least 25 global research data."); return; }
     const analysedRecord = { ...record, research: { ...record.research, points: Math.max(record.research.points, 25) } };
     const analysed = analyseGenetics(analysedRecord, 25);
     if (!analysed) { announce("More observation evidence is needed before analysis."); return; }
-    setResearch((current) => current - 25);
-    setSpecimens((current) => current.map((item) => { if (item.id !== activeSpecimen.id) return item; const updated = { ...item, genetics: { ...analysed, research: { ...analysed.research, mutations: analysed.research.mutations.map((mutation) => ({ ...mutation, detected: true })) } } }; return { ...updated, value: specimenValue(updated) }; }));
+    setResearch((current) => current - analysisCost);
+    setSpecimens((current) => current.map((item) => { if (item.id !== activeSpecimen.id) return item; const updated = { ...item, genetics: { ...analysed, research: { ...analysed.research, mutations: analysed.research.mutations.map((mutation) => ({ ...mutation, detected: mutation.detected })) } } }; return { ...updated, value: specimenValue(updated) }; }));
     announce(`Analysis complete for ${activeSpecimen.nickname}. Research level ${analysed.research.analysisLevel} unlocked.`);
   }
 
@@ -483,7 +483,7 @@ function App() {
   function propagateSpecimen(parent: Specimen, method: PropagationMethod) {
     const plant = findSpecies(parent.speciesId);
     const genus = plant.latin.split(" ")[0].toLowerCase();
-    const allowed = method === "division" || method === "tissue-culture"
+    const allowed = !parent.dead && !parent.reservedByProjectId && (method === "division" || method === "tissue-culture"
       || (method === "cutting" && ["monstera", "philodendron", "anthurium"].includes(genus) && parent.stage === "Mature")
       || (method === "corm" && genus === "alocasia" && parent.stage === "Mature");
     if (!allowed) {
@@ -496,7 +496,7 @@ function App() {
           : "Corm propagation is reserved for Alocasia.");
       return;
     }
-    const rarity = (getSpeciesEconomy(plant.id)?.rarity ?? getSpeciesEconomy(plant.name)?.rarity ?? plant.rarity) as Species["rarity"];
+    if (method === "corm" && parent.lastCormHarvestYear === Math.floor((day - 1) / 365)) { announce("This Alocasia has already yielded a corm this simulation-calendar year."); return; }\n    const rarity = (getSpeciesEconomy(plant.id)?.rarity ?? getSpeciesEconomy(plant.name)?.rarity ?? plant.rarity) as Species["rarity"];
     const details: Record<PropagationMethod, { prefix: string; label: string; location: string; health: number; nickname: string }> = {
       cutting: { prefix: "CUT", label: "Cutting", location: "Propagation Bench", health: 85, nickname: "Cutting" },
       division: { prefix: "DIV", label: "Division / offset", location: "Propagation Bench", health: 90, nickname: "Division" },
@@ -534,7 +534,7 @@ function App() {
       location: "Recovery · Greenhouse",
       value: 0,
     } : parent;
-    if (method === "cutting") parentAfterCutting.value = specimenValue(parentAfterCutting);
+    if (method === "cutting" || method === "tissue-culture") parentAfterCutting.value = specimenValue(parentAfterCutting);
     setCash((current) => current - totalCost);
     setSpecimens((current) => [...current.filter((item) => item.id !== parent.id), parentAfterCutting, ...children]);
     setSelected(children[0].id);
