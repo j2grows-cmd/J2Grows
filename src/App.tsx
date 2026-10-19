@@ -1010,16 +1010,19 @@ function Dashboard({ specimens, cash, research, day, projectStarted, onNavigate,
   const healthyCount = specimens.filter((item) => item.health >= 80).length;
   const healthPercent = specimens.length ? Math.round((healthyCount / specimens.length) * 100) : 0;
   return <>
-    <section className="dash-welcome">
-      <div className="dash-welcome-copy">
+    <section className="dash-feature-hero">
+      <div className="dash-feature-copy">
         <div className="eyebrow"><span className="eyebrow-line" /> YOUR BOTANICAL INSTITUTION</div>
         <h2>Welcome to your nursery</h2>
-        <p>Your nursery is growing. Tend your collection, discover new traits and build a remarkable botanical institution.</p>
+        <p>Your nursery is growing. Here's an overview of your plants, facilities and progress.</p>
+        <div className="dash-hero-controls">
+          <span className="dash-season"><Sun size={17} /> {timeLabel}<small>Day {day}</small></span>
+          <button className="button button-quiet" onClick={() => onNavigate("Settings")}><Settings size={15} /> Settings</button>
+          <button className="button button-primary" onClick={onAdvance}><Zap size={15} /> Advance day <ArrowRight size={14} /></button>
+        </div>
       </div>
-      <div className="dash-welcome-actions">
-        <span className="dash-season"><Sun size={17} /> {timeLabel}<small>Day {day}</small></span>
-        <button className="button button-quiet" onClick={() => onNavigate("Settings")}><Settings size={15} /> Settings</button>
-        <button className="button button-primary" onClick={onAdvance}><Zap size={15} /> Advance day <ArrowRight size={14} /></button>
+      <div className="dash-feature-photo" role="img" aria-label="Lush tropical foliage in a botanical greenhouse">
+        <div className="dash-photo-caption"><span>J2GROWS · BOTANICAL JOURNAL</span><strong>New growth, new possibilities.</strong></div>
       </div>
     </section>
 
@@ -1029,21 +1032,6 @@ function Dashboard({ specimens, cash, research, day, projectStarted, onNavigate,
       <div className="dash-resource-card"><span className="dash-resource-icon"><FlaskConical size={23} /></span><div><small>Research data</small><strong>{research.toLocaleString("en-GB")}</strong><span>{activeResearch ? "Programme active" : "Available to invest"}</span></div></div>
       <div className="dash-resource-card"><span className="dash-resource-icon"><Building2 size={23} /></span><div><small>Facilities</small><strong>1</strong><span>Home greenhouse</span></div></div>
       <div className="dash-resource-card"><span className="dash-resource-icon"><Users size={23} /></span><div><small>Staff</small><strong>1</strong><span>Founder-led nursery</span></div></div>
-    </section>
-
-    <section className="dash-feature-hero">
-      <div className="dash-feature-copy">
-        <div className="eyebrow"><Sprout size={14} /> THE WORK OF GROWING SOMETHING EXTRAORDINARY</div>
-        <h2>Every discovery<br /><em>starts with a leaf.</em></h2>
-        <p>Grow a collection with character. Study its genetics, nurture each specimen and work towards your first recognised cultivar.</p>
-        <div className="hero-actions">
-          <button className="button button-primary" onClick={() => onNavigate("Plant Catalogue")}>Explore collection <ArrowRight size={15} /></button>
-          <button className="button button-quiet" onClick={() => onNavigate("Research")}><Microscope size={15} /> Open research</button>
-        </div>
-      </div>
-      <div className="dash-feature-photo" role="img" aria-label="Lush tropical foliage in a botanical greenhouse">
-        <div className="dash-photo-caption"><span>J2GROWS · BOTANICAL JOURNAL</span><strong>New growth, new possibilities.</strong></div>
-      </div>
     </section>
 
     <section className="dash-three-columns dash-dashboard-main">
