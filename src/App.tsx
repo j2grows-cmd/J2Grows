@@ -9,6 +9,7 @@ import {
 import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeSpecies, type Species, type Specimen } from "./data";
 import { createUniqueSpecimenId } from "./game/specimen-id.ts";
 import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, normalizeFacilityLevels, propagationDaysRequired, weeklyFacilityOperatingCost, type FacilityLevels, type FacilityName } from "./game/facilities.ts";
+import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, startStaffTraining, STAFF_TRAINING_COST, type StaffState } from "./game/staff.ts";
 import { loadSpeciesCatalog } from "./supabase";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
 import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, observePlant, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
@@ -54,7 +55,7 @@ function Metric({ label, value, detail, icon: Icon, tone = "green" }: { label: s
 }
 
 type GameSave = {
-  version: 1 | 2 | 3 | 4 | 5;
+  version: 1 | 2 | 3 | 4 | 5 | 6;
   specimens: Specimen[];
   breedingProjects: BreedingProject[];
   cash: number;
@@ -68,6 +69,7 @@ type GameSave = {
   greenhouseEnvironment?: PlantEnvironment;
   researchUnlocks?: string[];
   facilityLevels?: FacilityLevels;
+  staffState?: StaffState;
 };
 
 const SAVE_KEY = "j2grows.prototype.save.v1";
@@ -77,12 +79,16 @@ function loadGameSave(): GameSave & { offlineDays: number } {
     const raw = localStorage.getItem(SAVE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<GameSave>;
-      if ((parsed.version === 1 || parsed.version === 2 || parsed.version === 3 || parsed.version === 4 || parsed.version === 5) && Array.isArray(parsed.specimens) && typeof parsed.cash === "number" && typeof parsed.research === "number" && typeof parsed.day === "number" && typeof parsed.savedAt === "number") {
+      if ((parsed.version === 1 || parsed.version === 2 || parsed.version === 3 || parsed.version === 4 || parsed.version === 5 || parsed.version === 6) && Array.isArray(parsed.specimens) && typeof parsed.cash === "number" && typeof parsed.research === "number" && typeof parsed.day === "number" && typeof parsed.savedAt === "number") {
         const offlineDays = Math.min(14, Math.floor(Math.max(0, Date.now() - parsed.savedAt) / (10 * 60 * 1000)));
         const days = offlineDays;
         const savedEnvironment = parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT };
         const savedFacilityLevels = normalizeFacilityLevels(parsed.facilityLevels);
+        const savedStaffState = normalizeStaffState(parsed.staffState);
         const progressedEnvironment = applyEnvironmentalController(savedEnvironment, savedFacilityLevels.environmentalController);
+        const offlineStaffStates: StaffState[] = [];
+        let progressedStaffState = savedStaffState;
+        for (let elapsed = 0; elapsed < days; elapsed += 1) { progressedStaffState = advanceStaffDay(progressedStaffState); offlineStaffStates.push(progressedStaffState); }
         const progressedSpecimens = parsed.specimens.map((specimen) => {
           let current = { ...specimen };
           if (current.genetics && typeof current.genetics.genetics.mutationGenePresent !== "boolean") {
@@ -95,8 +101,8 @@ function loadGameSave(): GameSave & { offlineDays: number } {
           const genus = findSpecies(current.speciesId).latin.split(" ")[0].toLowerCase();
           const speciesFactor = genus === "anthurium" ? 1.25 : genus === "alocasia" ? 1.1 : ["monstera", "philodendron"].includes(genus) ? 0.9 : 1;
           for (let elapsed = 0; elapsed < days; elapsed += 1) {
-            const condition = (progressedEnvironment.light + progressedEnvironment.nutrition + progressedEnvironment.humidity) / 3;
-            const effectiveCondition = progressedEnvironment.autoCare ? Math.max(60, condition) : condition;
+            const staffCondition = effectiveStaffCareCondition(progressedEnvironment, offlineStaffStates[elapsed] ?? savedStaffState);
+            const effectiveCondition = progressedEnvironment.autoCare ? Math.max(60, staffCondition) : staffCondition;
             const health = Math.max(0, Math.min(100, effectiveCondition < 35 ? current.health - 5 : effectiveCondition < 50 ? current.health - 2 : effectiveCondition >= 75 && current.health < 100 ? current.health + 2 : current.health));
             if (health <= 0) { current = { ...current, health: 0, dead: true }; break; }
             let stage = current.stage;
@@ -111,7 +117,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
           return current;
         });
         return {
-          version: 5,
+          version: 6,
           specimens: progressedSpecimens,
           breedingProjects: Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects : [],
           researchUnlocks: Array.isArray(parsed.researchUnlocks) ? parsed.researchUnlocks.filter((item): item is string => typeof item === "string") : [],
@@ -125,6 +131,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
           analysisEquipmentLevel: typeof parsed.analysisEquipmentLevel === "number" ? Math.max(0, Math.min(3, Math.floor(parsed.analysisEquipmentLevel))) : 0,
           greenhouseEnvironment: parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT },
           facilityLevels: savedFacilityLevels,
+          staffState: progressedStaffState,
           offlineDays,
         };
       }
@@ -132,7 +139,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
   } catch {
     // A malformed or unavailable local save falls back to a fresh prototype save.
   }
-  return { version: 5, specimens: [], breedingProjects: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, greenhouseEnvironment: { ...DEFAULT_ENVIRONMENT }, facilityLevels: { propagationBench: 0, environmentalController: 0 }, offlineDays: 0 };
+  return { version: 6, specimens: [], breedingProjects: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, greenhouseEnvironment: { ...DEFAULT_ENVIRONMENT }, facilityLevels: { propagationBench: 0, environmentalController: 0 }, staffState: { ...DEFAULT_STAFF_STATE }, offlineDays: 0 };
 }
 
 function App() {
@@ -157,6 +164,7 @@ function App() {
   const [research, setResearch] = useState(loadedSave.research);
   const [greenhouseEnvironment, setGreenhouseEnvironment] = useState<PlantEnvironment>(loadedSave.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
   const [facilityLevels, setFacilityLevels] = useState<FacilityLevels>(loadedSave.facilityLevels ?? { propagationBench: 0, environmentalController: 0 });
+  const [staffState, setStaffState] = useState<StaffState>(normalizeStaffState(loadedSave.staffState));
   const [saveSlots, setSaveSlots] = useState<Record<string, GameSave | null>>(() => {
     try { return JSON.parse(localStorage.getItem("j2grows.manual-save-slots.v1") || '{"1":null,"2":null,"3":null}') as Record<string, GameSave | null>; }
     catch { return { "1": null, "2": null, "3": null }; }
@@ -364,12 +372,12 @@ function App() {
   }
   useEffect(() => {
     try {
-      const save: GameSave = { version: 5, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, savedAt: Date.now() };
+      const save: GameSave = { version: 6, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, savedAt: Date.now() };
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     } catch {
       setNotice("Local save unavailable. Your progress may not persist in this browser.");
     }
-  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels]);
+  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState]);
 
   useEffect(() => {
     try { localStorage.setItem("j2grows.manual-save-slots.v1", JSON.stringify(saveSlots)); }
@@ -392,6 +400,7 @@ function App() {
     setProjectStarted(save.projectStarted); setAnalysisEquipmentLevel(Math.max(0, Math.min(3, save.analysisEquipmentLevel ?? 0)));
     setGreenhouseEnvironment(save.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
     setFacilityLevels(normalizeFacilityLevels(save.facilityLevels));
+    setStaffState(normalizeStaffState(save.staffState));
     setSelected(save.specimens[0]?.id ?? "");
     announce(`Loaded save slot ${slot}.`);
   }
@@ -424,6 +433,7 @@ function App() {
     setAnalysisStartedDay(undefined);
     setAnalysisEquipmentLevel(0);
     setFacilityLevels({ propagationBench: 0, environmentalController: 0 });
+    setStaffState({ ...DEFAULT_STAFF_STATE });
     setSelected("");
     setInstituteName("");
     setInstituteNameDraft("");
@@ -438,12 +448,13 @@ function App() {
 
   function advanceDay(): Specimen[] {
     const nextDay = day + 1;
+    const nextStaffState = advanceStaffDay(staffState);
     let mutationMessage = "";
     const nextSpecimens = specimens.map((specimen) => {
       if (specimen.dead || specimen.health <= 0) return { ...specimen, health: 0, dead: true, value: 0 };
       const simulationEnvironment = applyEnvironmentalController(greenhouseEnvironment, facilityLevels.environmentalController);
-      const rawEnvironmentalMean = (simulationEnvironment.light + simulationEnvironment.nutrition + simulationEnvironment.humidity) / 3;
-      const environmentalMean = simulationEnvironment.autoCare ? Math.max(60, rawEnvironmentalMean) : rawEnvironmentalMean;
+      const staffCondition = effectiveStaffCareCondition(simulationEnvironment, nextStaffState);
+      const environmentalMean = simulationEnvironment.autoCare ? Math.max(60, staffCondition) : staffCondition;
       const health = Math.max(0, Math.min(100, environmentalMean < 35 ? specimen.health - 5 : environmentalMean < 50 ? specimen.health - 2 : environmentalMean >= 75 && specimen.health < 100 ? specimen.health + 2 : specimen.health));
       const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation);
       const environment = { ...simulationEnvironment, health };
@@ -623,7 +634,8 @@ function App() {
       setAnalysisTargetSpecimenId(undefined);
       setAnalysisStartedDay(undefined);
     }
-    const weeklyOperatingCost = weeklyFacilityOperatingCost(facilityLevels, analysisEquipmentLevel, researchUnlocks.includes("routine-automation"));
+    setStaffState(nextStaffState);
+    const weeklyOperatingCost = weeklyFacilityOperatingCost(facilityLevels, analysisEquipmentLevel, researchUnlocks.includes("routine-automation")) + (nextStaffState.routineCareEnabled ? 8 : 0);
     if (nextDay % 7 === 0 && weeklyOperatingCost > 0) {
       setCash((current) => current - weeklyOperatingCost);
       mutationMessage += ` Weekly facility operating costs: £${weeklyOperatingCost}.`;
@@ -638,7 +650,7 @@ function App() {
   useEffect(() => {
     const timer = window.setInterval(() => advanceDay(), 10 * 60 * 1000);
     return () => window.clearInterval(timer);
-  }, [day, specimens, greenhouseEnvironment, breedingProjects, research, analysisEquipmentLevel, researchUnlocks, projectStarted]);
+  }, [day, specimens, greenhouseEnvironment, breedingProjects, research, analysisEquipmentLevel, researchUnlocks, projectStarted, facilityLevels, staffState]);
 
   function observeSelectedSpecimen() {
     if (!activeSpecimen) return;
@@ -901,9 +913,9 @@ function App() {
         {page === "Specimen Record" && <SpecimenPage specimen={activeSpecimen} plant={activeSpecies} onPropagate={(method) => propagateSpecimen(activeSpecimen, method)} onSell={() => sellSpecimen(activeSpecimen)} onObserve={observeSelectedSpecimen} onAnalyse={analyseSelectedSpecimen} researchPoints={research} currentDay={day} mutationStabilityVisible={researchUnlocks.includes("mutation-screening") && analysisEquipmentLevel > 0} onToggleProtection={() => setSpecimens((current) => current.map((item) => item.id === activeSpecimen.id ? { ...item, protected: !item.protected } : item))} onBack={() => setPage("Plant Catalogue")} announce={announce} />}
         {page === "Breeding" && <BreedingPage specimens={specimens} researchUnlocks={researchUnlocks} projects={breedingProjects} day={day} traitTargetingUnlocked={researchUnlocks.includes("inheritance-mapping")} onCross={runCross} />}
         {page === "Research" && <ResearchPage specimens={specimens} cash={cash} research={research} day={day} projectStarted={projectStarted} analysisTargetSpecimenId={analysisTargetSpecimenId} analysisStartedDay={analysisStartedDay} onStart={startResearch} announce={announce} researchUnlocks={researchUnlocks} onUnlockResearch={unlockResearchNode} />}
-        {page === "Greenhouse" && <GreenhousePage specimens={specimens} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onApplyEnvironment={(humidity, temperature, autoCare) => setGreenhouseEnvironment({ ...greenhouseEnvironment, humidity, temperature, autoCare, lightHours: 14, light: 70, nutrition: Math.max(20, 100 - Math.abs(temperature - 24) * 7) })} environment={greenhouseEnvironment} autoCareUnlocked={researchUnlocks.includes("routine-automation")} announce={announce} />}
+        {page === "Greenhouse" && <GreenhousePage specimens={specimens} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onChangeEnvironment={(humidity, temperature, autoCare) => setGreenhouseEnvironment((current) => ({ ...current, humidity, temperature, autoCare, lightHours: 14, light: 70, nutrition: Math.max(20, 100 - Math.abs(temperature - 24) * 7) }))} environment={greenhouseEnvironment} autoCareUnlocked={researchUnlocks.includes("routine-automation")} announce={announce} />}
         {page === "Facilities" && <FacilitiesPage cash={cash} analysisEquipmentLevel={analysisEquipmentLevel} facilityLevels={facilityLevels} routineAutomationUnlocked={researchUnlocks.includes("routine-automation")} onBuy={(name) => { const cost = nextFacilityUpgradeCost(name, facilityLevels, analysisEquipmentLevel); if (cost === null || !canPurchaseFacilityUpgrade(name, facilityLevels, analysisEquipmentLevel, cash)) { announce(cost === null ? "That facility is already at its maximum level or is not available." : "Not enough funds for this upgrade."); return; } setCash((value) => value - cost); if (name === "Analysis workstation") setAnalysisEquipmentLevel((level) => level + 1); else setFacilityLevels((levels) => ({ ...levels, [name === "Propagation bench" ? "propagationBench" : "environmentalController"]: levels[name === "Propagation bench" ? "propagationBench" : "environmentalController"] + 1 })); announce(`${name} upgraded for ${money(cost)}. The benefit is active immediately; facility running costs apply every seventh day.`); }} />}
-        {page === "Staff" && <StaffPage />}
+        {page === "Staff" && <StaffPage cash={cash} staffState={staffState} onToggleCare={() => setStaffState((current) => ({ ...current, routineCareEnabled: !current.routineCareEnabled }))} onStartTraining={() => { if (!canStartStaffTraining(cash, staffState)) { announce(cash < STAFF_TRAINING_COST ? `Training costs ${money(STAFF_TRAINING_COST)}.` : staffState.trainingLevel >= 3 ? "Your assistant has reached the maximum training level." : "Training is already in progress."); return; } const next = startStaffTraining(staffState); if (!next) return; setCash((current) => current - STAFF_TRAINING_COST); setStaffState(next); announce(`Basic plant-care training started for ${money(STAFF_TRAINING_COST)}. It completes after ${next.trainingDaysRemaining} simulated days.`); }} /> }
         {page === "Shop" && <ShopPage specimens={specimens} species={catalogSpecies} cash={cash} day={day} onBuy={purchaseSpecies} onSell={sellSpecimen} />}
         {page === "Finances" && <FinancesPage cash={cash} specimens={specimens} />}
         {page === "Settings" && <SettingsPage onReplayTutorial={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} onResetGame={resetGame} day={day} specimensCount={specimens.length} catalogSource={catalogSource} saveSlots={saveSlots} onSaveSlot={saveToSlot} onLoadSlot={loadFromSlot} />}
@@ -986,11 +998,11 @@ function ResearchPage({ specimens, cash, research, day, projectStarted, analysis
   const daysRemaining = analysisStartedDay === undefined ? 0 : Math.max(0, 3 - (day - analysisStartedDay));
   return <div className="research-layout"><section className="panel"><SectionHeader title="Research pathways" subtitle="Unlock permanent capabilities through a branching research tree." /><div className="research-tree">{RESEARCH_TREE.map((node) => { const unlocked = researchUnlocks.includes(node.id); const prerequisitesMet = node.prerequisites.every((id) => researchUnlocks.includes(id)); return <div className={`research-node ${unlocked ? "node-done" : prerequisitesMet && research >= node.cost ? "node-current" : "node-locked"}`} key={node.id}><div className="node-icon">{unlocked ? <Check size={18} /> : <Beaker size={18} />}</div><div><strong>{node.id.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join(" ")}</strong><span>{node.description} · Cost: {node.cost} research</span></div><button className="button button-quiet" disabled={unlocked || !canUnlockResearch(node.id, { points: research, unlocked: researchUnlocks, completed: researchUnlocks })} onClick={() => onUnlockResearch(node.id)}>{unlocked ? "Unlocked" : prerequisitesMet ? "Unlock" : "Prerequisites"}</button></div>; })}</div></section><aside className="panel project-panel"><div className="eyebrow"><FlaskConical size={13} /> SPECIMEN PROJECT</div><h2>Mutation Analysis</h2><p>Spend three in-game days analysing one specimen. If it carries the latent mutation gene, the analysis detects one random mutation. Each specimen can be analysed only once.</p><div className="project-art"><PlantArt type={selectedTarget ? findSpecies(selectedTarget.speciesId).image : "philodendron"} large /></div>{projectStarted ? <><div className="project-cost"><span>Specimen</span><strong>{activeTarget?.nickname ?? "Unavailable"}</strong></div><div className="project-cost"><span>Time remaining</span><strong>{daysRemaining} in-game day(s)</strong></div><div className="project-cost"><span>Completes on</span><strong>Day {(analysisStartedDay ?? day) + 3}</strong></div></> : <><label className="control-row" htmlFor="mutation-analysis-specimen">Specimen to analyse</label><select id="mutation-analysis-specimen" className="field-input" value={selectedTarget?.id ?? ""} onChange={(event) => setTargetId(event.target.value)} disabled={!eligibleSpecimens.length}>{eligibleSpecimens.map((item) => <option key={item.id} value={item.id}>{item.nickname} — {findSpecies(item.speciesId).name}</option>)}</select><div className="project-cost"><span>Project cost</span><strong>{money(25)}</strong></div><div className="project-cost"><span>Available funds</span><strong>{money(cash)}</strong></div><div className="project-cost"><span>Eligible specimens</span><strong>{eligibleSpecimens.length}</strong></div></>}<button className="button button-primary full-width" disabled={projectStarted || cash < 25 || !selectedTarget} onClick={() => selectedTarget && onStart(selectedTarget.id)}>{projectStarted ? "Analysis in progress" : !eligibleSpecimens.length ? "No eligible specimens" : cash < 25 ? "Insufficient funds" : "Begin 3-day analysis"}<ArrowRight size={15} /></button><button className="button button-quiet full-width" onClick={() => announce("Mutation Analysis is available once per living specimen. Plants without the mutation gene may yield no discovery.")}>How analysis works</button></aside></div>;
 }
-function GreenhousePage({ specimens, onSelect, onApplyEnvironment, environment, autoCareUnlocked, announce }: { specimens: Specimen[]; onSelect: (id: string) => void; onApplyEnvironment: (humidity: number, temperature: number, autoCare: boolean) => void; environment: PlantEnvironment; autoCareUnlocked: boolean; announce: (message: string) => void }) {
-  const [humidity, setHumidity] = useState(environment.humidity);
-  const [temperature, setTemperature] = useState(environment.temperature ?? 24);
-  const [autoCare, setAutoCare] = useState(environment.autoCare ?? false);
-  return <><div className="metric-grid"><Metric label="Temperature" value={`${temperature}°C`} detail="Target range 22–28°C" icon={Thermometer} /><Metric label="Humidity" value={`${humidity}%`} detail="Tropical zone" icon={Droplets} /><Metric label="Light schedule" value="14 hours" detail="Daily light period" icon={Sun} /><Metric label="Air circulation" value="Good" detail="Fans operating" icon={Activity} /></div><div className="two-column-layout"><section className="panel"><SectionHeader title="Growing zone · Tropical Aroids" subtitle="A simple first greenhouse zone." action="Zone details" /><div className="zone-visual"><PlantArt type="hero" large /><div><span className="pill">ACTIVE ZONE</span><h2>Home Greenhouse</h2><p>Species-specific controls will expand as equipment and research are unlocked.</p></div></div><div className="control-row"><label htmlFor="temp">Temperature <strong>{temperature}°C</strong></label><input id="temp" type="range" min="18" max="32" value={temperature} onChange={(event) => setTemperature(Number(event.target.value))} /></div><div className="control-row"><label htmlFor="humidity">Humidity <strong>{humidity}%</strong></label><input id="humidity" type="range" min="40" max="95" value={humidity} onChange={(event) => setHumidity(Number(event.target.value))} /></div><button className={`button ${autoCare ? "button-primary" : "button-quiet"}`} disabled={!autoCareUnlocked} onClick={() => setAutoCare((value) => !value)}><Zap size={15} /> Auto-care {autoCare ? "enabled" : autoCareUnlocked ? "paused" : "locked"}</button><button className="button button-quiet" onClick={() => { onApplyEnvironment(humidity, temperature, autoCare); announce("Growing conditions applied. New growth and variegation stability will respond over time."); }}>Apply environment</button></section><section className="panel"><SectionHeader title="Plants in this zone" subtitle="Select a specimen to inspect its record." />{specimens.map((item) => <button className="zone-plant-row" key={item.id} onClick={() => onSelect(item.id)}><PlantArt type={findSpecies(item.speciesId).image} /><span><strong>{item.nickname}</strong><small>{findSpecies(item.speciesId).name}</small></span><span className={item.health < 80 ? "health-low" : "health-good"}>{item.health}%</span><ChevronRight size={15} /></button>)}</section></div></>;
+function GreenhousePage({ specimens, onSelect, onChangeEnvironment, environment, autoCareUnlocked, announce }: { specimens: Specimen[]; onSelect: (id: string) => void; onChangeEnvironment: (humidity: number, temperature: number, autoCare: boolean) => void; environment: PlantEnvironment; autoCareUnlocked: boolean; announce: (message: string) => void }) {
+  const humidity = environment.humidity;
+  const temperature = environment.temperature ?? 24;
+  const autoCare = environment.autoCare ?? false;
+  return <><div className="metric-grid"><Metric label="Temperature" value={`${temperature}°C`} detail="Target range 22–28°C" icon={Thermometer} /><Metric label="Humidity" value={`${humidity}%`} detail="Tropical zone" icon={Droplets} /><Metric label="Light schedule" value="14 hours" detail="Daily light period" icon={Sun} /><Metric label="Air circulation" value="Good" detail="Fans operating" icon={Activity} /></div><div className="two-column-layout"><section className="panel"><SectionHeader title="Growing zone · Tropical Aroids" subtitle="A simple first greenhouse zone." action="Zone details" /><div className="zone-visual"><PlantArt type="hero" large /><div><span className="pill">ACTIVE ZONE</span><h2>Home Greenhouse</h2><p>Species-specific controls will expand as equipment and research are unlocked.</p></div></div><div className="control-row"><label htmlFor="temp">Temperature <strong>{temperature}°C</strong></label><input id="temp" type="range" min="18" max="32" value={temperature} onChange={(event) => onChangeEnvironment(humidity, Number(event.target.value), autoCare)} /></div><div className="control-row"><label htmlFor="humidity">Humidity <strong>{humidity}%</strong></label><input id="humidity" type="range" min="40" max="95" value={humidity} onChange={(event) => onChangeEnvironment(Number(event.target.value), temperature, autoCare)} /></div><button className={`button ${autoCare ? "button-primary" : "button-quiet"}`} disabled={!autoCareUnlocked} onClick={() => onChangeEnvironment(humidity, temperature, !autoCare)}><Zap size={15} /> Auto-care {autoCare ? "enabled" : autoCareUnlocked ? "paused" : "locked"}</button><p className="muted-copy">Changes save automatically and affect the simulation immediately. Auto-care in this zone requires Routine Automation research; staff routine care is managed separately.</p></section><section className="panel"><SectionHeader title="Plants in this zone" subtitle="Select a specimen to inspect its record." />{specimens.map((item) => <button className="zone-plant-row" key={item.id} onClick={() => onSelect(item.id)}><PlantArt type={findSpecies(item.speciesId).image} /><span><strong>{item.nickname}</strong><small>{findSpecies(item.speciesId).name}</small></span><span className={item.health < 80 ? "health-low" : "health-good"}>{item.health}%</span><ChevronRight size={15} /></button>)}</section></div></>;
 }
 
 function FacilitiesPage({ cash, analysisEquipmentLevel, facilityLevels, routineAutomationUnlocked, onBuy }: { cash: number; analysisEquipmentLevel: number; facilityLevels: FacilityLevels; routineAutomationUnlocked: boolean; onBuy: (name: FacilityName) => void }) {
@@ -1002,10 +1014,10 @@ function FacilitiesPage({ cash, analysisEquipmentLevel, facilityLevels, routineA
   return <><div className="facility-hero"><div><div className="eyebrow">CURRENT FACILITY</div><h2>Home greenhouse</h2><p>Facility upgrades are optional. Each has a permanent level, a gameplay effect and a weekly running cost.</p><div className="facility-tags"><span><Check size={13} /> Local cultivation</span><span><Check size={13} /> Basic propagation</span></div></div><div className="facility-hero-art"><PlantArt type="hero" large /></div></div><section className="panel"><SectionHeader title="Available improvements" subtitle="Levels and purchases are saved locally. Costs increase with each level." /><div className="project-cost"><span>Current weekly facility costs</span><strong>{money(weeklyFacilityOperatingCost(facilityLevels, analysisEquipmentLevel, routineAutomationUnlocked))}</strong></div><div className="upgrade-grid">{upgrades.map(({ name, description, icon: Icon, level, effect }) => { const cost = nextFacilityUpgradeCost(name, facilityLevels, analysisEquipmentLevel); const maxed = cost === null; return <article className="upgrade-card" key={name}><div className="upgrade-icon"><Icon size={20} /></div><h3>{name}</h3><p>{description}</p><div className="provenance-item"><span>Current level</span><strong>{level} / 3</strong></div><p className="facility-effect">{effect}</p><div className="upgrade-cost">{maxed ? "Maximum level reached" : money(cost)}</div><button className="button button-primary full-width" disabled={maxed || !canPurchaseFacilityUpgrade(name, facilityLevels, analysisEquipmentLevel, cash)} onClick={() => onBuy(name)}>{maxed ? "Fully upgraded" : cash < cost! ? "Not enough funds" : "Purchase next level"}</button></article>; })}</div></section></>;
 }
 
-function StaffPage() {
-  const [autoCare, setAutoCare] = useState(true);
-  const [training, setTraining] = useState(false);
-  return <><div className="metric-grid"><Metric label="Team capacity" value="1 helper" detail="Starter workforce" icon={Users} /><Metric label="Care automation" value={autoCare ? "Active" : "Paused"} detail="Routine greenhouse checks" icon={Sprout} /><Metric label="Training" value={training ? "In progress" : "Available"} detail="Develop specialist skills" icon={BookOpen} /></div><div className="two-column-layout"><section className="panel"><SectionHeader title="Your team" subtitle="Begin with practical help; specialist departments unlock later." /><div className="staff-profile"><div className="staff-avatar"><Sprout size={24} /></div><div><span className="eyebrow">STARTER ROLE</span><h2>Greenhouse Assistant</h2><p>Supports watering checks, routine observations and quarantine reminders.</p><div className="trait-pills"><span>Plant care</span><span>Reliable</span><span>Beginner</span></div></div></div><div className="control-row"><label>Routine care automation <strong>{autoCare ? "On" : "Off"}</strong></label><button className={`button ${autoCare ? "button-primary" : "button-quiet"}`} onClick={() => setAutoCare((value) => !value)}>{autoCare ? "Pause routine care" : "Enable routine care"}</button></div><button className="button button-quiet" onClick={() => setTraining((value) => !value)}>{training ? "Cancel training" : "Start basic plant-care training"}</button></section><aside className="panel"><SectionHeader title="Future departments" subtitle="Build towards goal-driven specialist teams." />{["Cultivation & Biosecurity", "Propagation & Tissue Culture", "Genetics & Analysis", "Automation & Production"].map((name, index) => <div className="department-row" key={name}><span className="department-index">0{index + 1}</span><strong>{name}</strong><span className="pill subtle-pill">Future</span></div>)}</aside></div></>;
+function StaffPage({ cash, staffState, onToggleCare, onStartTraining }: { cash: number; staffState: StaffState; onToggleCare: () => void; onStartTraining: () => void }) {
+  const training = staffState.trainingDaysRemaining > 0;
+  const maxed = staffState.trainingLevel >= 3;
+  return <><div className="metric-grid"><Metric label="Team capacity" value="1 helper" detail="Starter workforce" icon={Users} /><Metric label="Care automation" value={staffState.routineCareEnabled ? "Active" : "Paused"} detail={staffState.routineCareEnabled ? "Buffers poor conditions" : "No automatic care buffer"} icon={Sprout} /><Metric label="Training level" value={`${staffState.trainingLevel} / 3`} detail={training ? `${staffState.trainingDaysRemaining} day(s) remaining` : maxed ? "Specialist trained" : "Training available"} icon={BookOpen} /></div><div className="two-column-layout"><section className="panel"><SectionHeader title="Your team" subtitle="Staff settings persist in your local save and affect plant care." /><div className="staff-profile"><div className="staff-avatar"><Sprout size={24} /></div><div><span className="eyebrow">STARTER ROLE</span><h2>Greenhouse Assistant</h2><p>Routine care buffers poor environmental conditions. Each completed training level improves the care safety floor by five points.</p><div className="trait-pills"><span>Plant care</span><span>Reliable</span><span>Level {staffState.trainingLevel}</span></div></div></div><div className="control-row"><label>Routine care automation <strong>{staffState.routineCareEnabled ? "On" : "Off"}</strong></label><button className={`button ${staffState.routineCareEnabled ? "button-primary" : "button-quiet"}`} onClick={onToggleCare}>{staffState.routineCareEnabled ? "Pause routine care" : "Enable routine care"}</button></div><div className="project-cost"><span>Routine care running cost</span><strong>{staffState.routineCareEnabled ? "£8 / week" : "£0 / week"}</strong></div><div className="project-cost"><span>Training cost</span><strong>£{STAFF_TRAINING_COST} · 3 days</strong></div><button className="button button-quiet" disabled={training || maxed || cash < STAFF_TRAINING_COST} onClick={onStartTraining}>{training ? `Training in progress · ${staffState.trainingDaysRemaining} day(s) left` : maxed ? "Training complete" : cash < STAFF_TRAINING_COST ? "Insufficient funds" : "Start basic plant-care training"}</button>{training && <p className="muted-copy">Training advances with each simulated day. Care improves when training completes; training is preserved when you leave this page or reload.</p>}</section><aside className="panel"><SectionHeader title="Future departments" subtitle="Specialist roles remain planned, not yet available." />{["Cultivation & Biosecurity", "Propagation & Tissue Culture", "Genetics & Analysis", "Automation & Production"].map((name, index) => <div className="department-row" key={name}><span className="department-index">0{index + 1}</span><strong>{name}</strong><span className="pill subtle-pill">Coming later</span></div>)}</aside></div></>;
 }
 
 function ShopPage({ specimens, species, cash, day, onBuy, onSell }: { specimens: Specimen[]; species: Species[]; cash: number; day: number; onBuy: (plant: Species) => void; onSell: (specimen: Specimen) => void }) {
