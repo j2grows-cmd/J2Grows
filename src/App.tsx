@@ -584,32 +584,44 @@ function App() {
 
   function observeSelectedSpecimen() {
     if (!activeSpecimen) return;
+    if (activeSpecimen.dead || activeSpecimen.health <= 0) { announce("Dead specimens cannot produce new observation evidence."); return; }
     if (activeSpecimen.lastObservedDay === day) {
       announce(`${activeSpecimen.nickname} has already been observed today. Advance a day before recording another observation.`);
       return;
     }
     const record = activeSpecimen.genetics ?? createSpecimenGenetics(activeSpecimen.variegation);
     const observed = observePlant(record, activeSpecimen.variegation);
-    const updated = { ...activeSpecimen, genetics: observed, lastObservedDay: day, value: specimenValue(activeSpecimen) };
+    const discovered = observed.research.mutations.some((mutation) => mutation.detected);
+    const updated = { ...activeSpecimen, genetics: observed, lastObservedDay: day, discovered: Boolean(activeSpecimen.discovered || discovered) };
+    updated.value = specimenValue(updated);
     setSpecimens((current) => current.map((item) => item.id === activeSpecimen.id ? updated : item));
     setResearch((current) => current + 2);
-    announce(`Observation recorded for ${activeSpecimen.nickname}. Evidence added to its field record.`);
+    announce(discovered && !activeSpecimen.discovered
+      ? `Observation recorded. Sufficient evidence confirmed a mutation in ${activeSpecimen.nickname}.`
+      : `Observation recorded for ${activeSpecimen.nickname}. Evidence added to its field record.`);
   }
 
   function analyseSelectedSpecimen() {
     if (!activeSpecimen) return;
+    if (activeSpecimen.dead || activeSpecimen.health <= 0) { announce("Dead specimens cannot undergo further genetic analysis."); return; }
     const record = activeSpecimen.genetics ?? createSpecimenGenetics(activeSpecimen.variegation);
     if (record.research.analysisLevel >= 3) {
       announce(`${activeSpecimen.nickname} has completed all available genetic analysis levels.`);
       return;
     }
-    if (research < 25) { announce("Genetic analysis requires at least 25 global research data."); return; }
-    const analysedRecord = { ...record, research: { ...record.research, points: Math.max(record.research.points, 25) } };
-    const analysed = analyseGenetics(analysedRecord, 25);
-    if (!analysed) { announce("More observation evidence is needed before analysis."); return; }
+    if (record.research.observationCount < 3) { announce("Record at least three observations on this specimen before analysis."); return; }
+    const analysisCost = 15 + record.research.analysisLevel * 10;
+    if (research < analysisCost) { announce(`Analysis level ${record.research.analysisLevel + 1} costs ${analysisCost} global research points.`); return; }
+    if (record.research.points < analysisCost) { announce(`This specimen needs ${analysisCost} evidence points before analysis.`); return; }
+    const analysed = analyseGenetics(record, analysisCost);
+    if (!analysed) { announce("More recorded specimen evidence is needed before analysis."); return; }
     setResearch((current) => current - analysisCost);
-    setSpecimens((current) => current.map((item) => { if (item.id !== activeSpecimen.id) return item; const updated = { ...item, genetics: { ...analysed, research: { ...analysed.research, mutations: analysed.research.mutations.map((mutation) => ({ ...mutation, detected: mutation.detected })) } } }; return { ...updated, value: specimenValue(updated) }; }));
-    announce(`Analysis complete for ${activeSpecimen.nickname}. Research level ${analysed.research.analysisLevel} unlocked.`);
+    setSpecimens((current) => current.map((item) => {
+      if (item.id !== activeSpecimen.id) return item;
+      const updated = { ...item, genetics: analysed };
+      return { ...updated, value: specimenValue(updated) };
+    }));
+    announce(`Analysis complete for ${activeSpecimen.nickname}. Analysis level ${analysed.research.analysisLevel} unlocked.`);
   }
 
   function purchaseSpecies(plant: Species) {
