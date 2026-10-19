@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeSpecies, type Species, type Specimen } from "./data";
 import { loadSpeciesCatalog, supabase } from "./supabase";
+import { getSpeciesEconomy, getShopAvailability, STARTING_CASH } from "./game/catalog";
+import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, inheritGenetics, observePlant, shouldDiscoverMutation, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
 
 type Page = "Dashboard" | "Plant Catalogue" | "Specimen Record" | "Breeding" | "Research" | "Greenhouse" | "Facilities" | "Staff" | "Shop" | "Finances" | "Settings";
 const nav: { label: Page; icon: typeof Home }[] = [
@@ -37,7 +39,7 @@ function Metric({ label, value, detail, icon: Icon, tone = "green" }: { label: s
 }
 
 type GameSave = {
-  version: 1;
+  version: 2;
   specimens: Specimen[];
   cash: number;
   research: number;
@@ -53,7 +55,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
     const raw = localStorage.getItem(SAVE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<GameSave>;
-      if (parsed.version === 1 && Array.isArray(parsed.specimens) && typeof parsed.cash === "number" && typeof parsed.research === "number" && typeof parsed.day === "number" && typeof parsed.savedAt === "number") {
+      if ((parsed.version === 1 || parsed.version === 2) && Array.isArray(parsed.specimens) && typeof parsed.cash === "number" && typeof parsed.research === "number" && typeof parsed.day === "number" && typeof parsed.savedAt === "number") {
         const offlineDays = Math.min(14, Math.floor(Math.max(0, Date.now() - parsed.savedAt) / (10 * 60 * 1000)));
         const days = offlineDays;
         return {
@@ -71,7 +73,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
   } catch {
     // A malformed or unavailable local save falls back to a fresh prototype save.
   }
-  return { version: 1, specimens: [], cash: 1000, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), offlineDays: 0 };
+  return { version: 2, specimens: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), offlineDays: 0 };
 }
 
 function App() {
@@ -89,9 +91,9 @@ function App() {
     return () => { cancelled = true; };
   }, []);
   const [page, setPage] = useState<Page>("Dashboard");
-  const [specimens, setSpecimens] = useState<Specimen[]>(loadedSave.specimens);
+  const [specimens, setSpecimens] = useState<Specimen[]>(loadedSave.specimens.map((specimen) => ({ ...specimen, genetics: specimen.genetics ?? createSpecimenGenetics(specimen.variegation) })));
   const [cash, setCash] = useState(loadedSave.cash);
-  const [research, setResearch] = useState(loadedSave.research);
+  const [research, setResearch] = useState(loadedSave.research);\n  const [greenhouseEnvironment, setGreenhouseEnvironment] = useState<PlantEnvironment>({ ...DEFAULT_ENVIRONMENT });
   const [day, setDay] = useState(loadedSave.day);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All plants");
@@ -105,10 +107,10 @@ function App() {
   const [instituteNameDraft, setInstituteNameDraft] = useState(() => {
     try { return localStorage.getItem("j2grows.institute.name.v1") || ""; } catch { return ""; }
   });
-  const [starterSpeciesId, setStarterSpeciesId] = useState("alocasia-polly");
+  const [starterSpeciesId, setStarterSpeciesId] = useState("alocasia-polly");\n  const starterPlant = catalogSpecies.find((item) => item.id === starterSpeciesId) ?? prototypeSpecies.find((item) => item.id === starterSpeciesId) ?? prototypeSpecies[0];\n  const starterPrice = getSpeciesEconomy(starterPlant.name)?.basePrice ?? starterPlant.basePrice ?? 15;
   const tutorialSteps: { page: Page; title: string; body: string; tip: string }[] = [
     { page: "Dashboard", title: "Name your institute", body: "Every great botanical institution starts with a name. Choose one that will appear throughout your nursery.", tip: "You can change this later by replaying the introduction or through the institution settings." },
-    { page: "Plant Catalogue", title: "Acquire your first plant", body: "Choose a starter species for £250. This is your first living specimen and the source of your first cutting.", tip: "You start with £1,000, so you will have funds left for propagation." },
+    { page: "Plant Catalogue", title: "Acquire your first plant", body: "Choose an affordable starter species using its base price. This is your first living specimen and the source of your first propagation.", tip: "You start with £1,000, so you will have funds left for propagation." },
     { page: "Specimen Record", title: "Propagate your first plant", body: "Create your first new specimen using a propagation method that fits your chosen plant. It costs £100 in this guided prototype.", tip: "Most aroids can be propagated in several ways, but Alocasia uses corms rather than stem cuttings here." },
     { page: "Greenhouse", title: "Give your new plant time to establish", body: "Advance one simulated day to let your new specimen establish. This tutorial uses a scripted outcome so you can learn the discovery loop.", tip: "The full growth and environmental simulation is still being developed." },
     { page: "Specimen Record", title: "Discover your first mutation", body: "Your propagated plant develops a new variegation expression. The mutation is recorded on the specimen so you can inspect and protect this discovery.", tip: "This first mutation is scripted for onboarding; later genetics will use the game's inheritance and mutation rules." },
@@ -129,23 +131,44 @@ function App() {
     announce(`${name} is ready to grow.`);
   }
 
-  function acquireStarterPlant() {
-    if (specimens.length > 0) { setTutorialStep(2); setSelected(specimens[0].id); setPage("Specimen Record"); return; }
-    const cost = 250;
-    if (cash < cost) { announce("You need £250 to acquire your first plant."); return; }
-    const plant = catalogSpecies.find((item) => item.id === starterSpeciesId) ?? prototypeSpecies.find((item) => item.id === starterSpeciesId) ?? prototypeSpecies[0];
-    const id = `J2G-${plant.latin.split(" ")[0].slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-6)}`;
+  function specimenValue(specimen: Specimen, plantName = findSpecies(specimen.speciesId).name): number {
+    const economy = getSpeciesEconomy(plantName);
+    const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation);
+    return calculateSpecimenValue({
+      basePrice: economy?.basePrice ?? findSpecies(specimen.speciesId).basePrice ?? 15,
+      health: specimen.health,
+      stage: specimen.stage,
+      variegationStrength: specimen.variegation,
+      stability: record.genetics.stability,
+      geneticsBonus: 1,
+      discoveryBonus: specimen.discovered ? 1.1 : 1,
+    });
+  }
+
+  function acquireSpecies(plant: Species, starter = false) {
+    const cost = getSpeciesEconomy(plant.name)?.basePrice ?? plant.basePrice ?? 15;
+    if (cash < cost) { announce(`Not enough funds. ${plant.name} costs ${money(cost)}.`); return; }
+    const id = `J2G-${plant.latin.split(" ")[0].slice(0, 3).toUpperCase()}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+    const genetics = createSpecimenGenetics(0);
     const specimen: Specimen = {
       id, speciesId: plant.id, nickname: plant.name, location: "Home greenhouse",
-      health: 100, stage: "Juvenile", value: cost, protected: false,
-      variegation: 0, discovered: false,
+      health: 100, stage: "Juvenile", value: 0, protected: false,
+      variegation: 0, discovered: false, genetics,
     };
+    specimen.value = specimenValue(specimen, plant.name);
     setCash((current) => current - cost);
     setSpecimens((current) => [...current, specimen]);
     setSelected(id);
-    setTutorialStep(2);
-    setPage("Specimen Record");
-    announce(`${plant.name} acquired for £250. Your first specimen has been recorded.`);
+    if (starter) {
+      setTutorialStep(2);
+      setPage("Specimen Record");
+    }
+    announce(`${plant.name} acquired for ${money(cost)}. Its base price is ${money(cost)}; individual value will change with growth and genetics.`);
+  }
+
+  function acquireStarterPlant() {
+    if (specimens.length > 0) { setTutorialStep(2); setSelected(specimens[0].id); setPage("Specimen Record"); return; }
+    acquireSpecies(starterPlant, true);
   }
 
   function takeTutorialCutting() {
@@ -211,7 +234,7 @@ function App() {
   }
   useEffect(() => {
     try {
-      const save: GameSave = { version: 1, specimens, cash, research, day, projectStarted, savedAt: Date.now() };
+      const save: GameSave = { version: 2, specimens, cash, research, day, projectStarted, savedAt: Date.now() };
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     } catch {
       setNotice("Local save unavailable. Your progress may not persist in this browser.");
@@ -238,7 +261,7 @@ function App() {
     if (!confirmed) return;
     try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem("j2grows.tutorial.completed.v1"); } catch { /* State can still reset for this session. */ }
     setSpecimens([]);
-    setCash(1000);
+    setCash(STARTING_CASH);
     setResearch(0);
     setDay(1);
     setProjectStarted(false);
@@ -251,14 +274,62 @@ function App() {
     setPage("Dashboard");
     setTutorialStep(0);
     setTutorialOpen(true);
-    announce("New game started: £1,000, no plants, and 0 research data.");
+    announce(`New game started: ${money(STARTING_CASH)}, no plants, and 0 research data.`);
   }
 
   function advanceDay() {
-    setDay((current) => current + 1);
-    setSpecimens((current) => current.map((specimen) => ({ ...specimen, health: Math.min(100, specimen.health + (specimen.health < 90 ? 2 : 0)) })));
-    setResearch((current) => current + 25);
-    announce("A day passed. Eligible plants grew and research progressed.");
+    const nextDay = day + 1;
+    let mutationMessage = "";
+    const nextSpecimens = specimens.map((specimen) => {
+      const health = Math.min(100, specimen.health + (specimen.health < 90 ? 2 : 0));
+      const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation);
+      const environment = { ...greenhouseEnvironment, health };
+      const growth = growVariegation(record.genetics, environment, specimen.variegation);
+      let nextRecord: SpecimenGenetics = observePlant({ ...record, environment, expression: growth.expression }, growth.expression);
+      let nextVariegation = growth.expression;
+      let discovered = specimen.discovered;
+      if (shouldDiscoverMutation(record.genetics, environment, record.research.analysisLevel)) {
+        const mutation = createMutation();
+        mutation.detected = research > 0 || record.research.analysisLevel > 0;
+        nextRecord = { ...nextRecord, genetics: { ...nextRecord.genetics, mutationIds: [...new Set([...nextRecord.genetics.mutationIds, mutation.id])] }, research: { ...nextRecord.research, mutations: [...nextRecord.research.mutations, mutation] } };
+        if (mutation.category === "colour") nextVariegation = Math.min(100, Math.max(nextVariegation, 35 + Math.round(Math.random() * 35)));
+        if (mutation.detected) {
+          discovered = true;
+          mutationMessage = ` A ${mutation.rarity.toLowerCase()} ${mutation.category} mutation was detected in ${specimen.nickname}.`;
+        }
+      }
+      const updated = { ...specimen, health, variegation: nextVariegation, discovered, genetics: { ...nextRecord, expression: nextVariegation, environment } };
+      return { ...updated, value: specimenValue(updated) };
+    });
+    setDay(nextDay);
+    setSpecimens(nextSpecimens);
+    setResearch((current) => current + 5);
+    announce(`Day ${nextDay}: plants grew, observations added research evidence and environmental conditions influenced variegation.${mutationMessage}`);
+  }
+
+  function observeSelectedSpecimen() {
+    if (!activeSpecimen) return;
+    const record = activeSpecimen.genetics ?? createSpecimenGenetics(activeSpecimen.variegation);
+    const observed = observePlant(record, activeSpecimen.variegation);
+    const updated = { ...activeSpecimen, genetics: observed, value: specimenValue(activeSpecimen) };
+    setSpecimens((current) => current.map((item) => item.id === activeSpecimen.id ? updated : item));
+    setResearch((current) => current + 2);
+    announce(`Observation recorded for ${activeSpecimen.nickname}. Evidence added to its field record.`);
+  }
+
+  function analyseSelectedSpecimen() {
+    if (!activeSpecimen) return;
+    if (research < 25) { announce("Genetic analysis costs 25 research data."); return; }
+    const record = activeSpecimen.genetics ?? createSpecimenGenetics(activeSpecimen.variegation);
+    const analysed = analyseGenetics({ ...record, research: { ...record.research, points: Math.max(record.research.points, 25) } }, 25);
+    if (!analysed) { announce("More observation evidence is needed before analysis."); return; }
+    setResearch((current) => current - 25);
+    setSpecimens((current) => current.map((item) => item.id === activeSpecimen.id ? { ...item, genetics: analysed } : item));
+    announce(`Analysis complete for ${activeSpecimen.nickname}. Research level ${analysed.research.analysisLevel} unlocked.`);
+  }
+
+  function purchaseSpecies(plant: Species) {
+    acquireSpecies(plant);
   }
 
   type PropagationMethod = "cutting" | "division" | "corm" | "tissue-culture";
@@ -275,13 +346,20 @@ function App() {
         : "Corm propagation is reserved for Alocasia.");
       return;
     }
-    const details: Record<PropagationMethod, { cost: number; prefix: string; label: string; location: string; health: number; nickname: string }> = {
-      cutting: { cost: 100, prefix: "CUT", label: "Cutting", location: "Propagation Bench", health: 85, nickname: "Cutting" },
-      division: { cost: 80, prefix: "DIV", label: "Division / offset", location: "Propagation Bench", health: 90, nickname: "Division" },
-      corm: { cost: 75, prefix: "COR", label: "Corm", location: "Corm Nursery", health: 75, nickname: "Corm" },
-      "tissue-culture": { cost: 200, prefix: "TC", label: "Tissue culture", location: "Tissue Culture Lab", health: 70, nickname: "Tissue Culture" },
+    const rarity = (getSpeciesEconomy(plant.name)?.rarity ?? plant.rarity) as Species["rarity"];
+    const costs: Record<PropagationMethod, Record<Species["rarity"], number>> = {
+      division: { Common: 2, Uncommon: 3, Rare: 4, "Very Rare": 5, "Ultra Rare": 7, Mythic: 10 },
+      corm: { Common: 2, Uncommon: 3, Rare: 4, "Very Rare": 5, "Ultra Rare": 7, Mythic: 10 },
+      cutting: { Common: 4, Uncommon: 5, Rare: 7, "Very Rare": 10, "Ultra Rare": 12, Mythic: 15 },
+      "tissue-culture": { Common: 10, Uncommon: 15, Rare: 20, "Very Rare": 30, "Ultra Rare": 40, Mythic: 60 },
     };
-    const detail = details[method];
+    const details: Record<PropagationMethod, { prefix: string; label: string; location: string; health: number; nickname: string }> = {
+      cutting: { prefix: "CUT", label: "Cutting", location: "Propagation Bench", health: 85, nickname: "Cutting" },
+      division: { prefix: "DIV", label: "Division / offset", location: "Propagation Bench", health: 90, nickname: "Division" },
+      corm: { prefix: "COR", label: "Corm", location: "Corm Nursery", health: 75, nickname: "Corm" },
+      "tissue-culture": { prefix: "TC", label: "Tissue culture", location: "Tissue Culture Lab", health: 70, nickname: "Tissue Culture" },
+    };
+    const detail = { ...details[method], cost: costs[method][rarity] };
     if (cash < detail.cost) { announce(`Not enough funds. ${detail.label} propagation costs ${money(detail.cost)}.`); return; }
     const suffix = `${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
     const child: Specimen = {
@@ -336,27 +414,31 @@ function App() {
       announce("You need £100 for supplies to run this cross.");
       return;
     }
-    const seed = [...(parentA.id + parentB.id)].reduce((sum, char) => sum + char.charCodeAt(0), day);
-    const inheritedVariation = Math.max(0, Math.min(100, Math.round((parentA.variegation + parentB.variegation) / 2 + ((seed % 17) - 8))));
-    const source = seed % 2 === 0 ? parentA : parentB;
+    const parentAGenetics = parentA.genetics ?? createSpecimenGenetics(parentA.variegation);
+    const parentBGenetics = parentB.genetics ?? createSpecimenGenetics(parentB.variegation);
+    const inherited = inheritGenetics(parentAGenetics.genetics, parentBGenetics.genetics);
+    const inheritedVariation = Math.max(0, Math.min(100, Math.round((parentA.variegation + parentB.variegation + inherited.variegationPotential) / 3)));
+    const source = inherited.variegationPotential >= parentAGenetics.genetics.variegationPotential ? parentA : parentB;
     const childNumber = String(specimens.length + 1).padStart(4, "0");
     const child: Specimen = {
-      id: "J2G-" + genusA.slice(0, 3).toUpperCase() + "-" + childNumber,
+      id: `J2G-${genusA.slice(0, 3).toUpperCase()}-${childNumber}-${Date.now().toString(36).slice(-3).toUpperCase()}`,
       speciesId: source.speciesId,
       nickname: "Seedling " + childNumber,
       location: "Propagation Bench",
       health: 88,
       stage: "Juvenile",
-      value: Math.max(35, Math.round(45 + inheritedVariation * 2.2)),
+      value: 0,
       protected: false,
       variegation: inheritedVariation,
-      discovered: inheritedVariation >= 45,
+      discovered: false,
+      genetics: { ...createSpecimenGenetics(inheritedVariation), genetics: inherited },
     };
-    setCash((current) => current - 100);
+    child.value = specimenValue(child);
+    setCash((current) => current - 4);
     setSpecimens((current) => [...current, child]);
     setSelected(child.id);
     setPage("Specimen Record");
-    announce("Cross completed. " + child.nickname + " recorded with " + inheritedVariation + "% variegation expression. This uses a simplified prototype inheritance model.");
+    announce(`Cross completed. ${child.nickname} inherited a blended genetic profile with ${inheritedVariation}% visible variegation. Mutation is possible but not guaranteed.`);
   }
 
   function startResearch() {
@@ -403,13 +485,13 @@ function App() {
 
         {page === "Dashboard" && <Dashboard specimens={specimens} cash={cash} research={research} day={day} projectStarted={projectStarted} onNavigate={setPage} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onAdvance={advanceDay} />}
         {page === "Plant Catalogue" && <Catalogue specimens={filteredSpecimens} species={catalogSpecies} catalogSource={catalogSource} query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onSell={sellSpecimen} />}
-        {page === "Specimen Record" && <SpecimenPage specimen={activeSpecimen} plant={activeSpecies} onPropagate={(method) => propagateSpecimen(activeSpecimen, method)} onSell={() => sellSpecimen(activeSpecimen)} onToggleProtection={() => setSpecimens((current) => current.map((item) => item.id === activeSpecimen.id ? { ...item, protected: !item.protected } : item))} onBack={() => setPage("Plant Catalogue")} announce={announce} />}
+        {page === "Specimen Record" && <SpecimenPage specimen={activeSpecimen} plant={activeSpecies} onPropagate={(method) => propagateSpecimen(activeSpecimen, method)} onSell={() => sellSpecimen(activeSpecimen)} onObserve={observeSelectedSpecimen} onAnalyse={analyseSelectedSpecimen} researchPoints={research} onToggleProtection={() => setSpecimens((current) => current.map((item) => item.id === activeSpecimen.id ? { ...item, protected: !item.protected } : item))} onBack={() => setPage("Plant Catalogue")} announce={announce} />}
         {page === "Breeding" && <BreedingPage specimens={specimens} onCross={runCross} />}
         {page === "Research" && <ResearchPage cash={cash} research={research} projectStarted={projectStarted} onStart={startResearch} announce={announce} />}
-        {page === "Greenhouse" && <GreenhousePage specimens={specimens} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} announce={announce} />}
+        {page === "Greenhouse" && <GreenhousePage specimens={specimens} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onApplyEnvironment={(humidity, temperature) => setGreenhouseEnvironment({ ...greenhouseEnvironment, humidity, light: 70, nutrition: Math.max(20, 100 - Math.abs(temperature - 24) * 7), health: 100 })} announce={announce} />}
         {page === "Facilities" && <FacilitiesPage cash={cash} onBuy={(cost) => { if (cash < cost) announce("Not enough funds for this upgrade."); else { setCash((value) => value - cost); announce("Facility upgrade purchased. New capacity is being prepared."); } }} />}
         {page === "Staff" && <StaffPage />}
-        {page === "Shop" && <ShopPage specimens={specimens} onSell={sellSpecimen} />}
+        {page === "Shop" && <ShopPage specimens={specimens} species={catalogSpecies} cash={cash} day={day} onBuy={purchaseSpecies} onSell={sellSpecimen} />}
         {page === "Finances" && <FinancesPage cash={cash} specimens={specimens} />}
         {page === "Settings" && <SettingsPage onReplayTutorial={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} onResetGame={resetGame} day={day} specimensCount={specimens.length} catalogSource={catalogSource} />}
       </div>
@@ -463,7 +545,7 @@ function BreedingPage({ specimens, onCross }: { specimens: Specimen[]; onCross: 
     return item ? findSpecies(item.speciesId).latin.split(" ")[0] : "";
   };
   const compatible = specimens.filter((item) => item.id !== parentA && genus(item.id) === genus(parentA));
-  return <div className="two-column-layout"><section className="panel"><SectionHeader title="Breeding workbench" subtitle="Choose source specimens and review the experiment before committing resources." /><div className="breeding-parent-grid">{[{ label: "Parent A", value: parentA, set: setParentA, options: specimens }, { label: "Parent B", value: parentB, set: setParentB, options: compatible }].map((parent) => <div className="parent-picker" key={parent.label}><span className="filter-heading">{parent.label.toUpperCase()}</span><select value={parent.value} onChange={(event) => parent.set(event.target.value)}>{parent.options.map((item) => <option key={item.id} value={item.id}>{item.nickname} · {findSpecies(item.speciesId).name}</option>)}</select>{parent.value && specimens.find((item) => item.id === parent.value) && <PlantArt type={findSpecies(specimens.find((item) => item.id === parent.value)!.speciesId).image} large />}</div>)}</div><div className="experiment-summary"><div><span>Method</span><strong>Controlled cross · prototype</strong></div><div><span>Research cost</span><strong>250 cash</strong></div><div><span>Duration</span><strong>1 simulated day</strong></div></div><p className="muted-copy">The first version records the experiment flow; actual genetic inheritance and offspring creation are next-stage work.</p><button className="button button-primary" disabled={!parentA || !parentB || parentA === parentB || genus(parentA) !== genus(parentB)} onClick={() => onCross(parentA, parentB)}>Run cross · £100 <ArrowRight size={15} /></button></section><aside className="panel"><SectionHeader title="Outcome preview" subtitle="Possible outcomes, not guarantees." /><div className="outcome-art"><PlantArt type="monstera" large /></div><h3>Trait observation</h3><p className="muted-copy">The next genetics milestone will model visible traits, hidden potential and inheritance confidence separately.</p><div className="provenance-item"><span>Parent A</span><strong>{specimens.find((item) => item.id === parentA)?.nickname ?? "Not selected"}</strong></div><div className="provenance-item"><span>Parent B</span><strong>{specimens.find((item) => item.id === parentB)?.nickname ?? "Not selected"}</strong></div></aside></div>;
+  return <div className="two-column-layout"><section className="panel"><SectionHeader title="Breeding workbench" subtitle="Choose source specimens and review the experiment before committing resources." /><div className="breeding-parent-grid">{[{ label: "Parent A", value: parentA, set: setParentA, options: specimens }, { label: "Parent B", value: parentB, set: setParentB, options: compatible }].map((parent) => <div className="parent-picker" key={parent.label}><span className="filter-heading">{parent.label.toUpperCase()}</span><select value={parent.value} onChange={(event) => parent.set(event.target.value)}>{parent.options.map((item) => <option key={item.id} value={item.id}>{item.nickname} · {findSpecies(item.speciesId).name}</option>)}</select>{parent.value && specimens.find((item) => item.id === parent.value) && <PlantArt type={findSpecies(specimens.find((item) => item.id === parent.value)!.speciesId).image} large />}</div>)}</div><div className="experiment-summary"><div><span>Method</span><strong>Controlled cross · prototype</strong></div><div><span>Research cost</span><strong>250 cash</strong></div><div><span>Duration</span><strong>1 simulated day</strong></div></div><p className="muted-copy">Inheritance blends both parents, includes bounded variation and can occasionally produce mutations. Outcomes are never guaranteed.</p><button className="button button-primary" disabled={!parentA || !parentB || parentA === parentB || genus(parentA) !== genus(parentB)} onClick={() => onCross(parentA, parentB)}>Run cross · £100 <ArrowRight size={15} /></button></section><aside className="panel"><SectionHeader title="Outcome preview" subtitle="Possible outcomes, not guarantees." /><div className="outcome-art"><PlantArt type="monstera" large /></div><h3>Trait observation</h3><p className="muted-copy">The next genetics milestone will model visible traits, hidden potential and inheritance confidence separately.</p><div className="provenance-item"><span>Parent A</span><strong>{specimens.find((item) => item.id === parentA)?.nickname ?? "Not selected"}</strong></div><div className="provenance-item"><span>Parent B</span><strong>{specimens.find((item) => item.id === parentB)?.nickname ?? "Not selected"}</strong></div></aside></div>;
 }
 
 function ResearchPage({ cash, research, projectStarted, onStart, announce }: { cash: number; research: number; projectStarted: boolean; onStart: () => void; announce: (message: string) => void }) {
