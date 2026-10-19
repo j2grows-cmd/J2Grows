@@ -12,6 +12,7 @@ import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityU
 import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, startStaffTraining, STAFF_TRAINING_COST, weeklyStaffOperatingCost, type StaffState } from "./game/staff.ts";
 import { getOfflineProgressDays } from "./game/offline-progress.ts";
 import { canCreateOffset } from "./game/propagation-eligibility.ts";
+import { checkSaveEnvelope, isRecord, normalizeManualSaveSlots, normalizeSpecimens } from "./game/save-validation.ts";
 import { loadSpeciesCatalog } from "./supabase";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
 import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, observePlant, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
@@ -57,7 +58,7 @@ function Metric({ label, value, detail, icon: Icon, tone = "green" }: { label: s
 }
 
 type GameSave = {
-  version: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  version: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
   specimens: Specimen[];
   breedingProjects: BreedingProject[];
   cash: number;
@@ -77,51 +78,79 @@ type GameSave = {
 
 const SAVE_KEY = "j2grows.prototype.save.v1";
 
-function loadGameSave(): GameSave & { offlineDays: number } {
+const SAVE_BACKUP_KEY = `${SAVE_KEY}.recovery-backup`;
+
+function backupRawSave(raw: string, reason: string) {
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Partial<GameSave>;
-      if ((parsed.version === 1 || parsed.version === 2 || parsed.version === 3 || parsed.version === 4 || parsed.version === 5 || parsed.version === 6 || parsed.version === 7) && Array.isArray(parsed.specimens) && typeof parsed.cash === "number" && typeof parsed.research === "number" && typeof parsed.day === "number" && typeof parsed.savedAt === "number") {
-        const offlineProgressEnabled = parsed.offlineProgressEnabled !== false;
-        const offlineDays = getOfflineProgressDays(parsed.savedAt, Date.now(), offlineProgressEnabled);
-        const savedFacilityLevels = normalizeFacilityLevels(parsed.facilityLevels);
-        const savedStaffState = normalizeStaffState(parsed.staffState);
-        const normalizedSpecimens = parsed.specimens.map((specimen) => {
-          let current = { ...specimen };
-          if (current.genetics && typeof current.genetics.genetics.mutationGenePresent !== "boolean") {
-            current.genetics = { ...current.genetics, genetics: { ...current.genetics.genetics, mutationGenePresent: Math.random() < 0.2 } };
-          }
-          if (current.genetics) {
-            current.genetics = { ...current.genetics, research: { ...current.genetics.research, mutations: current.genetics.research.mutations.map((mutation) => ({ ...mutation, strength: typeof mutation.strength === "number" ? mutation.strength : 20 })) } };
-          }
-          return current;
-        });
-        return {
-          version: 7,
-          specimens: normalizedSpecimens,
-          breedingProjects: Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects : [],
-          researchUnlocks: Array.isArray(parsed.researchUnlocks) ? parsed.researchUnlocks.filter((item): item is string => typeof item === "string") : [],
-          cash: parsed.cash,
-          research: parsed.research,
-          day: parsed.day,
-          projectStarted: Boolean(parsed.projectStarted && typeof parsed.analysisTargetSpecimenId === "string" && typeof parsed.analysisStartedDay === "number" && parsed.day - parsed.analysisStartedDay < 3),
-          analysisTargetSpecimenId: typeof parsed.analysisTargetSpecimenId === "string" && parsed.day - (parsed.analysisStartedDay ?? parsed.day) < 3 ? parsed.analysisTargetSpecimenId : undefined,
-          analysisStartedDay: typeof parsed.analysisStartedDay === "number" && parsed.day - parsed.analysisStartedDay < 3 ? parsed.analysisStartedDay : undefined,
-          savedAt: Date.now(),
-          analysisEquipmentLevel: typeof parsed.analysisEquipmentLevel === "number" ? Math.max(0, Math.min(3, Math.floor(parsed.analysisEquipmentLevel))) : 0,
-          greenhouseEnvironment: parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT },
-          facilityLevels: savedFacilityLevels,
-          staffState: savedStaffState,
-          offlineProgressEnabled,
-          offlineDays,
-        };
-      }
+    localStorage.setItem(SAVE_BACKUP_KEY, JSON.stringify({ backedUpAt: Date.now(), reason, raw }));
+  } catch { /* Recovery still proceeds if browser storage is full/unavailable. */ }
+}
+
+function freshGameSave(recoveryNotice = ""): GameSave & { offlineDays: number; recoveryNotice: string } {
+  return { version: 8, specimens: [], breedingProjects: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, greenhouseEnvironment: { ...DEFAULT_ENVIRONMENT }, facilityLevels: { propagationBench: 0, environmentalController: 0 }, staffState: { ...DEFAULT_STAFF_STATE }, offlineProgressEnabled: true, offlineDays: 0, recoveryNotice };
+}
+
+function loadGameSave(): GameSave & { offlineDays: number; recoveryNotice: string } {
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return freshGameSave();
+    let parsed: unknown;
+    try { parsed = JSON.parse(raw) as unknown; }
+    catch {
+      backupRawSave(raw, "The autosave was not valid JSON.");
+      return freshGameSave("Your autosave was damaged. A recovery backup was saved and a fresh game was started.");
     }
+    const envelope = checkSaveEnvelope(parsed);
+    if (!envelope.valid || !isRecord(parsed)) {
+      backupRawSave(raw, envelope.reason ?? "The autosave structure was invalid.");
+      return freshGameSave("Your autosave could not be safely loaded. A recovery backup was saved and a fresh game was started.");
+    }
+    const recovered = normalizeSpecimens(parsed.specimens);
+    const validProjects = Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects.filter((item) => isRecord(item) && typeof item.id === "string" && typeof item.parentAId === "string" && typeof item.parentBId === "string" && typeof item.startedDay === "number" && typeof item.completesOnDay === "number" && typeof item.cost === "number" && ["active", "completed", "cancelled"].includes(String(item.status)) && typeof item.lineId === "string" && typeof item.failureChance === "number") : [];
+    const droppedProjects = Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects.length - validProjects.length : 0;
+    const offlineProgressEnabled = parsed.offlineProgressEnabled !== false;
+    const offlineDays = getOfflineProgressDays(parsed.savedAt as number, Date.now(), offlineProgressEnabled);
+    const savedFacilityLevels = normalizeFacilityLevels(parsed.facilityLevels);
+    const savedStaffState = normalizeStaffState(parsed.staffState);
+    const noticeParts: string[] = [];
+    if (recovered.dropped || recovered.repaired || droppedProjects) {
+      backupRawSave(raw, `Recovered save: skipped ${recovered.dropped} invalid/duplicate specimen(s), repaired ${recovered.repaired} specimen(s), and skipped ${droppedProjects} invalid breeding project(s).`);
+      if (recovered.dropped) noticeParts.push(`${recovered.dropped} invalid specimen(s) skipped`);
+      if (recovered.repaired) noticeParts.push(`${recovered.repaired} specimen(s) repaired`);
+      if (droppedProjects) noticeParts.push(`${droppedProjects} invalid breeding project(s) skipped`);
+    }
+    const cash = Math.min(1_000_000_000, Math.max(0, parsed.cash as number));
+    const research = Math.min(1_000_000_000, Math.max(0, parsed.research as number));
+    const day = Math.min(1_000_000_000, Math.max(1, Math.floor(parsed.day as number)));
+    if (cash !== parsed.cash || research !== parsed.research || day !== parsed.day) {
+      backupRawSave(raw, "Recovered save with out-of-range cash, research or day values.");
+      noticeParts.push("invalid economy/day values were clamped");
+    }
+    const analysisStartedDay = typeof parsed.analysisStartedDay === "number" && Number.isFinite(parsed.analysisStartedDay) && day - parsed.analysisStartedDay < 3 ? Math.max(1, Math.floor(parsed.analysisStartedDay)) : undefined;
+    const analysisTargetSpecimenId = typeof parsed.analysisTargetSpecimenId === "string" && recovered.specimens.some((item) => item.id === parsed.analysisTargetSpecimenId) && analysisStartedDay !== undefined ? parsed.analysisTargetSpecimenId : undefined;
+    const projectStarted = Boolean(parsed.projectStarted && analysisTargetSpecimenId && analysisStartedDay !== undefined);
+    const recoveryNotice = noticeParts.length ? `Save recovery completed: ${noticeParts.join("; ")}. A backup of the original save was retained in this browser.` : "";
+    return {
+      version: 8,
+      specimens: recovered.specimens,
+      breedingProjects: validProjects as unknown as BreedingProject[],
+      researchUnlocks: Array.isArray(parsed.researchUnlocks) ? parsed.researchUnlocks.filter((item): item is string => typeof item === "string") : [],
+      cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay,
+      savedAt: Date.now(),
+      analysisEquipmentLevel: typeof parsed.analysisEquipmentLevel === "number" && Number.isFinite(parsed.analysisEquipmentLevel) ? Math.max(0, Math.min(3, Math.floor(parsed.analysisEquipmentLevel))) : 0,
+      greenhouseEnvironment: isRecord(parsed.greenhouseEnvironment) ? {
+        light: typeof parsed.greenhouseEnvironment.light === "number" && Number.isFinite(parsed.greenhouseEnvironment.light) ? Math.max(0, Math.min(100, parsed.greenhouseEnvironment.light)) : DEFAULT_ENVIRONMENT.light,
+        nutrition: typeof parsed.greenhouseEnvironment.nutrition === "number" && Number.isFinite(parsed.greenhouseEnvironment.nutrition) ? Math.max(0, Math.min(100, parsed.greenhouseEnvironment.nutrition)) : DEFAULT_ENVIRONMENT.nutrition,
+        humidity: typeof parsed.greenhouseEnvironment.humidity === "number" && Number.isFinite(parsed.greenhouseEnvironment.humidity) ? Math.max(0, Math.min(100, parsed.greenhouseEnvironment.humidity)) : DEFAULT_ENVIRONMENT.humidity,
+        health: typeof parsed.greenhouseEnvironment.health === "number" && Number.isFinite(parsed.greenhouseEnvironment.health) ? Math.max(0, Math.min(100, parsed.greenhouseEnvironment.health)) : DEFAULT_ENVIRONMENT.health,
+      } : { ...DEFAULT_ENVIRONMENT },
+      facilityLevels: savedFacilityLevels, staffState: savedStaffState, offlineProgressEnabled, offlineDays, recoveryNotice,
+    };
   } catch {
-    // A malformed or unavailable local save falls back to a fresh prototype save.
+    if (raw) backupRawSave(raw, "The autosave could not be read safely.");
+    return freshGameSave(raw ? "Your autosave could not be read safely. A recovery backup was saved and a fresh game was started." : "");
   }
-  return { version: 7, specimens: [], breedingProjects: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, greenhouseEnvironment: { ...DEFAULT_ENVIRONMENT }, facilityLevels: { propagationBench: 0, environmentalController: 0 }, staffState: { ...DEFAULT_STAFF_STATE }, offlineProgressEnabled: true, offlineDays: 0 };
 }
 function App() {
   const loadedSave = useMemo(() => loadGameSave(), []);
@@ -149,14 +178,26 @@ function App() {
   const [offlineProgressEnabled, setOfflineProgressEnabled] = useState(loadedSave.offlineProgressEnabled !== false);
   const [offlineDaysRemaining, setOfflineDaysRemaining] = useState(loadedSave.offlineDays);
   const [saveSlots, setSaveSlots] = useState<Record<string, GameSave | null>>(() => {
-    try { return JSON.parse(localStorage.getItem("j2grows.manual-save-slots.v1") || '{"1":null,"2":null,"3":null}') as Record<string, GameSave | null>; }
-    catch { return { "1": null, "2": null, "3": null }; }
+    const slotsKey = "j2grows.manual-save-slots.v1";
+    try {
+      const raw = localStorage.getItem(slotsKey);
+      if (!raw) return { "1": null, "2": null, "3": null };
+      const parsed: unknown = JSON.parse(raw);
+      const normalized = normalizeManualSaveSlots(parsed);
+      if (!isRecord(parsed) || Object.keys(normalized).some((key) => parsed[key] !== undefined && parsed[key] !== null && normalized[key] === null)) {
+        try { localStorage.setItem(`${slotsKey}.recovery-backup`, JSON.stringify({ backedUpAt: Date.now(), raw, reason: "One or more manual save slots were malformed." })); } catch { /* Keep usable slots even if backup storage fails. */ }
+      }
+      return normalized as Record<string, GameSave | null>;
+    } catch {
+      try { const raw = localStorage.getItem(slotsKey); if (raw) localStorage.setItem(`${slotsKey}.recovery-backup`, JSON.stringify({ backedUpAt: Date.now(), raw, reason: "Manual save slots were not valid JSON." })); } catch { /* Recovery remains available in memory. */ }
+      return { "1": null, "2": null, "3": null };
+    }
   });
   const [day, setDay] = useState(loadedSave.day);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All plants");
   const [selected, setSelected] = useState<string>(initialSpecimens[0].id);
-  const [notice, setNotice] = useState(loadedSave.offlineDays > 0 ? `Welcome back. ${loadedSave.offlineDays} simulated day(s) of eligible offline progress applied.` : "");
+  const [notice, setNotice] = useState(loadedSave.recoveryNotice || (loadedSave.offlineDays > 0 ? `Welcome back. ${loadedSave.offlineDays} simulated day(s) of eligible offline progress applied.` : ""));
   const [projectStarted, setProjectStarted] = useState(loadedSave.projectStarted);
   const [analysisTargetSpecimenId, setAnalysisTargetSpecimenId] = useState<string | undefined>(loadedSave.analysisTargetSpecimenId);
   const [analysisStartedDay, setAnalysisStartedDay] = useState<number | undefined>(loadedSave.analysisStartedDay);
@@ -355,7 +396,7 @@ function App() {
   }
   useEffect(() => {
     try {
-      const save: GameSave = { version: 7, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, offlineProgressEnabled, savedAt: Date.now() };
+      const save: GameSave = { version: 8, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, offlineProgressEnabled, savedAt: Date.now() };
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     } catch {
       setNotice("Local save unavailable. Your progress may not persist in this browser.");
