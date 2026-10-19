@@ -29,7 +29,7 @@ export type Specimen = {
   /** Original shop price; used to prevent instant buy-and-resell arbitrage while allowing value to rise with growth. */
   purchasePrice?: number;
   /** Development state for a newly propagated specimen; omitted for established plants. */
-  propagation?: { method: "corm" | "cutting" | "division" | "tissue-culture"; phase: "Corm" | "Sprouting" | "Establishing"; daysInPhase: number; daysToSprout: number; daysToEstablish: number };
+  propagation?: { method: "corm" | "cutting" | "division" | "tissue-culture"; phase: "Corm" | "Sprouting" | "Establishing" | "Cutting" | "Rooting" | "New Growth"; daysInPhase: number; daysToSprout: number; daysToEstablish: number; daysToJuvenile?: number };
   value: number;
   protected: boolean;
   variegation: number;
