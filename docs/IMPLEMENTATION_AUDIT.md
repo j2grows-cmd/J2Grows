@@ -30,10 +30,13 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **Save compatibility:** Existing specimen IDs and lineage references are not rewritten. The existing save/load and manual-slot paths continue to serialise and restore those fields as stored.
 - **Tests:** Added tests for UUID format, collision retry, bounded failure and preserving legacy IDs.
 
-### A05. Facility upgrades charge money but do not persist or affect the facility
-- **Evidence:** Facilities' purchase callback only subtracts cash and announces success. No purchased-upgrade state is stored, displayed or included in `GameSave`.
-- **Impact:** The player can repeatedly pay for the same upgrade without receiving a durable benefit; reload loses the supposed purchase.
-- **Recommended fix:** Add owned-upgrade state to the save, disable/reprice owned upgrades, and connect each upgrade to a visible effect. Otherwise label the cards as non-purchasable previews.
+### A05. Facility upgrades — resolved on the development branch
+- **Previous evidence:** Facility purchases only charged cash and announced success; most upgrades had no durable level or gameplay effect.
+- **Current state:** Added save-version 5 with migration defaults for older saves and manual save slots. Propagation bench, Environmental controller and Analysis workstation levels are capped at three, displayed in Facilities, and priced progressively. Purchases validate the upgrade, current level and available funds before charging.
+- **Gameplay effects:** Each Propagation bench level shortens propagation phases by one day (minimum one day); each Environmental controller level adds five points to simulated light, nutrition and humidity, capped at 100; the Analysis workstation continues to influence mutation odds and analysis.
+- **Running costs:** Owned levels contribute weekly operating costs charged on every seventh simulation day. Costs are shown/announced when an upgrade is purchased.
+- **Tests:** Added coverage for progressive prices, invalid/underfunded/max-level purchases, environmental bounds, propagation duration, running costs, and old-save level migration.
+- **Remaining check:** Confirm CI and browser-test purchase → save/reload → effect → seventh-day operating cost.
 
 ### A06. Greenhouse and staff controls are transient
 - **Evidence:** Temperature, humidity and auto-care state live inside `GreenhousePage`; staff auto-care and training state live inside `StaffPage`. These components unmount on navigation, so their local state resets. They are not included in the save.
@@ -101,7 +104,7 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 
 1. **A01** — first plant acquisition; otherwise the new-game state is a softlock.
 2. **A02, A03, A04** — correct breeding, research and identity rules.
-3. **A05, A06, A07, A08** — durable state and coherent simulation.
+3. **A06, A07, A08** — greenhouse/staff state, coherent simulation and save validation.
 4. **A09, A10, A11** — catalogue robustness and truthful connection status.
 5. **A12, A13, A15, A16, A17** — tutorial/UI/documentation and regression coverage.
 
