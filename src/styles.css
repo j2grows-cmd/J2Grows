@@ -1011,3 +1011,10 @@ body{
  .catalogue-art-button{height:210px;min-height:210px;flex-basis:210px}
  .catalogue-art-button .plant-art{width:80%;height:80%;flex-basis:80%}
 }
+
+
+/* Slightly enlarge the centered catalogue artwork from 80% to 88% */
+.catalogue-art-button .plant-art{width:88%;height:88%;flex-basis:88%}
+@media(max-width:560px){
+ .catalogue-art-button .plant-art{width:88%;height:88%;flex-basis:88%}
+}
