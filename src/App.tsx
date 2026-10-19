@@ -7,6 +7,7 @@ import {
   Sprout, Sun, Thermometer, TrendingUp, Users, Wallet, X, Zap
 } from "lucide-react";
 import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeSpecies, type Species, type Specimen } from "./data";
+import { createUniqueSpecimenId } from "./game/specimen-id.ts";
 import { loadSpeciesCatalog } from "./supabase";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
 import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, observePlant, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
@@ -218,7 +219,9 @@ function App() {
   function acquireSpecies(plant: Species, starter = false) {
     const cost = getSpeciesEconomy(plant.id)?.basePrice ?? getSpeciesEconomy(plant.name)?.basePrice ?? plant.basePrice ?? 15;
     if (cash < cost) { announce(`Not enough funds. ${plant.name} costs ${money(cost)}.`); return; }
-    const id = `J2G-${plant.latin.split(" ")[0].slice(0, 3).toUpperCase()}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+    const usedIds = new Set(specimens.map((item) => item.id));
+    const id = createUniqueSpecimenId(usedIds);
+    usedIds.add(id);
     const genetics = createSpecimenGenetics(0);
     const specimen: Specimen = {
       id, speciesId: plant.id, nickname: plant.name, location: "Home greenhouse",
@@ -230,7 +233,7 @@ function App() {
     if (starter) {
       // A protected mature demonstration specimen lets the tutorial teach propagation
       // without bypassing the normal maturity requirement for ordinary shop plants.
-      const demoId = `J2G-DEMO-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+      const demoId = createUniqueSpecimenId(usedIds);
       const demonstration: Specimen = {
         ...specimen,
         id: demoId,
@@ -280,7 +283,7 @@ function App() {
     const cost = isAlocasia ? 2 : 4;
     if (cash < cost) { announce(`You need ${money(cost)} for propagation supplies.`); return; }
     const offspring: Specimen = {
-      id: `J2G-${isAlocasia ? "COR" : "CUT"}-${Date.now().toString().slice(-6)}`,
+      id: createUniqueSpecimenId(specimens.map((item) => item.id)),
       speciesId: parent.speciesId, nickname: isAlocasia ? "First Corm" : "First Cutting",
       location: isAlocasia ? "Corm Nursery" : "Propagation Bench",
       health: isAlocasia ? 75 : 85, stage: "Juvenile",
@@ -540,7 +543,7 @@ function App() {
       const inheritedMutationRecords = [...recordA.research.mutations, ...recordB.research.mutations]
         .filter((mutation, index, all) => inheritedMutationIds.includes(mutation.id) && all.findIndex((candidate) => candidate.id === mutation.id) === index)
         .map((mutation) => ({ ...mutation, detected: false, evidenceCount: 0 }));
-      const childId = `J2G-LINE-${nextDay.toString().padStart(4, "0")}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+      const childId = createUniqueSpecimenId([...nextSpecimens, ...completedChildren].map((item) => item.id));
       const childVariation = Math.round(inherited.variegationPotential);
       const child: Specimen = {
         id: childId, speciesId: parentA.speciesId, nickname: `Genetic Line ${generation} · ${completedChildren.length + 1}`,
@@ -562,7 +565,7 @@ function App() {
           const batchProfile = applyTraitTargeting(inheritTraits(recordA.genetics, recordB.genetics), recordA.genetics, recordB.genetics, project.targetTrait);
           const batchChild: Specimen = {
             ...child,
-            id: `${childId}-B${batchIndex}`,
+            id: createUniqueSpecimenId([...nextSpecimens, ...completedChildren].map((item) => item.id)),
             nickname: `Genetic Line ${generation} · ${completedChildren.length}`,
             variegation: Math.round(batchProfile.variegationPotential),
             genetics: { ...createSpecimenGenetics(batchProfile.variegationPotential), genetics: batchProfile, research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: inheritedMutationRecords.map((mutation) => ({ ...mutation, detected: false, evidenceCount: 0 })) } },
@@ -713,10 +716,12 @@ function App() {
     const count = method === "cutting" ? 1 + Math.floor(Math.random() * 3) : 1;
     const totalCost = detail.cost * count;
     if (cash < totalCost) { announce(`Not enough funds. ${count > 1 ? `${count} cuttings cost ${money(totalCost)} in total` : `${detail.label} propagation costs ${money(totalCost)}`}.`); return; }
-    const children: Specimen[] = Array.from({ length: count }, (_, index) => {
-      const suffix = `${Date.now().toString(36).toUpperCase()}-${index}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+    const usedIds = new Set(specimens.map((item) => item.id));
+    const children: Specimen[] = Array.from({ length: count }, () => {
+      const id = createUniqueSpecimenId(usedIds);
+      usedIds.add(id);
       const child: Specimen = {
-        id: `J2G-${detail.prefix}-${suffix}`,
+        id,
         speciesId: parent.speciesId,
         nickname: `${plant.name} ${detail.nickname}${count > 1 ? ` ${index + 1}` : ""}`,
         location: detail.location,
