@@ -7,6 +7,10 @@ export type FacilityLevels = {
 
 export type FacilityName = "Propagation bench" | "Environmental controller" | "Analysis workstation";
 
+export function normalizeFacilityLevels(input?: Partial<FacilityLevels> | null): FacilityLevels {
+  return { propagationBench: clampLevel(input?.propagationBench ?? 0), environmentalController: clampLevel(input?.environmentalController ?? 0) };
+}
+
 export const MAX_FACILITY_LEVEL = 3;
 const BASE_COST: Record<FacilityName, number> = {
   "Propagation bench": 1200,
@@ -25,7 +29,7 @@ function clampLevel(level: number): number {
 }
 
 export function nextFacilityUpgradeCost(name: string, levels: FacilityLevels, analysisEquipmentLevel: number): number | null {
-  if (!(name in BASE_COST)) return null;
+  if (!Object.hasOwn(BASE_COST, name)) return null;
   const facilityName = name as FacilityName;
   const level = getFacilityLevel(facilityName, levels, analysisEquipmentLevel);
   if (level >= MAX_FACILITY_LEVEL) return null;
