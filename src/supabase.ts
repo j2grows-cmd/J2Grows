@@ -31,7 +31,7 @@ type SpeciesRow = {
 function fromSpeciesRow(row: SpeciesRow): Species {
   const local = prototypeSpecies.find((plant) => plant.id === row.id);
   const imagePath = imagePathOverrides[row.id] ?? row.image_path;
-  const image = supabase!.storage.from("plant-images").getPublicUrl(imagePath).data.publicUrl;
+  const image = imagePath.trim() ? supabase!.storage.from("plant-images").getPublicUrl(imagePath).data.publicUrl : "";
   const fallback = makeStorageSpecies(row.id, image);
   const economy = getSpeciesEconomy(row.id) ?? getSpeciesEconomy(row.name);
 
