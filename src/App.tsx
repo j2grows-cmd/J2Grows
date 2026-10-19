@@ -672,7 +672,7 @@ function App() {
     setResearch((current) => current - analysisCost);
     setSpecimens((current) => current.map((item) => {
       if (item.id !== activeSpecimen.id) return item;
-      const updated = { ...item, genetics: analysed };
+      const updated = { ...item, genetics: analysed, discovered: Boolean(item.discovered || analysed.research.mutations.some((mutation) => mutation.detected)) };
       return { ...updated, value: specimenValue(updated) };
     }));
     announce(`Analysis complete for ${activeSpecimen.nickname}. Analysis level ${analysed.research.analysisLevel} unlocked.${equipmentCanConfirmWeakMutations ? " Equipped mutation screening confirmed eligible low-strength mutations." : ""}`);
