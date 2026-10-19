@@ -83,7 +83,7 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **Current state:** `loadSpeciesCatalog` now returns a precise source: `supabase-table`, `storage-folders`, or `local`. The Species Library displays that source and labels remote catalogue status as “Metadata loaded” rather than implying all images succeeded. Settings uses the same accurate source names.
 - **Image status:** The library reports remote images loaded, fallback artwork in use, and images still loading. The existing image error handler switches broken URLs to genus-matched CSS artwork and reports that state to the library.
 - **Tests:** Added `src/game/catalogue-status.ts` and `tests/catalogue-status.test.mjs` to cover all source labels and counts for loaded, pending, broken and local/fallback artwork.
-- **Verification:** CI is being checked for this change before closing the audit item.
+- **Verification:** GitHub Actions passed `npm test`, `npm run typecheck` and `npm run build` on implementation commit `7e2a1fcf50688a026cf86a17d36acbf0b939a2ac`.
 - **Remaining check:** Browser-test real catalogue entries and broken image URLs to confirm the status display updates correctly. No live Supabase data or configuration was changed.
 ### A12. Tutorial promises actions the game does not yet support
 - **Evidence:** The guide discusses managing plants, breeding and research, but a fresh save starts with no specimens and has no acquisition flow. The greenhouse and research steps also describe controls/projects whose outcomes are placeholders.
