@@ -394,7 +394,8 @@ function App() {
     let mutationMessage = "";
     const nextSpecimens = specimens.map((specimen) => {
       if (specimen.dead || specimen.health <= 0) return { ...specimen, health: 0, dead: true, value: 0 };
-      const rawEnvironmentalMean = (greenhouseEnvironment.light + greenhouseEnvironment.nutrition + greenhouseEnvironment.humidity) / 3;\n      const environmentalMean = greenhouseEnvironment.autoCare ? Math.max(60, rawEnvironmentalMean) : rawEnvironmentalMean;
+      const rawEnvironmentalMean = (greenhouseEnvironment.light + greenhouseEnvironment.nutrition + greenhouseEnvironment.humidity) / 3;
+      const environmentalMean = greenhouseEnvironment.autoCare ? Math.max(60, rawEnvironmentalMean) : rawEnvironmentalMean;
       const health = Math.max(0, Math.min(100, environmentalMean < 35 ? specimen.health - 5 : environmentalMean < 50 ? specimen.health - 2 : environmentalMean >= 75 && specimen.health < 100 ? specimen.health + 2 : specimen.health));
       const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation);
       const environment = { ...greenhouseEnvironment, health };
