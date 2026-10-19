@@ -430,10 +430,7 @@ function App() {
         mutation.detected = false;
         nextRecord = { ...nextRecord, genetics: { ...nextRecord.genetics, mutationIds: [...new Set([...nextRecord.genetics.mutationIds, mutation.id])] }, research: { ...nextRecord.research, mutations: [...nextRecord.research.mutations, mutation] } };
         if (mutation.category === "colour") { nextVariegation = Math.min(100, Math.max(nextVariegation, 35 + Math.round(Math.random() * 35))); nextRecord = { ...nextRecord, genetics: { ...nextRecord.genetics, variegationPotential: Math.max(nextRecord.genetics.variegationPotential, nextVariegation) } }; }
-        if (mutation.detected) {
-          discovered = true;
-          mutationMessage = ` A ${mutation.rarity.toLowerCase()} ${mutation.category} mutation was detected in ${specimen.nickname}.`;
-        }
+        mutationMessage += ` A potential ${mutation.category} mutation occurred in ${specimen.nickname}; record observations to confirm it.`;
       }
       let propagation = specimen.propagation;
       let stage = specimen.stage;
