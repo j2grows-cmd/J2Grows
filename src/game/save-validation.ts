@@ -1,4 +1,5 @@
 import type { Specimen } from "../data.ts";
+import type { PlantEnvironment } from "./genetics.ts";
 
 const VALID_STAGES = new Set(["Corm / Seedling", "Juvenile", "Growing", "Mature", "Breeding-ready"]);
 const VALID_PROPAGATION_METHODS = new Set(["corm", "cutting", "division", "tissue-culture"]);
@@ -20,14 +21,17 @@ function finite(value: unknown, fallback: number, min: number, max: number, inte
 function validGenetics(value: unknown): Specimen["genetics"] | undefined {
   if (!isRecord(value) || !isRecord(value.genetics) || !isRecord(value.research) || !Array.isArray(value.research.mutations)) return undefined;
   const profile = value.genetics;
-  if (!["variegationPotential", "stability", "hiddenPotential", "growthPotential"].every((key) => typeof profile[key] === "number" && Number.isFinite(profile[key]))) return undefined;
-  if (!Array.isArray(profile.mutationIds) || !Array.isArray(value.observations) || !isRecord(value.environment)) return undefined;
-  const environmentKeys = ["light", "nutrition", "humidity", "health"];
-  if (!environmentKeys.every((key) => typeof value.environment![key] === "number" && Number.isFinite(value.environment![key]))) return undefined;
+  const environmentRaw = value.environment;
   const research = value.research;
+  if (!isRecord(environmentRaw)) return undefined;
+  if (!["variegationPotential", "stability", "hiddenPotential", "growthPotential"].every((key) => typeof profile[key] === "number" && Number.isFinite(profile[key]))) return undefined;
+  if (!Array.isArray(profile.mutationIds) || !Array.isArray(value.observations)) return undefined;
+  const environmentKeys = ["light", "nutrition", "humidity", "health"];
+  if (!environmentKeys.every((key) => typeof environmentRaw[key] === "number" && Number.isFinite(environmentRaw[key]))) return undefined;
   if (!["points", "observationCount", "analysisLevel"].every((key) => typeof research[key] === "number" && Number.isFinite(research[key])) || !Array.isArray(research.discoveredTraits)) return undefined;
-  const mutations = research.mutations.filter((item) => isRecord(item) && typeof item.id === "string" && typeof item.category === "string").map((item) => ({ ...item, strength: finite(item.strength, 20, 0, 100), detected: item.detected === true }));
-  const environment = Object.fromEntries(environmentKeys.map((key) => [key, finite(value.environment![key], 65, 0, 100)]));
+  const mutationsRaw = research.mutations as unknown[];
+  const mutations = mutationsRaw.filter((item: unknown) => isRecord(item) && typeof item.id === "string" && typeof item.category === "string").map((item: unknown) => ({ ...(item as Record<string, unknown>), strength: finite((item as Record<string, unknown>).strength, 20, 0, 100), detected: (item as Record<string, unknown>).detected === true }));
+  const environment = Object.fromEntries(environmentKeys.map((key) => [key, finite(environmentRaw[key], 65, 0, 100)]));
   return {
     genetics: {
       variegationPotential: finite(profile.variegationPotential, 0, 0, 100),
@@ -38,7 +42,7 @@ function validGenetics(value: unknown): Specimen["genetics"] | undefined {
       mutationIds: profile.mutationIds.filter((item): item is string => typeof item === "string"),
     },
     expression: finite(value.expression, 0, 0, 100),
-    environment: environment as Specimen["genetics"] extends infer G ? G extends { environment: infer E } ? E : never : never,
+    environment: environment as unknown as PlantEnvironment,
     observations: value.observations.map((item) => finite(item, 0, 0, 100)),
     research: { points: finite(research.points, 0, 0, 1_000_000_000), observationCount: finite(research.observationCount, 0, 0, 1_000_000, true), analysisLevel: finite(research.analysisLevel, 0, 0, 3, true), discoveredTraits: research.discoveredTraits.filter((item): item is string => typeof item === "string"), mutations },
   } as Specimen["genetics"];
