@@ -1766,3 +1766,68 @@ body{
  .top-resource{flex:1 1 0;max-width:none}
  .topbar>.profile-chip{flex:0 0 auto;margin-left:auto}
 }
+
+
+/* Premium header spacing pass: balanced rhythm, consistent card sizing */
+.topbar{
+  height:78px;
+  padding:0 clamp(24px,2.2vw,42px)!important;
+  gap:clamp(14px,1.5vw,26px)!important;
+  justify-content:space-between!important;
+  align-items:center;
+  background:linear-gradient(105deg,#10180e 0%,#080d08 52%,#11180e 100%);
+  border-bottom:1px solid rgba(201,173,104,.28);
+}
+.top-institution{
+  flex:0 0 170px!important;
+  width:170px;min-width:170px!important;
+  gap:13px;padding-right:20px!important;
+  border-right:1px solid rgba(201,173,104,.18);
+}
+.top-leaf{width:40px;height:40px;border-radius:12px}
+.top-institution strong{font-size:18px;letter-spacing:-.3px}
+.top-resource,.top-resource.research-resource{
+  flex:0 1 205px!important;
+  width:auto;min-width:170px!important;max-width:225px;
+  min-height:54px;padding:9px 14px!important;
+  gap:12px;border-radius:12px;
+}
+.resource-symbol{width:34px;height:34px;flex:0 0 34px;border-radius:10px}
+.top-resource strong{font-size:17px;line-height:1.2}
+.top-resource small{font-size:15px;line-height:1.25;margin-top:4px}
+.top-level{
+  flex:0 1 245px!important;
+  width:auto;min-width:220px!important;max-width:260px;
+  min-height:54px;padding:9px 14px!important;gap:12px;border-radius:12px;
+}
+.top-level .level-star{width:34px;height:34px;flex-basis:34px;border-radius:10px}
+.top-level .level-info>div:first-child{gap:12px;margin-bottom:7px}
+.top-level .level-info strong{font-size:15px;line-height:1.25}
+.top-level .level-info span{font-size:15px}
+.top-level .level-info .progress-track{height:5px;border-radius:99px}
+.topbar>.icon-button{width:42px;height:42px;flex:0 0 42px;border-radius:12px}
+.topbar>.profile-chip{
+  flex:0 1 255px!important;
+  width:auto;min-width:210px!important;max-width:290px;
+  min-height:54px;margin-left:0;padding:4px 0 4px 20px!important;
+  gap:12px;border-left:1px solid rgba(201,173,104,.18);
+}
+.profile-avatar{width:40px;height:40px;flex-basis:40px}
+.profile-chip strong{font-size:16px;line-height:1.3}
+.profile-chip span{font-size:15px;margin-top:3px}
+.topbar:after{opacity:.7}
+@media(max-width:1450px){
+ .topbar{gap:12px!important;padding:0 20px!important}
+ .top-institution{flex-basis:145px!important;width:145px;min-width:145px!important;padding-right:12px!important}
+ .top-resource,.top-resource.research-resource{flex:0 1 175px!important;min-width:150px!important;padding:8px 10px!important}
+ .top-level{flex:0 1 220px!important;min-width:195px!important;padding:8px 10px!important}
+ .topbar>.profile-chip{flex:0 1 220px!important;min-width:175px!important;padding-left:12px!important;gap:8px}
+}
+@media(max-width:1100px){
+ .topbar{gap:8px!important;padding:0 12px!important}
+ .top-institution{flex-basis:120px!important;width:120px;min-width:120px!important;gap:8px}
+ .top-resource,.top-resource.research-resource{flex:1 1 0!important;min-width:125px!important;gap:8px;padding:8px!important}
+ .top-level{flex:1 1 0!important;min-width:175px!important;gap:8px}
+ .topbar>.profile-chip{flex:0 1 180px!important;min-width:150px!important;padding-left:8px!important;gap:7px}
+ .profile-avatar{width:34px;height:34px;flex-basis:34px}
+}
