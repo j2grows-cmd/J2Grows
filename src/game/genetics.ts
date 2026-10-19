@@ -121,6 +121,7 @@ export function observePlant(record: SpecimenGenetics, expression = record.expre
   const observations = [...record.observations, clamp(expression)].slice(-24);
   const observationCount = record.research.observationCount + 1;
   const points = record.research.points + 2 + (observations.length >= 3 ? 1 : 0);
+  const mutations = record.research.mutations.map((mutation) => mutation.detected ? mutation : { ...mutation, evidenceCount: (mutation.evidenceCount ?? 0) + 1, detected: (mutation.evidenceCount ?? 0) + 1 >= 3 });
   const discoveries = [...record.research.discoveredTraits];
   if (observations.length >= 3 && observations.every((value) => value >= 60) && !discoveries.includes("consistent-high-variegation")) {
     discoveries.push("consistent-high-variegation");
@@ -129,7 +130,7 @@ export function observePlant(record: SpecimenGenetics, expression = record.expre
     ...record,
     expression: clamp(expression),
     observations,
-    research: { ...record.research, points, observationCount, discoveredTraits: discoveries },
+    research: { ...record.research, points, observationCount, discoveredTraits: discoveries, mutations },
   };
 }
 
