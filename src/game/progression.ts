@@ -74,7 +74,7 @@ export function unlockResearch(nodeId: string, state: ResearchState): ResearchSt
 }
 
 /** One authoritative clock. Offline advancement is validated, bounded and never grants research by itself. */
-export function calculateElapsedDays(now: number, lastProcessedAt: number, dayLengthMs = 10 * 60 * 1000, capDays = 14): number {
+export function calculateElapsedDays(now: number, lastProcessedAt: number, dayLengthMs = 60 * 60 * 1000, capDays = 14): number {
   if (!Number.isFinite(now) || !Number.isFinite(lastProcessedAt) || now < lastProcessedAt || dayLengthMs <= 0) return 0;
   return Math.min(capDays, Math.floor((now - lastProcessedAt) / dayLengthMs));
 }
