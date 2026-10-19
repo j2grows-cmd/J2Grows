@@ -61,6 +61,8 @@ type GameSave = {
   projectStarted: boolean;
   savedAt: number;
   analysisEquipmentLevel: number;
+  greenhouseEnvironment?: PlantEnvironment;
+  researchUnlocks?: string[];
 };
 
 const SAVE_KEY = "j2grows.prototype.save.v1";
@@ -76,13 +78,15 @@ function loadGameSave(): GameSave & { offlineDays: number } {
         return {
           version: 3,
           specimens: parsed.specimens.map((specimen) => ({ ...specimen, health: Math.min(100, Math.max(0, specimen.health + (specimen.health < 90 ? days * 2 : 0))) })),
-          breedingProjects: Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects : [],\n          researchUnlocks: Array.isArray(parsed.researchUnlocks) ? parsed.researchUnlocks.filter((item): item is string => typeof item === "string") : [],
+          breedingProjects: Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects : [],
+          researchUnlocks: Array.isArray(parsed.researchUnlocks) ? parsed.researchUnlocks.filter((item): item is string => typeof item === "string") : [],
           cash: parsed.cash,
           research: parsed.research,
           day: parsed.day + days,
           projectStarted: Boolean(parsed.projectStarted),
           savedAt: Date.now(),
-          analysisEquipmentLevel: typeof parsed.analysisEquipmentLevel === "number" ? parsed.analysisEquipmentLevel : 0,\n          greenhouseEnvironment: parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT },
+          analysisEquipmentLevel: typeof parsed.analysisEquipmentLevel === "number" ? parsed.analysisEquipmentLevel : 0,
+          greenhouseEnvironment: parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT },
           offlineDays,
         };
       }
@@ -109,7 +113,8 @@ function App() {
   }, []);
   const [page, setPage] = useState<Page>("Dashboard");
   const [specimens, setSpecimens] = useState<Specimen[]>(loadedSave.specimens.map((specimen) => ({ ...specimen, genetics: specimen.genetics ?? createSpecimenGenetics(specimen.variegation) })));
-  const [breedingProjects, setBreedingProjects] = useState<BreedingProject[]>(loadedSave.breedingProjects ?? []);\n  const [researchUnlocks, setResearchUnlocks] = useState<string[]>(loadedSave.researchUnlocks ?? []);
+  const [breedingProjects, setBreedingProjects] = useState<BreedingProject[]>(loadedSave.breedingProjects ?? []);
+  const [researchUnlocks, setResearchUnlocks] = useState<string[]>(loadedSave.researchUnlocks ?? []);
   const [cash, setCash] = useState(loadedSave.cash);
   const [research, setResearch] = useState(loadedSave.research);
   const [greenhouseEnvironment, setGreenhouseEnvironment] = useState<PlantEnvironment>(loadedSave.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
@@ -329,7 +334,7 @@ function App() {
   }, [saveSlots]);
 
   function saveToSlot(slot: string) {
-    const save: GameSave = { version: 3, specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel, greenhouseEnvironment, savedAt: Date.now() };
+    const save: GameSave = { version: 3, specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, savedAt: Date.now() };
     setSaveSlots((current) => ({ ...current, [slot]: save }));
     announce(`Saved the current game to slot ${slot}.`);
   }
@@ -338,7 +343,8 @@ function App() {
     const save = saveSlots[slot];
     if (!save) { announce(`Save slot ${slot} is empty.`); return; }
     setSpecimens(save.specimens.map((item) => ({ ...item, genetics: item.genetics ?? createSpecimenGenetics(item.variegation) })));
-    setBreedingProjects(save.breedingProjects ?? []);\n    setResearchUnlocks(save.researchUnlocks ?? []);
+    setBreedingProjects(save.breedingProjects ?? []);
+    setResearchUnlocks(save.researchUnlocks ?? []);
     setCash(save.cash); setResearch(save.research); setDay(save.day);
     setProjectStarted(save.projectStarted); setAnalysisEquipmentLevel(save.analysisEquipmentLevel);
     setGreenhouseEnvironment(save.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
@@ -523,7 +529,8 @@ function App() {
           : "Corm propagation is reserved for Alocasia.");
       return;
     }
-    if (method === "corm" && parent.lastCormHarvestYear === Math.floor((day - 1) / 365)) { announce("This Alocasia has already yielded a corm this simulation-calendar year."); return; }\n    const rarity = (getSpeciesEconomy(plant.id)?.rarity ?? getSpeciesEconomy(plant.name)?.rarity ?? plant.rarity) as Species["rarity"];
+    if (method === "corm" && parent.lastCormHarvestYear === Math.floor((day - 1) / 365)) { announce("This Alocasia has already yielded a corm this simulation-calendar year."); return; }
+    const rarity = (getSpeciesEconomy(plant.id)?.rarity ?? getSpeciesEconomy(plant.name)?.rarity ?? plant.rarity) as Species["rarity"];
     const details: Record<PropagationMethod, { prefix: string; label: string; location: string; health: number; nickname: string }> = {
       cutting: { prefix: "CUT", label: "Cutting", location: "Propagation Bench", health: 85, nickname: "Cutting" },
       division: { prefix: "DIV", label: "Division / offset", location: "Propagation Bench", health: 90, nickname: "Division" },
