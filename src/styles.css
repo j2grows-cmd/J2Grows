@@ -291,7 +291,7 @@ input[type="range"]{width:100%;cursor:pointer}
 }
 @media(max-width:760px){
   .sidebar{width:min(290px,86vw);transform:translateX(-102%);transition:transform .22s ease}
-  .sidebar.menu-open{transform:translateX(0)}
+  .sidebar.sidebar-open{transform:translateX(0)}
   .main-area{margin-left:0}
   .topbar{height:auto;min-height:64px;padding:12px 16px;gap:9px;flex-wrap:wrap}
   .top-institution{min-width:0;flex:1}
