@@ -352,7 +352,21 @@ function App() {
       if (propagation) {
         const delay = suitability < 45 ? 2 : suitability < 65 ? 1 : 0;
         propagation = { ...propagation, daysInPhase: propagation.daysInPhase + 1 };
-        if (propagation.phase === "Corm" && propagation.daysInPhase >= propagation.daysToSprout + delay) {
+        if (propagation.phase === "Cutting" && propagation.daysInPhase >= propagation.daysToSprout + delay) {
+          propagation = { ...propagation, phase: "Rooting", daysInPhase: 0 };
+          location = "Propagation Bench · Rooting";
+          growthMessage = ` ${specimen.nickname} has begun rooting.`;
+        } else if (propagation.phase === "Rooting" && propagation.daysInPhase >= propagation.daysToEstablish + delay) {
+          propagation = { ...propagation, phase: "New Growth", daysInPhase: 0 };
+          location = "Propagation Bench · New Growth";
+          growthMessage = ` ${specimen.nickname} is showing new growth.`;
+        } else if (propagation.phase === "New Growth" && propagation.daysInPhase >= (propagation.daysToJuvenile ?? 5) + delay) {
+          propagation = undefined;
+          stage = "Juvenile";
+          stageDays = 0;
+          location = "Greenhouse · Establishing";
+          growthMessage = ` ${specimen.nickname} has established as a juvenile plant.`;
+        } else if (propagation.phase === "Corm" && propagation.daysInPhase >= propagation.daysToSprout + delay) {
           propagation = { ...propagation, phase: "Sprouting", daysInPhase: 0 };
           location = "Corm Nursery · Sprouting";
           growthMessage = ` ${specimen.nickname} has started sprouting.`;
@@ -455,7 +469,7 @@ function App() {
         location: detail.location,
         health: detail.health,
         stage: "Juvenile",
-        propagation: { method, phase: method === "corm" ? "Corm" : "Establishing", daysInPhase: 0, daysToSprout: method === "corm" ? 2 + Math.floor(Math.random() * 4) : 0, daysToEstablish: 3 + Math.floor(Math.random() * 3) },
+        propagation: { method, phase: method === "corm" ? "Corm" : method === "cutting" ? "Cutting" : "Establishing", daysInPhase: 0, daysToSprout: method === "corm" ? 2 + Math.floor(Math.random() * 4) : method === "cutting" ? 2 + Math.floor(Math.random() * 3) : 0, daysToEstablish: 3 + Math.floor(Math.random() * 3), daysToJuvenile: method === "cutting" ? 4 + Math.floor(Math.random() * 3) : undefined },
         value: 0,
         protected: false,
         variegation: parent.variegation,
