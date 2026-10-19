@@ -109,11 +109,17 @@ export function normalizeManualSaveSlots(value: unknown): Record<string, unknown
     if (candidate === null || candidate === undefined) continue;
     if (checkSaveEnvelope(candidate).valid && isRecord(candidate)) {
       const recovered = normalizeSpecimens(candidate.specimens);
-      slots[key] = { ...candidate, version: 8, specimens: recovered.specimens,
+      const projects = Array.isArray(candidate.breedingProjects) ? candidate.breedingProjects.filter((item: unknown) => isRecord(item) && typeof item.id === "string" && typeof item.parentAId === "string" && typeof item.parentBId === "string" && typeof item.startedDay === "number" && Number.isFinite(item.startedDay) && typeof item.completesOnDay === "number" && Number.isFinite(item.completesOnDay) && typeof item.cost === "number" && Number.isFinite(item.cost) && ["active", "completed", "cancelled"].includes(String(item.status)) && typeof item.lineId === "string" && typeof item.failureChance === "number" && Number.isFinite(item.failureChance)) : [];
+      const env = isRecord(candidate.greenhouseEnvironment) ? candidate.greenhouseEnvironment : {};
+      const envValue = (field: string, fallback: number) => finite(env[field], fallback, 0, 100);
+      slots[key] = { ...candidate, version: 8, specimens: recovered.specimens, breedingProjects: projects,
         cash: finite(candidate.cash, 0, 0, 1_000_000_000),
         research: finite(candidate.research, 0, 0, 1_000_000_000),
         day: finite(candidate.day, 1, 1, 1_000_000_000, true),
         savedAt: finite(candidate.savedAt, Date.now(), 0, Number.MAX_SAFE_INTEGER),
+        researchUnlocks: Array.isArray(candidate.researchUnlocks) ? candidate.researchUnlocks.filter((item: unknown): item is string => typeof item === "string") : [],
+        analysisEquipmentLevel: finite(candidate.analysisEquipmentLevel, 0, 0, 3, true),
+        greenhouseEnvironment: { light: envValue("light", 65), nutrition: envValue("nutrition", 65), humidity: envValue("humidity", 65), health: envValue("health", 100) },
       };
     }
   }
