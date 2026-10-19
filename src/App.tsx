@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeSpecies, type Species, type Specimen } from "./data";
 import { createUniqueSpecimenId } from "./game/specimen-id.ts";
-import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, propagationDaysRequired, weeklyFacilityOperatingCost, type FacilityLevels, type FacilityName } from "./game/facilities.ts";
+import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, normalizeFacilityLevels, propagationDaysRequired, weeklyFacilityOperatingCost, type FacilityLevels, type FacilityName } from "./game/facilities.ts";
 import { loadSpeciesCatalog } from "./supabase";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
 import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, observePlant, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
@@ -81,7 +81,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
         const offlineDays = Math.min(14, Math.floor(Math.max(0, Date.now() - parsed.savedAt) / (10 * 60 * 1000)));
         const days = offlineDays;
         const savedEnvironment = parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT };
-        const savedFacilityLevels: FacilityLevels = { propagationBench: Number.isInteger(parsed.facilityLevels?.propagationBench) ? Math.max(0, Math.min(3, parsed.facilityLevels!.propagationBench!)) : 0, environmentalController: Number.isInteger(parsed.facilityLevels?.environmentalController) ? Math.max(0, Math.min(3, parsed.facilityLevels!.environmentalController!)) : 0 };
+        const savedFacilityLevels = normalizeFacilityLevels(parsed.facilityLevels);
         const progressedEnvironment = applyEnvironmentalController(savedEnvironment, savedFacilityLevels.environmentalController);
         const progressedSpecimens = parsed.specimens.map((specimen) => {
           let current = { ...specimen };
@@ -377,7 +377,7 @@ function App() {
   }, [saveSlots]);
 
   function saveToSlot(slot: string) {
-    const save: GameSave = { version: 4, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, savedAt: Date.now() };
+    const save: GameSave = { version: 5, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, savedAt: Date.now() };
     setSaveSlots((current) => ({ ...current, [slot]: save }));
     announce(`Saved the current game to slot ${slot}.`);
   }
@@ -391,7 +391,7 @@ function App() {
     setCash(save.cash); setResearch(save.research); setDay(save.day);
     setProjectStarted(save.projectStarted); setAnalysisEquipmentLevel(Math.max(0, Math.min(3, save.analysisEquipmentLevel ?? 0)));
     setGreenhouseEnvironment(save.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
-    setFacilityLevels({ propagationBench: Math.max(0, Math.min(3, save.facilityLevels?.propagationBench ?? 0)), environmentalController: Math.max(0, Math.min(3, save.facilityLevels?.environmentalController ?? 0)) });
+    setFacilityLevels(normalizeFacilityLevels(save.facilityLevels));
     setSelected(save.specimens[0]?.id ?? "");
     announce(`Loaded save slot ${slot}.`);
   }
