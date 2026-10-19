@@ -1195,3 +1195,74 @@ body{
  .dash-featured-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
  .dash-plant-image{height:120px}
 }
+
+
+/* Dashboard viewport-fit refinement: preserve 15px minimum while reducing wasted height */
+.dash-welcome{margin-bottom:9px;gap:16px}
+.dash-welcome-copy h2{font-size:clamp(34px,2.3vw,42px);margin:4px 0 3px}
+.dash-welcome-copy p{font-size:15px;line-height:1.35;max-width:68ch}
+.dash-welcome-actions{gap:7px}
+.dash-resource-grid{gap:8px;margin-bottom:9px}
+.dash-resource-card{min-height:70px;padding:9px 10px;gap:9px}
+.dash-resource-icon{width:38px;height:38px;flex-basis:38px}
+.dash-resource-card strong{font-size:23px}
+.dash-feature-hero{min-height:205px;margin-bottom:10px}
+.dash-feature-copy{padding:18px 21px}
+.dash-feature-copy h2{font-size:clamp(34px,2.65vw,46px);margin:9px 0 7px;line-height:1}
+.dash-feature-copy p{font-size:15px;line-height:1.4;margin-bottom:10px}
+.dash-feature-photo{min-height:205px}
+.dash-photo-caption{right:12px;bottom:12px;padding:8px 10px}
+.dash-dashboard-main{gap:9px;margin-bottom:9px}
+.dash-widget{padding:11px}
+.dash-widget .section-header{margin-bottom:8px}
+.dash-widget .section-header h2{font-size:18px}
+.dash-condition-grid{gap:7px}
+.dash-condition{min-height:68px;padding:8px;gap:8px}
+.condition-icon{width:30px;height:30px;flex-basis:30px}
+.dash-condition strong{font-size:17px}
+.condition-meter{height:7px;margin-top:3px}
+.dash-widget-link{margin-top:8px;padding-top:7px}
+.dash-activity-row{padding:9px 0;gap:8px}
+.dash-activity-icon{width:31px;height:31px;flex-basis:31px}
+.dash-activity-copy{gap:3px}
+.dash-activity-copy strong{font-size:15px}
+.dash-activity-copy small{font-size:15px;line-height:1.3}
+.dash-finance-total{padding:11px;gap:5px}
+.dash-finance-total strong{font-size:29px}
+.dash-finance-breakdown{margin-top:8px}
+.dash-finance-breakdown>div{padding:2px 7px;gap:4px}
+.dash-finance-note{padding-top:8px;line-height:1.3}
+.dash-lower-grid{gap:9px}
+.dash-featured-panel{padding:11px}
+.dash-featured-panel .section-header{margin-bottom:8px}
+.dash-featured-panel .section-header h2{font-size:19px}
+.dash-featured-grid{gap:7px}
+.dash-plant-image{height:clamp(105px,8vw,132px)}
+.dash-plant-copy{padding:8px;gap:4px}
+.dash-plant-copy>strong{font-size:16px}
+.dash-plant-copy>span{min-height:0}
+.dash-plant-copy>div{margin-top:3px;padding-top:5px}
+.dash-plant-add{min-height:110px;padding:9px;gap:6px}
+.dash-side-stack{gap:9px}
+.dash-side-panel{padding:10px}
+.dash-side-panel .section-header{margin-bottom:6px}
+.dash-research-card{padding:9px;gap:8px}
+.dash-side-icon{width:36px;height:36px;flex-basis:36px}
+.dash-task-row{padding:7px 0;gap:8px}
+.dash-task-icon{width:30px;height:30px;flex-basis:30px}
+@media(min-width:1250px) and (max-height:950px){
+ .dash-welcome{margin-bottom:8px}
+ .dash-resource-grid{margin-bottom:8px}
+ .dash-resource-card{min-height:66px;padding:8px}
+ .dash-feature-hero{min-height:185px;margin-bottom:8px}
+ .dash-feature-copy{padding:16px 19px}
+ .dash-feature-photo{min-height:185px}
+ .dash-dashboard-main{margin-bottom:8px}
+ .dash-widget{padding:10px}
+ .dash-condition{min-height:63px;padding:7px}
+ .dash-activity-row{padding:8px 0}
+ .dash-lower-grid{gap:8px}
+ .dash-featured-panel{padding:10px}
+ .dash-plant-image{height:108px}
+ .dash-side-panel{padding:9px}
+}
