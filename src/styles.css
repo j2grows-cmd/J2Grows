@@ -1725,3 +1725,18 @@ body{
  .dash-resource-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
  .dash-three-columns{grid-template-columns:1fr}
 }
+
+
+/* Full-bleed top header: stretch to the right edge of the viewport */
+.main-area{width:auto!important;max-width:none!important;margin-left:232px}
+.topbar{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  box-sizing:border-box;
+  padding-left:22px;
+  padding-right:clamp(22px,2.4vw,44px);
+  border-radius:0!important;
+}
+@media(max-width:1250px){.main-area{margin-left:205px}.topbar{padding-left:16px;padding-right:20px}}
+@media(max-width:850px){.main-area{margin-left:0}.topbar{padding-left:14px;padding-right:14px}}
