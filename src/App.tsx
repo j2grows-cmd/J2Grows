@@ -363,12 +363,6 @@ function App() {
       return;
     }
     const rarity = (getSpeciesEconomy(plant.name)?.rarity ?? plant.rarity) as Species["rarity"];
-    const costs: Record<PropagationMethod, Record<Species["rarity"], number>> = {
-      division: { Common: 2, Uncommon: 3, Rare: 4, "Very Rare": 5, "Ultra Rare": 7, Mythic: 10 },
-      corm: { Common: 2, Uncommon: 3, Rare: 4, "Very Rare": 5, "Ultra Rare": 7, Mythic: 10 },
-      cutting: { Common: 4, Uncommon: 5, Rare: 7, "Very Rare": 10, "Ultra Rare": 12, Mythic: 15 },
-      "tissue-culture": { Common: 10, Uncommon: 15, Rare: 20, "Very Rare": 30, "Ultra Rare": 40, Mythic: 60 },
-    };
     const details: Record<PropagationMethod, { prefix: string; label: string; location: string; health: number; nickname: string }> = {
       cutting: { prefix: "CUT", label: "Cutting", location: "Propagation Bench", health: 85, nickname: "Cutting" },
       division: { prefix: "DIV", label: "Division / offset", location: "Propagation Bench", health: 90, nickname: "Division" },
