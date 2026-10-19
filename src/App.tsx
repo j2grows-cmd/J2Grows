@@ -99,6 +99,32 @@ function App() {
   const [notice, setNotice] = useState(loadedSave.offlineDays > 0 ? `Welcome back. ${loadedSave.offlineDays} simulated day(s) of eligible offline progress applied.` : "");
   const [projectStarted, setProjectStarted] = useState(loadedSave.projectStarted);
   const [showMenu, setShowMenu] = useState(false);
+  const tutorialSteps: { page: Page; title: string; body: string; tip: string }[] = [
+    { page: "Dashboard", title: "Welcome to your botanical institution", body: "This is your home base. Keep an eye on plant health, funds, research data and the next milestone. Use “Advance day” to move the simulation forward.", tip: "Start here whenever you want a quick overview of your nursery." },
+    { page: "Plant Catalogue", title: "Meet your collection", body: "Browse the species catalogue and use search and filters to find specimens. Select a plant card to open its individual record.", tip: "Your catalogue can use Supabase species and images when the connection is configured." },
+    { page: "Specimen Record", title: "Every plant has its own story", body: "A specimen has an identity, health, growth stage, estimated value, traits and a location. You can protect important plants from being sold.", tip: "Choose a specimen in the catalogue to inspect its full record." },
+    { page: "Greenhouse", title: "Manage your growing space", body: "Inspect the greenhouse and adjust the temperature and humidity controls. In this prototype, those controls are visual only and do not yet change plant health.", tip: "Environmental simulation is planned for a later gameplay milestone." },
+    { page: "Breeding", title: "Create the next generation", body: "Choose two different specimens from the same genus and run a cross. It costs £100 and creates a seedling with a simplified inherited-variegation value.", tip: "This is an early placeholder model, not the full genetics system yet." },
+    { page: "Research", title: "Invest in discovery", body: "Mutation Analysis costs £250 to start. Research unlocks are currently introductory placeholders, ready to be expanded into a proper progression tree.", tip: "Keep some funds in reserve for future upgrades and experiments." },
+    { page: "Finances", title: "Build sustainably", body: "Review your cash balance and the estimated value of your plant inventory. Selling eligible specimens and buying upgrades affect your current balance.", tip: "Some figures and the financial projection are illustrative in this prototype." },
+  ];
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [tutorialOpen, setTutorialOpen] = useState(() => {
+    try { return localStorage.getItem("j2grows.tutorial.completed.v1") !== "true"; }
+    catch { return true; }
+  });
+  function finishTutorial() {
+    setTutorialOpen(false);
+    try { localStorage.setItem("j2grows.tutorial.completed.v1", "true"); } catch { /* Tutorial can still be dismissed for this session. */ }
+  }
+  function moveTutorial(direction: -1 | 1) {
+    const next = tutorialStep + direction;
+    if (next < 0) return;
+    if (next >= tutorialSteps.length) { finishTutorial(); return; }
+    setTutorialStep(next);
+    setPage(tutorialSteps[next].page);
+    if (tutorialSteps[next].page === "Specimen Record" && specimens.length) setSelected(specimens[0].id);
+  }
   useEffect(() => {
     try {
       const save: GameSave = { version: 1, specimens, cash, research, day, projectStarted, savedAt: Date.now() };
@@ -208,7 +234,7 @@ function App() {
       <div className="brand"><div className="brand-mark"><Leaf size={27} /></div><div className="brand-name">J2Grows</div><div className="brand-tagline">CULTIVATE · DISCOVER · BREED · BUILD</div></div>
       <div className="institution-switch"><div className="institution-emblem"><Sprout size={19} /></div><div><strong>Botanical Nursery</strong><span>Home institution</span></div><ChevronDown size={14} /></div>
       <nav className="main-nav">{nav.map(({ label, icon: Icon }) => <button key={label} className={`nav-item ${page === label || (page === "Specimen Record" && label === "Plant Catalogue") ? "active" : ""}`} onClick={() => { setPage(label); setShowMenu(false); }}><Icon size={17} /><span>{label}</span>{label === "Research" && <span className="nav-dot" />}</button>)}</nav>
-      <div className="sidebar-bottom"><div className="facility-mini"><div className="facility-mini-top"><span>STARTER FACILITY</span><span className="status-dot" /></div><strong>Home greenhouse</strong><div className="facility-progress"><span style={{ width: "36%" }} /></div><small>36% capacity used</small></div><div className="season-card"><Sun size={18} /><div><strong>Year 2 · Spring</strong><span>Day {day}</span></div><button onClick={advanceDay} title="Advance one day"><ArrowRight size={16} /></button></div><div className="sidebar-footer"><span><span className="online-dot" /> Local save active</span><button onClick={() => announce("Settings will be added in a later milestone.")} aria-label="Settings"><Settings size={16} /></button></div></div>
+      <div className="sidebar-bottom"><div className="facility-mini"><div className="facility-mini-top"><span>STARTER FACILITY</span><span className="status-dot" /></div><strong>Home greenhouse</strong><div className="facility-progress"><span style={{ width: "36%" }} /></div><small>36% capacity used</small></div><div className="season-card"><Sun size={18} /><div><strong>Year 2 · Spring</strong><span>Day {day}</span></div><button onClick={advanceDay} title="Advance one day"><ArrowRight size={16} /></button></div><div className="sidebar-footer"><span><span className="online-dot" /> Local save active</span><div className="sidebar-footer-actions"><button onClick={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} aria-label="Open tutorial" title="Tutorial"><BookOpen size={16} /></button><button onClick={() => announce("Settings will be added in a later milestone.")} aria-label="Settings"><Settings size={16} /></button></div></div></div>
     </aside>
 
     <main className="main-area">
@@ -241,6 +267,7 @@ function App() {
       </div>
       <footer className="app-footer"><span>J2Grows <span className="footer-separator">/</span> Prototype 0.1</span><span>All specimen and economic values are early prototype data.</span><span><span className="online-dot" /> Offline-first</span></footer>
     </main>
+    {tutorialOpen && <div className="tutorial-backdrop" role="presentation"><section className="tutorial-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorial-title"><div className="tutorial-topline"><span className="tutorial-mark"><Sprout size={19} /></span><span>J2GROWS FIELD GUIDE</span><button className="tutorial-close" onClick={finishTutorial} aria-label="Close tutorial"><X size={17} /></button></div><div className="tutorial-progress-label"><span>GETTING STARTED</span><span>{String(tutorialStep + 1).padStart(2, "0")} / {String(tutorialSteps.length).padStart(2, "0")}</span></div><div className="tutorial-progress-track"><span style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="tutorial-content"><div className="tutorial-eyebrow"><span className="eyebrow-line" /> YOUR FIRST DAYS</div><h2 id="tutorial-title">{tutorialSteps[tutorialStep].title}</h2><p>{tutorialSteps[tutorialStep].body}</p><div className="tutorial-tip"><Leaf size={16} /><span>{tutorialSteps[tutorialStep].tip}</span></div></div><div className="tutorial-footer"><button className="button button-quiet" onClick={finishTutorial}>Skip tutorial</button><div><button className="button button-quiet tutorial-back" disabled={tutorialStep === 0} onClick={() => moveTutorial(-1)}>Back</button><button className="button button-primary" onClick={() => moveTutorial(1)}>{tutorialStep === tutorialSteps.length - 1 ? "Finish guide" : "Next step"} <ArrowRight size={15} /></button></div></div></section></div>}
     {notice && <div className="toast" role="status"><Check size={17} /><span>{notice}</span><button onClick={() => setNotice("")} aria-label="Dismiss notification"><X size={15} /></button></div>}
   </div>;
 }
