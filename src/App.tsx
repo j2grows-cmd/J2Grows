@@ -9,7 +9,7 @@ import {
 import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeSpecies, type Species, type Specimen } from "./data";
 import { createUniqueSpecimenId } from "./game/specimen-id.ts";
 import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, normalizeFacilityLevels, propagationDaysRequired, weeklyFacilityOperatingCost, type FacilityLevels, type FacilityName } from "./game/facilities.ts";
-import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, startStaffTraining, STAFF_TRAINING_COST, type StaffState } from "./game/staff.ts";
+import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, startStaffTraining, STAFF_TRAINING_COST, weeklyStaffOperatingCost, type StaffState } from "./game/staff.ts";
 import { loadSpeciesCatalog } from "./supabase";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
 import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, observePlant, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
@@ -385,7 +385,7 @@ function App() {
   }, [saveSlots]);
 
   function saveToSlot(slot: string) {
-    const save: GameSave = { version: 5, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, savedAt: Date.now() };
+    const save: GameSave = { version: 6, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, savedAt: Date.now() };
     setSaveSlots((current) => ({ ...current, [slot]: save }));
     announce(`Saved the current game to slot ${slot}.`);
   }
@@ -635,7 +635,7 @@ function App() {
       setAnalysisStartedDay(undefined);
     }
     setStaffState(nextStaffState);
-    const weeklyOperatingCost = weeklyFacilityOperatingCost(facilityLevels, analysisEquipmentLevel, researchUnlocks.includes("routine-automation")) + (nextStaffState.routineCareEnabled ? 8 : 0);
+    const weeklyOperatingCost = weeklyFacilityOperatingCost(facilityLevels, analysisEquipmentLevel, researchUnlocks.includes("routine-automation")) + weeklyStaffOperatingCost(nextStaffState);
     if (nextDay % 7 === 0 && weeklyOperatingCost > 0) {
       setCash((current) => current - weeklyOperatingCost);
       mutationMessage += ` Weekly facility operating costs: £${weeklyOperatingCost}.`;
