@@ -523,6 +523,23 @@ function App() {
       }
       child.value = specimenValue(child);
       completedChildren.push(child);
+      if (researchUnlocks.includes("batch-breeding")) {
+        for (let batchIndex = 2; batchIndex <= 3; batchIndex += 1) {
+          const batchProfile = inheritTraits(recordA.genetics, recordB.genetics);
+          const batchChild: Specimen = {
+            ...child,
+            id: `${childId}-B${batchIndex}`,
+            nickname: `Genetic Line ${generation} · ${completedChildren.length}`,
+            variegation: Math.round(batchProfile.variegationPotential),
+            genetics: { ...createSpecimenGenetics(batchProfile.variegationPotential), genetics: batchProfile, research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: inheritedMutationRecords.map((mutation) => ({ ...mutation, detected: false, evidenceCount: 0 })) } },
+            stabilityGenerations: { ...stabilityGenerations },
+            stableMutationIds: [...stableMutationIds],
+          };
+          batchChild.value = specimenValue(batchChild);
+          completedChildren.push(batchChild);
+        }
+        mutationMessage += " Batch breeding produced three offspring after the research unlock.";
+      }
       mutationMessage += ` Breeding completed: ${child.nickname} was created from both recorded parents.`;
       return { ...project, status: "completed" as const };
     });
