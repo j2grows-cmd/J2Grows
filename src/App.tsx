@@ -39,7 +39,7 @@ function Metric({ label, value, detail, icon: Icon, tone = "green" }: { label: s
 }
 
 type GameSave = {
-  version: 2;
+  version: 1 | 2;
   specimens: Specimen[];
   cash: number;
   research: number;
@@ -93,7 +93,8 @@ function App() {
   const [page, setPage] = useState<Page>("Dashboard");
   const [specimens, setSpecimens] = useState<Specimen[]>(loadedSave.specimens.map((specimen) => ({ ...specimen, genetics: specimen.genetics ?? createSpecimenGenetics(specimen.variegation) })));
   const [cash, setCash] = useState(loadedSave.cash);
-  const [research, setResearch] = useState(loadedSave.research);\n  const [greenhouseEnvironment, setGreenhouseEnvironment] = useState<PlantEnvironment>({ ...DEFAULT_ENVIRONMENT });
+  const [research, setResearch] = useState(loadedSave.research);
+  const [greenhouseEnvironment, setGreenhouseEnvironment] = useState<PlantEnvironment>({ ...DEFAULT_ENVIRONMENT });
   const [day, setDay] = useState(loadedSave.day);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All plants");
@@ -107,12 +108,14 @@ function App() {
   const [instituteNameDraft, setInstituteNameDraft] = useState(() => {
     try { return localStorage.getItem("j2grows.institute.name.v1") || ""; } catch { return ""; }
   });
-  const [starterSpeciesId, setStarterSpeciesId] = useState("alocasia-polly");\n  const starterPlant = catalogSpecies.find((item) => item.id === starterSpeciesId) ?? prototypeSpecies.find((item) => item.id === starterSpeciesId) ?? prototypeSpecies[0];\n  const starterPrice = getSpeciesEconomy(starterPlant.name)?.basePrice ?? starterPlant.basePrice ?? 15;
+  const [starterSpeciesId, setStarterSpeciesId] = useState("alocasia-polly");
+  const starterPlant = catalogSpecies.find((item) => item.id === starterSpeciesId) ?? prototypeSpecies.find((item) => item.id === starterSpeciesId) ?? prototypeSpecies[0];
+  const starterPrice = getSpeciesEconomy(starterPlant.name)?.basePrice ?? starterPlant.basePrice ?? 15;
   const tutorialSteps: { page: Page; title: string; body: string; tip: string }[] = [
     { page: "Dashboard", title: "Name your institute", body: "Every great botanical institution starts with a name. Choose one that will appear throughout your nursery.", tip: "You can change this later by replaying the introduction or through the institution settings." },
-    { page: "Plant Catalogue", title: "Acquire your first plant", body: "Choose an affordable starter species using its base price. This is your first living specimen and the source of your first propagation.", tip: "You start with £1,000, so you will have funds left for propagation." },
-    { page: "Specimen Record", title: "Propagate your first plant", body: "Create your first new specimen using a propagation method that fits your chosen plant. It costs £100 in this guided prototype.", tip: "Most aroids can be propagated in several ways, but Alocasia uses corms rather than stem cuttings here." },
-    { page: "Greenhouse", title: "Give your new plant time to establish", body: "Advance one simulated day to let your new specimen establish. This tutorial uses a scripted outcome so you can learn the discovery loop.", tip: "The full growth and environmental simulation is still being developed." },
+    { page: "Plant Catalogue", title: "Acquire your first plant", body: "Choose an affordable starter species using its base price. This is your first living specimen and the source of your first propagation.", tip: "You start with £100 and can buy a common starter plant for around £10–£20." },
+    { page: "Specimen Record", title: "Propagate your first plant", body: "Create your first new specimen using a propagation method that fits your chosen plant. Costs vary by method and species rarity.", tip: "Most aroids can be propagated in several ways, but Alocasia uses corms rather than stem cuttings here." },
+    { page: "Greenhouse", title: "Give your new plant time to establish", body: "Advance one simulated day to let your new specimen establish and record its first growth cycle.", tip: "The full growth and environmental simulation is still being developed." },
     { page: "Specimen Record", title: "Record your first observation", body: "Record the new growth on your propagated plant. Observations build research evidence and help reveal variegation stability over time.", tip: "Mutations are rare and not guaranteed. Research improves your understanding rather than forcing a result." },
   ];
   const [tutorialStep, setTutorialStep] = useState(0);
@@ -189,6 +192,7 @@ function App() {
       health: isAlocasia ? 75 : 85, stage: "Juvenile", value: 0,
       protected: false, variegation: parent.variegation, discovered: false, genetics: parent.genetics ? { ...parent.genetics, genetics: { ...parent.genetics.genetics, mutationIds: [...parent.genetics.genetics.mutationIds] }, observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: [] } } : createSpecimenGenetics(parent.variegation),
     };
+    offspring.value = specimenValue(offspring);
     setCash((current) => current - cost);
     setSpecimens((current) => [...current, offspring]);
     setSelected(offspring.id);
@@ -205,7 +209,7 @@ function App() {
     setSelected(cutting.id);
     setTutorialStep(4);
     setPage("Specimen Record");
-    announce("One day passed. Your propagated specimen is ready for its guided mutation discovery.");
+    announce("One day passed. Your propagated specimen has grown; you can now record an observation.");
   }
 
   function recordTutorialObservation() {
@@ -489,7 +493,7 @@ function App() {
 
         {page === "Dashboard" && <Dashboard specimens={specimens} cash={cash} research={research} day={day} projectStarted={projectStarted} onNavigate={setPage} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onAdvance={advanceDay} />}
         {page === "Plant Catalogue" && <Catalogue specimens={filteredSpecimens} species={catalogSpecies} catalogSource={catalogSource} query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onSell={sellSpecimen} />}
-        {page === "Specimen Record" && <SpecimenPage specimen={activeSpecimen} plant={activeSpecies} onPropagate={(method) => propagateSpecimen(activeSpecimen, method)} onSell={() => sellSpecimen(activeSpecimen)} onObserve={observeSelectedSpecimen} onAnalyse={analyseSelectedSpecimen} researchPoints={research} onObserve={observeSelectedSpecimen} onAnalyse={analyseSelectedSpecimen} researchPoints={research} onToggleProtection={() => setSpecimens((current) => current.map((item) => item.id === activeSpecimen.id ? { ...item, protected: !item.protected } : item))} onBack={() => setPage("Plant Catalogue")} announce={announce} />}
+        {page === "Specimen Record" && <SpecimenPage specimen={activeSpecimen} plant={activeSpecies} onPropagate={(method) => propagateSpecimen(activeSpecimen, method)} onSell={() => sellSpecimen(activeSpecimen)} onObserve={observeSelectedSpecimen} onAnalyse={analyseSelectedSpecimen} researchPoints={research} onToggleProtection={() => setSpecimens((current) => current.map((item) => item.id === activeSpecimen.id ? { ...item, protected: !item.protected } : item))} onBack={() => setPage("Plant Catalogue")} announce={announce} />}
         {page === "Breeding" && <BreedingPage specimens={specimens} onCross={runCross} />}
         {page === "Research" && <ResearchPage cash={cash} research={research} projectStarted={projectStarted} onStart={startResearch} announce={announce} />}
         {page === "Greenhouse" && <GreenhousePage specimens={specimens} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onApplyEnvironment={(humidity, temperature) => setGreenhouseEnvironment({ ...greenhouseEnvironment, humidity, light: 70, nutrition: Math.max(20, 100 - Math.abs(temperature - 24) * 7), health: 100 })} announce={announce} />}
