@@ -28,6 +28,8 @@ export type Specimen = {
   geneticLineId?: string;
   lineParentIds?: string[];
   generation?: number;
+  stabilityGenerations?: Record<string, number>;
+  stableMutationIds?: string[];
   /** Reserved by an active breeding project; prevents sale or reuse. */
   reservedByProjectId?: string;
   /** Dead specimens remain in the collection record but cannot be used. */
