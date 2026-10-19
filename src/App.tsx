@@ -11,6 +11,7 @@ import { createUniqueSpecimenId } from "./game/specimen-id.ts";
 import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, normalizeFacilityLevels, propagationDaysRequired, weeklyFacilityOperatingCost, type FacilityLevels, type FacilityName } from "./game/facilities.ts";
 import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, startStaffTraining, STAFF_TRAINING_COST, weeklyStaffOperatingCost, type StaffState } from "./game/staff.ts";
 import { getOfflineProgressDays } from "./game/offline-progress.ts";
+import { canCreateOffset } from "./game/propagation-eligibility.ts";
 import { loadSpeciesCatalog } from "./supabase";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
 import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, observePlant, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
@@ -722,11 +723,13 @@ function App() {
   function propagateSpecimen(parent: Specimen, method: PropagationMethod) {
     const plant = findSpecies(parent.speciesId);
     const genus = plant.latin.split(" ")[0].toLowerCase();
-    const allowed = !parent.dead && !parent.reservedByProjectId && (method === "division" || method === "tissue-culture"
+    const allowed = !parent.dead && !parent.reservedByProjectId && ((method === "division" && canCreateOffset(parent.stage)) || method === "tissue-culture"
       || (method === "cutting" && ["monstera", "philodendron", "anthurium"].includes(genus) && (parent.stage === "Mature" || parent.stage === "Breeding-ready"))
       || (method === "corm" && genus === "alocasia" && (parent.stage === "Mature" || parent.stage === "Breeding-ready")));
     if (!allowed) {
-      announce(method === "cutting"
+      announce(method === "division" && !parent.dead && !parent.reservedByProjectId && !canCreateOffset(parent.stage)
+        ? "Offsets can only be taken from mature or breeding-ready plants. Grow this specimen to maturity first."
+        : method === "cutting"
         ? ["monstera", "philodendron", "anthurium"].includes(genus)
           ? "Stem cuttings can only be taken from a mature plant. Grow this specimen to maturity first."
           : "Stem cuttings are available for Monstera, Philodendron and Anthurium in this game."
