@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeSpecies, type Species, type Specimen } from "./data";
 import { createUniqueSpecimenId } from "./game/specimen-id.ts";
-import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, propagationDaysRequired, type FacilityLevels } from "./game/facilities.ts";
+import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, propagationDaysRequired, weeklyFacilityOperatingCost, type FacilityLevels, type FacilityName } from "./game/facilities.ts";
 import { loadSpeciesCatalog } from "./supabase";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
 import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, observePlant, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
@@ -122,7 +122,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
           analysisTargetSpecimenId: typeof parsed.analysisTargetSpecimenId === "string" && parsed.day + days - (parsed.analysisStartedDay ?? parsed.day) < 3 ? parsed.analysisTargetSpecimenId : undefined,
           analysisStartedDay: typeof parsed.analysisStartedDay === "number" && parsed.day + days - parsed.analysisStartedDay < 3 ? parsed.analysisStartedDay : undefined,
           savedAt: Date.now(),
-          analysisEquipmentLevel: typeof parsed.analysisEquipmentLevel === "number" ? parsed.analysisEquipmentLevel : 0,
+          analysisEquipmentLevel: typeof parsed.analysisEquipmentLevel === "number" ? Math.max(0, Math.min(3, Math.floor(parsed.analysisEquipmentLevel))) : 0,
           greenhouseEnvironment: parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT },
           facilityLevels: savedFacilityLevels,
           offlineDays,
@@ -389,7 +389,7 @@ function App() {
     setBreedingProjects(save.breedingProjects ?? []);
     setResearchUnlocks(save.researchUnlocks ?? []);
     setCash(save.cash); setResearch(save.research); setDay(save.day);
-    setProjectStarted(save.projectStarted); setAnalysisEquipmentLevel(save.analysisEquipmentLevel);
+    setProjectStarted(save.projectStarted); setAnalysisEquipmentLevel(Math.max(0, Math.min(3, save.analysisEquipmentLevel ?? 0)));
     setGreenhouseEnvironment(save.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
     setFacilityLevels({ propagationBench: Math.max(0, Math.min(3, save.facilityLevels?.propagationBench ?? 0)), environmentalController: Math.max(0, Math.min(3, save.facilityLevels?.environmentalController ?? 0)) });
     setSelected(save.specimens[0]?.id ?? "");
@@ -623,7 +623,7 @@ function App() {
       setAnalysisTargetSpecimenId(undefined);
       setAnalysisStartedDay(undefined);
     }
-    const weeklyOperatingCost = analysisEquipmentLevel * 5 + facilityLevels.propagationBench * 3 + facilityLevels.environmentalController * 5 + (researchUnlocks.includes("routine-automation") ? 10 : 0);
+    const weeklyOperatingCost = weeklyFacilityOperatingCost(facilityLevels, analysisEquipmentLevel, researchUnlocks.includes("routine-automation"));
     if (nextDay % 7 === 0 && weeklyOperatingCost > 0) {
       setCash((current) => current - weeklyOperatingCost);
       mutationMessage += ` Weekly facility operating costs: £${weeklyOperatingCost}.`;
@@ -993,13 +993,13 @@ function GreenhousePage({ specimens, onSelect, onApplyEnvironment, environment, 
   return <><div className="metric-grid"><Metric label="Temperature" value={`${temperature}°C`} detail="Target range 22–28°C" icon={Thermometer} /><Metric label="Humidity" value={`${humidity}%`} detail="Tropical zone" icon={Droplets} /><Metric label="Light schedule" value="14 hours" detail="Daily light period" icon={Sun} /><Metric label="Air circulation" value="Good" detail="Fans operating" icon={Activity} /></div><div className="two-column-layout"><section className="panel"><SectionHeader title="Growing zone · Tropical Aroids" subtitle="A simple first greenhouse zone." action="Zone details" /><div className="zone-visual"><PlantArt type="hero" large /><div><span className="pill">ACTIVE ZONE</span><h2>Home Greenhouse</h2><p>Species-specific controls will expand as equipment and research are unlocked.</p></div></div><div className="control-row"><label htmlFor="temp">Temperature <strong>{temperature}°C</strong></label><input id="temp" type="range" min="18" max="32" value={temperature} onChange={(event) => setTemperature(Number(event.target.value))} /></div><div className="control-row"><label htmlFor="humidity">Humidity <strong>{humidity}%</strong></label><input id="humidity" type="range" min="40" max="95" value={humidity} onChange={(event) => setHumidity(Number(event.target.value))} /></div><button className={`button ${autoCare ? "button-primary" : "button-quiet"}`} disabled={!autoCareUnlocked} onClick={() => setAutoCare((value) => !value)}><Zap size={15} /> Auto-care {autoCare ? "enabled" : autoCareUnlocked ? "paused" : "locked"}</button><button className="button button-quiet" onClick={() => { onApplyEnvironment(humidity, temperature, autoCare); announce("Growing conditions applied. New growth and variegation stability will respond over time."); }}>Apply environment</button></section><section className="panel"><SectionHeader title="Plants in this zone" subtitle="Select a specimen to inspect its record." />{specimens.map((item) => <button className="zone-plant-row" key={item.id} onClick={() => onSelect(item.id)}><PlantArt type={findSpecies(item.speciesId).image} /><span><strong>{item.nickname}</strong><small>{findSpecies(item.speciesId).name}</small></span><span className={item.health < 80 ? "health-low" : "health-good"}>{item.health}%</span><ChevronRight size={15} /></button>)}</section></div></>;
 }
 
-function FacilitiesPage({ cash, analysisEquipmentLevel, onBuy }: { cash: number; analysisEquipmentLevel: number; onBuy: (name: string, cost: number) => void }) {
-  const upgrades = [
-    { name: "Propagation bench", description: "Increase space for cuttings and seedlings.", cost: 1200, icon: Sprout, level: 0 },
-    { name: "Environmental controller", description: "Unlock more consistent greenhouse conditions.", cost: 2400, icon: Gauge, level: 0 },
-    { name: "Analysis workstation", description: "Improve mutation detection and reveal genetic potential more effectively.", cost: 35, icon: Microscope, level: analysisEquipmentLevel },
+function FacilitiesPage({ cash, analysisEquipmentLevel, facilityLevels, onBuy }: { cash: number; analysisEquipmentLevel: number; facilityLevels: FacilityLevels; onBuy: (name: FacilityName) => void }) {
+  const upgrades: { name: FacilityName; description: string; icon: typeof Sprout; level: number; effect: string }[] = [
+    { name: "Propagation bench", description: "Speed up cuttings, corms, divisions and tissue-culture phases.", icon: Sprout, level: facilityLevels.propagationBench, effect: "Each level removes one day from propagation phases, with a one-day minimum." },
+    { name: "Environmental controller", description: "Improve light, nutrition and humidity values used by the simulation.", icon: Gauge, level: facilityLevels.environmentalController, effect: "Each level adds 5 points to simulated light, nutrition and humidity, up to 100." },
+    { name: "Analysis workstation", description: "Improve mutation odds and support equipped mutation analysis.", icon: Microscope, level: analysisEquipmentLevel, effect: "Each level increases mutation chance and adds £5 to weekly running costs." },
   ];
-  return <><div className="facility-hero"><div><div className="eyebrow">CURRENT FACILITY</div><h2>Home greenhouse</h2><p>Begin with a focused growing setup. Expansion is always your choice.</p><div className="facility-tags"><span><Check size={13} /> Local cultivation</span><span><Check size={13} /> Basic propagation</span></div></div><div className="facility-hero-art"><PlantArt type="hero" large /></div></div><section className="panel"><SectionHeader title="Available improvements" subtitle="Spend carefully; each upgrade should support your current goals." /><div className="upgrade-grid">{upgrades.map(({ name, description, cost, icon: Icon, level }) => <article className="upgrade-card" key={name}><div className="upgrade-icon"><Icon size={20} /></div><h3>{name}</h3><p>{description}</p>{name === "Analysis workstation" && <div className="provenance-item"><span>Current level</span><strong>{level}</strong></div>}<div className="upgrade-cost">{money(cost)}</div><button className="button button-primary full-width" disabled={cash < cost} onClick={() => onBuy(name, cost)}>{cash < cost ? "Not enough funds" : "Purchase upgrade"}</button></article>)}</div></section></>;
+  return <><div className="facility-hero"><div><div className="eyebrow">CURRENT FACILITY</div><h2>Home greenhouse</h2><p>Facility upgrades are optional. Each has a permanent level, a gameplay effect and a weekly running cost.</p><div className="facility-tags"><span><Check size={13} /> Local cultivation</span><span><Check size={13} /> Basic propagation</span></div></div><div className="facility-hero-art"><PlantArt type="hero" large /></div></div><section className="panel"><SectionHeader title="Available improvements" subtitle="Levels and purchases are saved locally. Costs increase with each level." /><div className="upgrade-grid">{upgrades.map(({ name, description, icon: Icon, level, effect }) => { const cost = nextFacilityUpgradeCost(name, facilityLevels, analysisEquipmentLevel); const maxed = cost === null; return <article className="upgrade-card" key={name}><div className="upgrade-icon"><Icon size={20} /></div><h3>{name}</h3><p>{description}</p><div className="provenance-item"><span>Current level</span><strong>{level} / 3</strong></div><p className="facility-effect">{effect}</p><div className="upgrade-cost">{maxed ? "Maximum level reached" : money(cost)}</div><button className="button button-primary full-width" disabled={maxed || !canPurchaseFacilityUpgrade(name, facilityLevels, analysisEquipmentLevel, cash)} onClick={() => onBuy(name)}>{maxed ? "Fully upgraded" : cash < cost! ? "Not enough funds" : "Purchase next level"}</button></article>; })}</div></section></>;
 }
 
 function StaffPage() {
