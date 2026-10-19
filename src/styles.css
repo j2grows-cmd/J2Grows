@@ -1018,3 +1018,10 @@ body{
 @media(max-width:560px){
  .catalogue-art-button .plant-art{width:88%;height:88%;flex-basis:88%}
 }
+
+
+/* Set centered catalogue artwork to 95% of its image area */
+.catalogue-art-button .plant-art{width:95%;height:95%;flex-basis:95%}
+@media(max-width:560px){
+ .catalogue-art-button .plant-art{width:95%;height:95%;flex-basis:95%}
+}
