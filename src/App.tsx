@@ -458,7 +458,11 @@ function App() {
         if (propagation?.phase === "Sprouting") stage = "Juvenile";
       } else {
         stageDays += 1;
-        if (stage === "Juvenile" && health >= 40 && stageDays >= Math.ceil(10 * speciesFactor * conditionFactor)) {
+        if (stage === "Corm / Seedling" && health >= 40 && stageDays >= 5) {
+          stage = "Juvenile";
+          stageDays = 0;
+          growthMessage = ` ${specimen.nickname} has established from seedling to juvenile growth.`;
+        } else if (stage === "Juvenile" && health >= 40 && stageDays >= Math.ceil(10 * speciesFactor * conditionFactor)) {
           stage = "Growing";
           stageDays = 0;
           growthMessage = ` ${specimen.nickname} has entered the growing stage.`;
