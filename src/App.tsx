@@ -430,7 +430,7 @@ function App() {
     setBreedingProjects(save.breedingProjects ?? []);
     setResearchUnlocks(save.researchUnlocks ?? []);
     setCash(save.cash); setResearch(save.research); setDay(save.day);
-    setProjectStarted(save.projectStarted); setAnalysisEquipmentLevel(Math.max(0, Math.min(3, save.analysisEquipmentLevel ?? 0)));
+    setProjectStarted(Boolean(save.projectStarted && save.analysisTargetSpecimenId && save.analysisStartedDay !== undefined)); setAnalysisTargetSpecimenId(save.analysisTargetSpecimenId); setAnalysisStartedDay(save.analysisStartedDay); setAnalysisEquipmentLevel(Math.max(0, Math.min(3, save.analysisEquipmentLevel ?? 0)));
     setGreenhouseEnvironment(save.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
     setFacilityLevels(normalizeFacilityLevels(save.facilityLevels));
     setStaffState(normalizeStaffState(save.staffState));
