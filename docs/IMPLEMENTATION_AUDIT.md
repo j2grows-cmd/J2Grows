@@ -111,7 +111,7 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **Decision:** Offsets may only be taken from plants at the `Mature` or `Breeding-ready` stage. Corm, seedling, juvenile and growing specimens must develop before producing offsets.
 - **Current state:** The propagation action now checks the specimen's growth stage and explains that the plant must reach maturity first when blocked for this reason. Other propagation methods retain their existing eligibility rules.
 - **Tests:** Added a stage eligibility regression test covering Corm, Seedling, Juvenile, Growing, Mature, Breeding-ready and unknown stages.
-- **Verification:** Awaiting CI for the current implementation commit.
+- **Verification:** GitHub Actions passed `npm test`, `npm run typecheck` and `npm run build` on implementation commit `5da5f0d5ee462f9966a3e9ffca72caf82858e153`.
 
 ## Suggested repair order
 
