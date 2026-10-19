@@ -736,3 +736,53 @@ body{
 .species-library-card>.plant-art img{
   object-position:center top;
 }
+
+
+/* Catalogue refinements: clearer owned collection, actionable empty state and filter counts */
+.catalogue-filters{padding:15px}
+.catalogue-filters .section-header{margin-bottom:12px}
+.catalogue-filters .section-header h2{font-size:18px}
+.filter-option{gap:10px;min-height:35px;transition:background .16s,border-color .16s,color .16s}
+.filter-option>span{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:1}
+.filter-option small{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;padding:0 5px;border-radius:5px;background:rgba(255,255,255,.045);color:#929d83;font-size:9px}
+.filter-option.selected small{background:#344526;color:#d5e6b1}
+.filter-option:hover:not(.selected){background:rgba(143,167,90,.08);border-color:rgba(143,167,90,.18);color:#e5e8d9}
+.catalogue-toolbar{margin-bottom:10px}
+.catalogue-toolbar h2{font-size:20px}
+.catalogue-toolbar .pill{white-space:nowrap}
+.catalogue-card{box-shadow:0 5px 16px rgba(0,0,0,.12)}
+.catalogue-card:hover{transform:translateY(-2px);border-color:rgba(185,217,130,.55);box-shadow:0 12px 25px rgba(0,0,0,.22)}
+.catalogue-art-button .plant-art img{object-position:center top}
+.catalogue-art-button:focus-visible,.catalogue-card-actions button:focus-visible,.filter-option:focus-visible{outline:2px solid #b9d982;outline-offset:2px}
+.catalogue-card-content h3{line-height:1.25}
+.catalogue-card-content>p{line-height:1.45}
+.empty-panel{padding:23px 18px;min-height:205px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.empty-panel.filtered-empty{min-height:180px}
+.empty-panel.starter-empty{min-height:220px;padding:24px;gap:8px;background:radial-gradient(ellipse at 50% 0%,rgba(67,88,40,.17),transparent 68%),linear-gradient(145deg,rgba(17,26,17,.7),rgba(9,15,10,.94))}
+.empty-panel-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#24341d;color:#c6df96;border:1px solid rgba(185,217,130,.2)}
+.empty-panel h3{margin:4px 0 0}
+.empty-panel p{max-width:440px;line-height:1.6;margin:0 0 4px}
+.empty-panel-actions{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}
+.empty-panel-actions .button{font-size:10px;padding:9px 12px}
+.species-library{scroll-margin-top:90px}
+.species-library-card{transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.species-library-card:hover{transform:translateY(-2px);border-color:rgba(185,217,130,.55);box-shadow:0 10px 20px rgba(0,0,0,.18)}
+.species-library-card strong{font-size:11px;line-height:1.35}
+.species-library-card span{line-height:1.4}
+@media(max-width:900px){
+  .catalogue-layout{grid-template-columns:minmax(0,1fr)}
+  .catalogue-filters{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:14px;align-items:start}
+  .catalogue-filters .section-header,.catalogue-filters .search-field,.catalogue-filters .filter-heading,.catalogue-filters .filter-note{grid-column:1/-1}
+  .catalogue-filters .filter-heading{margin-top:12px}
+  .catalogue-filters .filter-option{grid-column:auto}
+}
+@media(max-width:560px){
+  .catalogue-filters{display:block}
+  .catalogue-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .catalogue-card-content{padding:9px}
+  .catalogue-card-content h3{font-size:14px}
+  .catalogue-art-button .plant-art{height:125px}
+  .catalogue-card-stats{flex-wrap:wrap}
+  .empty-panel-actions{flex-direction:column;width:100%}
+  .empty-panel-actions .button{width:100%}
+}
