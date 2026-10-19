@@ -185,3 +185,25 @@ button:focus-visible,input:focus-visible,select:focus-visible{
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
+
+.sidebar-footer-actions{display:flex;align-items:center;gap:7px}
+.tutorial-backdrop{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:22px;background:rgba(4,7,4,.76);backdrop-filter:blur(9px);animation:tutorialFadeIn .18s ease-out}
+.tutorial-dialog{width:min(100%,540px);overflow:hidden;border:1px solid rgba(159,187,105,.42);border-radius:17px;background:linear-gradient(150deg,#172015 0%,#0e130d 68%);box-shadow:0 28px 100px rgba(0,0,0,.58),0 0 50px rgba(103,139,62,.09);color:var(--text)}
+.tutorial-topline{display:flex;align-items:center;gap:10px;padding:19px 23px;border-bottom:1px solid rgba(160,182,119,.15);color:#b6c895;font-size:9px;letter-spacing:1.8px;font-weight:700}
+.tutorial-mark{display:grid;place-items:center;width:34px;height:34px;border:1px solid #3d512c;border-radius:10px;background:#23321a;color:var(--olive-bright)}
+.tutorial-close{display:grid;place-items:center;width:32px;height:32px;margin-left:auto;border:1px solid #303b29;border-radius:8px;background:#11180f;color:var(--muted)}
+.tutorial-progress-label{display:flex;justify-content:space-between;padding:19px 25px 9px;color:var(--muted);font-size:9px;letter-spacing:1.3px}
+.tutorial-progress-track{height:3px;margin:0 25px;background:#2b3524;border-radius:8px;overflow:hidden}
+.tutorial-progress-track span{display:block;height:100%;background:linear-gradient(90deg,#718f45,#c4d995);transition:width .2s ease}
+.tutorial-content{padding:26px 27px 25px}
+.tutorial-eyebrow{display:flex;align-items:center;gap:8px;color:#b5c78f;font-size:9px;letter-spacing:1.5px;font-weight:700}
+.tutorial-content h2{margin:13px 0 12px;color:#f0ecd9;font:500 clamp(25px,5vw,34px)/1.13 "Playfair Display",serif;letter-spacing:-.5px}
+.tutorial-content>p{margin:0;color:#c1c6b7;font-size:13px;line-height:1.8}
+.tutorial-tip{display:flex;align-items:flex-start;gap:10px;margin-top:21px;padding:13px 14px;border:1px solid rgba(146,173,96,.2);border-radius:10px;background:rgba(119,148,73,.08);color:#b9cba0;font-size:11px;line-height:1.65}
+.tutorial-tip svg{flex:0 0 auto;margin-top:1px;color:var(--olive-bright)}
+.tutorial-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 24px;border-top:1px solid rgba(160,182,119,.15);background:rgba(0,0,0,.12)}
+.tutorial-footer>div{display:flex;gap:8px}
+.tutorial-footer .button{font-size:11px;padding:10px 13px}
+.tutorial-footer .button:disabled{opacity:.35}
+@keyframes tutorialFadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:520px){.tutorial-backdrop{padding:12px}.tutorial-topline{padding:15px 17px}.tutorial-content{padding:22px 19px}.tutorial-progress-label{padding-left:19px;padding-right:19px}.tutorial-progress-track{margin-left:19px;margin-right:19px}.tutorial-footer{padding:13px 15px;align-items:stretch}.tutorial-footer .button{padding:9px 10px}.tutorial-footer>div{gap:5px}}
