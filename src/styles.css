@@ -817,3 +817,18 @@ body{
   min-height:2.6em;
 }
 .species-library-card>div:last-child span{display:none}
+
+
+/* Premium botanical specimen cards with rarity as a quiet collector label */
+.species-library-card{position:relative;overflow:hidden;background:linear-gradient(160deg,#152018 0%,#0a110c 78%);border-color:rgba(208,178,101,.28);box-shadow:inset 0 1px rgba(255,255,255,.025),0 8px 18px rgba(0,0,0,.16)}
+.species-library-card>.plant-art{height:clamp(140px,10vw,178px);background:radial-gradient(ellipse at 50% 35%,rgba(112,139,73,.2),transparent 68%),#101a11}
+.species-library-card>div:last-child{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-height:78px;padding:12px 12px 13px}
+.species-library-card>div:last-child strong{font-family:"Playfair Display",Georgia,serif;font-size:16px;line-height:1.25;letter-spacing:-.2px;font-weight:600;color:#f4ead6;min-height:0}
+.species-library-card>div:last-child span:not(.species-rarity){display:none}
+.species-rarity{display:inline-flex;align-items:center;min-height:20px;padding:3px 8px;border:1px solid rgba(185,217,130,.25);border-radius:999px;background:rgba(120,151,74,.12);color:#c8dc9c;font-size:9px;font-weight:600;letter-spacing:.45px;text-transform:uppercase}
+.species-library-card.rarity-common .species-rarity{border-color:rgba(169,183,157,.24);background:rgba(169,183,157,.08);color:#c2cabb}
+.species-library-card.rarity-uncommon .species-rarity{border-color:rgba(153,205,123,.3);background:rgba(109,155,75,.13);color:#b9dc91}
+.species-library-card.rarity-rare .species-rarity{border-color:rgba(113,177,221,.34);background:rgba(64,126,174,.15);color:#a9d8f1}
+.species-library-card.rarity-epic .species-rarity{border-color:rgba(190,141,231,.38);background:rgba(139,76,179,.16);color:#d8b8f4}
+.species-library-card.rarity-legendary .species-rarity{border-color:rgba(224,183,88,.4);background:rgba(164,121,38,.17);color:#f0d48b}
+.species-library-card:hover{transform:translateY(-3px);border-color:rgba(219,193,119,.65);box-shadow:inset 0 1px rgba(255,255,255,.04),0 14px 26px rgba(0,0,0,.27)}
