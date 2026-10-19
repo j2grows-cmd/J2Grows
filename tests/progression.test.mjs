@@ -63,6 +63,7 @@ test("targeted breeding probabilistically biases a chosen trait and applies cost
   const missed = applyTraitTargeting(inherited, parentA, parentB, "variegationPotential", () => 0.99);
   assert.equal(missed.variegationPotential, inherited.variegationPotential, "targeting can fail to improve the selected trait");
   assert.equal(applyTraitTargeting(inherited, parentA, parentB, undefined, () => 0), inherited);
+  assert.equal(calculateTargetedBreedingCost(0, false), 0);
   assert.equal(calculateTargetedBreedingCost(20, false), 20);
   assert.equal(calculateTargetedBreedingCost(20, true), 25);
   assert.equal(calculateTargetedFailureChance(0.1, false), 0.1);
