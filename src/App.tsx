@@ -10,7 +10,7 @@ import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeS
 import { loadSpeciesCatalog } from "./supabase";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
 import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, observePlant, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
-import { breedingDurationDays, breedingFailureChance, calculateBreedingCost, canBreed, inheritTraits, mutationOccurs, type BreedingProject } from "./game/progression";
+import { breedingDurationDays, breedingFailureChance, calculateBreedingCost, canBreed, inheritTraits, mutationOccurs, type BreedingProject, RESEARCH_TREE, canUnlockResearch, unlockResearch } from "./game/progression";
 
 type PropagationMethod = "cutting" | "division" | "corm" | "tissue-culture";
 
@@ -76,7 +76,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
         return {
           version: 3,
           specimens: parsed.specimens.map((specimen) => ({ ...specimen, health: Math.min(100, Math.max(0, specimen.health + (specimen.health < 90 ? days * 2 : 0))) })),
-          breedingProjects: Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects : [],
+          breedingProjects: Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects : [],\n          researchUnlocks: Array.isArray(parsed.researchUnlocks) ? parsed.researchUnlocks.filter((item): item is string => typeof item === "string") : [],
           cash: parsed.cash,
           research: parsed.research,
           day: parsed.day + days,
@@ -109,7 +109,7 @@ function App() {
   }, []);
   const [page, setPage] = useState<Page>("Dashboard");
   const [specimens, setSpecimens] = useState<Specimen[]>(loadedSave.specimens.map((specimen) => ({ ...specimen, genetics: specimen.genetics ?? createSpecimenGenetics(specimen.variegation) })));
-  const [breedingProjects, setBreedingProjects] = useState<BreedingProject[]>(loadedSave.breedingProjects ?? []);
+  const [breedingProjects, setBreedingProjects] = useState<BreedingProject[]>(loadedSave.breedingProjects ?? []);\n  const [researchUnlocks, setResearchUnlocks] = useState<string[]>(loadedSave.researchUnlocks ?? []);
   const [cash, setCash] = useState(loadedSave.cash);
   const [research, setResearch] = useState(loadedSave.research);
   const [greenhouseEnvironment, setGreenhouseEnvironment] = useState<PlantEnvironment>(loadedSave.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
@@ -316,12 +316,12 @@ function App() {
   }
   useEffect(() => {
     try {
-      const save: GameSave = { version: 3, specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel, greenhouseEnvironment, savedAt: Date.now() };
+      const save: GameSave = { version: 3, specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, savedAt: Date.now() };
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     } catch {
       setNotice("Local save unavailable. Your progress may not persist in this browser.");
     }
-  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel, greenhouseEnvironment]);
+  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks]);
 
   useEffect(() => {
     try { localStorage.setItem("j2grows.manual-save-slots.v1", JSON.stringify(saveSlots)); }
@@ -338,7 +338,7 @@ function App() {
     const save = saveSlots[slot];
     if (!save) { announce(`Save slot ${slot} is empty.`); return; }
     setSpecimens(save.specimens.map((item) => ({ ...item, genetics: item.genetics ?? createSpecimenGenetics(item.variegation) })));
-    setBreedingProjects(save.breedingProjects ?? []);
+    setBreedingProjects(save.breedingProjects ?? []);\n    setResearchUnlocks(save.researchUnlocks ?? []);
     setCash(save.cash); setResearch(save.research); setDay(save.day);
     setProjectStarted(save.projectStarted); setAnalysisEquipmentLevel(save.analysisEquipmentLevel);
     setGreenhouseEnvironment(save.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
@@ -630,6 +630,13 @@ function App() {
     announce(`Breeding project started for ${money(cost)}. Parents are reserved until day ${project.completesOnDay}; research can reduce failure risk.`);
   }
 
+  function unlockResearchNode(nodeId: string) {
+    const result = unlockResearch(nodeId, { points: research, unlocked: researchUnlocks, completed: researchUnlocks });
+    if (!result) { const node = RESEARCH_TREE.find((item) => item.id === nodeId); announce(node ? `Research requires ${node.cost} points and all listed prerequisites.` : "Research node not found."); return; }
+    setResearch(result.points); setResearchUnlocks(result.unlocked);
+    announce(`Research unlocked: ${nodeId.replaceAll("-", " ")}.`);
+  }
+
   function startResearch() {
     if (projectStarted) {
       announce("Mutation Analysis is already in progress.");
@@ -676,7 +683,7 @@ function App() {
         {page === "Plant Catalogue" && <Catalogue specimens={filteredSpecimens} species={catalogSpecies} catalogSource={catalogSource} query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onSell={sellSpecimen} />}
         {page === "Specimen Record" && <SpecimenPage specimen={activeSpecimen} plant={activeSpecies} onPropagate={(method) => propagateSpecimen(activeSpecimen, method)} onSell={() => sellSpecimen(activeSpecimen)} onObserve={observeSelectedSpecimen} onAnalyse={analyseSelectedSpecimen} researchPoints={research} currentDay={day} onToggleProtection={() => setSpecimens((current) => current.map((item) => item.id === activeSpecimen.id ? { ...item, protected: !item.protected } : item))} onBack={() => setPage("Plant Catalogue")} announce={announce} />}
         {page === "Breeding" && <BreedingPage specimens={specimens} onCross={runCross} />}
-        {page === "Research" && <ResearchPage cash={cash} research={research} projectStarted={projectStarted} onStart={startResearch} announce={announce} />}
+        {page === "Research" && <ResearchPage cash={cash} research={research} projectStarted={projectStarted} onStart={startResearch} announce={announce} researchUnlocks={researchUnlocks} onUnlockResearch={unlockResearchNode} />}
         {page === "Greenhouse" && <GreenhousePage specimens={specimens} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onApplyEnvironment={(humidity, temperature) => setGreenhouseEnvironment({ ...greenhouseEnvironment, humidity, light: 70, nutrition: Math.max(20, 100 - Math.abs(temperature - 24) * 7), health: 100 })} announce={announce} />}
         {page === "Facilities" && <FacilitiesPage cash={cash} analysisEquipmentLevel={analysisEquipmentLevel} onBuy={(name, cost) => { if (cash < cost) announce("Not enough funds for this upgrade."); else { setCash((value) => value - cost); if (name === "Analysis workstation") setAnalysisEquipmentLevel((level) => level + 1); announce(name === "Analysis workstation" ? "Analysis workstation upgraded. Mutation detection and research are more effective." : "Facility upgrade purchased. New capacity is being prepared."); } }} />}
         {page === "Staff" && <StaffPage />}
@@ -738,11 +745,9 @@ function BreedingPage({ specimens, onCross }: { specimens: Specimen[]; onCross: 
   return <div className="two-column-layout"><section className="panel"><SectionHeader title="Breeding workbench" subtitle="Choose source specimens and review the experiment before committing resources." /><div className="breeding-parent-grid">{[{ label: "Parent A", value: parentA, set: setParentA, options: specimens }, { label: "Parent B", value: parentB, set: setParentB, options: compatible }].map((parent) => <div className="parent-picker" key={parent.label}><span className="filter-heading">{parent.label.toUpperCase()}</span><select value={parent.value} onChange={(event) => parent.set(event.target.value)}>{parent.options.map((item) => <option key={item.id} value={item.id}>{item.nickname} · {findSpecies(item.speciesId).name}</option>)}</select>{parent.value && specimens.find((item) => item.id === parent.value) && <PlantArt type={findSpecies(specimens.find((item) => item.id === parent.value)!.speciesId).image} large />}</div>)}</div><div className="experiment-summary"><div><span>Method</span><strong>Controlled cross · prototype</strong></div><div><span>Supplies cost</span><strong>£4</strong></div><div><span>Duration</span><strong>1 simulated day</strong></div></div><p className="muted-copy">Inheritance blends both parents, includes bounded variation and can occasionally produce mutations. Outcomes are never guaranteed.</p><button className="button button-primary" disabled={!parentA || !parentB || parentA === parentB || genus(parentA) !== genus(parentB)} onClick={() => onCross(parentA, parentB)}>Run cross · £4 <ArrowRight size={15} /></button></section><aside className="panel"><SectionHeader title="Outcome preview" subtitle="Possible outcomes, not guarantees." /><div className="outcome-art"><PlantArt type="monstera" large /></div><h3>Trait observation</h3><p className="muted-copy">Parent profiles influence offspring traits; research and equipment improve discovery, while mutation outcomes remain uncertain.</p><div className="provenance-item"><span>Parent A</span><strong>{specimens.find((item) => item.id === parentA)?.nickname ?? "Not selected"}</strong></div><div className="provenance-item"><span>Parent B</span><strong>{specimens.find((item) => item.id === parentB)?.nickname ?? "Not selected"}</strong></div></aside></div>;
 }
 
-function ResearchPage({ cash, research, projectStarted, onStart, announce }: { cash: number; research: number; projectStarted: boolean; onStart: () => void; announce: (message: string) => void }) {
-  const nodes = [{ title: "Basic Genetics", desc: "Learn the foundations of inheritance.", done: true }, { title: "Mutation Analysis", desc: "Investigate unusual traits and uncertainty.", done: projectStarted }, { title: "Selective Breeding", desc: "Compare descendants across generations.", done: false }, { title: "Tissue Culture", desc: "Scale propagation and preserve selected traits.", done: false }];
-  return <div className="research-layout"><section className="panel"><SectionHeader title="Research pathways" subtitle="Capabilities unlock tools; projects investigate individual genetic lines." /><div className="research-tree">{nodes.map((node, index) => <div className={`research-node ${node.done ? "node-done" : index === 1 ? "node-current" : "node-locked"}`} key={node.title}><div className="node-icon">{node.done ? <Check size={18} /> : index === 1 ? <Microscope size={18} /> : <Beaker size={18} />}</div><div><strong>{node.title}</strong><span>{node.desc}</span></div><span className="node-state">{node.done ? "Available" : index === 1 ? "Ready to begin" : "Locked"}</span></div>)}</div></section><aside className="panel project-panel"><div className="eyebrow"><FlaskConical size={13} /> RECOMMENDED PROJECT</div><h2>Mutation Analysis</h2><p>Begin recording unusual traits and build confidence in what your collection might inherit.</p><div className="project-art"><PlantArt type="philodendron" large /></div><div className="project-cost"><span>Estimated cost</span><strong>{money(25)}</strong></div><div className="project-cost"><span>Available funds</span><strong>{money(cash)}</strong></div><div className="project-cost"><span>Research data</span><strong>{research.toLocaleString("en-GB")}</strong></div><button className="button button-primary full-width" disabled={projectStarted || cash < 25} onClick={onStart}>{projectStarted ? "Project in progress" : cash < 25 ? "Insufficient funds" : "Begin project"}<ArrowRight size={15} /></button><button className="button button-quiet full-width" onClick={() => announce("Advanced research programmes will unlock as the prototype grows.")}>Explore future programmes</button></aside></div>;
+function ResearchPage({ cash, research, projectStarted, onStart, announce, researchUnlocks, onUnlockResearch }: { cash: number; research: number; projectStarted: boolean; onStart: () => void; announce: (message: string) => void; researchUnlocks: string[]; onUnlockResearch: (id: string) => void }) {
+  return <div className="research-layout"><section className="panel"><SectionHeader title="Research pathways" subtitle="Unlock permanent capabilities through a branching research tree." /><div className="research-tree">{RESEARCH_TREE.map((node) => { const unlocked = researchUnlocks.includes(node.id); const prerequisitesMet = node.prerequisites.every((id) => researchUnlocks.includes(id)); return <div className={`research-node ${unlocked ? "node-done" : prerequisitesMet && research >= node.cost ? "node-current" : "node-locked"}`} key={node.id}><div className="node-icon">{unlocked ? <Check size={18} /> : <Beaker size={18} />}</div><div><strong>{node.id.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join(" ")}</strong><span>{node.description} · Cost: {node.cost} research</span></div><button className="button button-quiet" disabled={unlocked || !canUnlockResearch(node.id, { points: research, unlocked: researchUnlocks, completed: researchUnlocks })} onClick={() => onUnlockResearch(node.id)}>{unlocked ? "Unlocked" : prerequisitesMet ? "Unlock" : "Prerequisites"}</button></div>; })}</div></section><aside className="panel project-panel"><div className="eyebrow"><FlaskConical size={13} /> RECOMMENDED PROJECT</div><h2>Mutation Analysis</h2><p>Record unusual traits, gather specimen evidence and validate promising discoveries.</p><div className="project-art"><PlantArt type="philodendron" large /></div><div className="project-cost"><span>Estimated cost</span><strong>{money(25)}</strong></div><div className="project-cost"><span>Available funds</span><strong>{money(cash)}</strong></div><div className="project-cost"><span>Research data</span><strong>{research.toLocaleString("en-GB")}</strong></div><button className="button button-primary full-width" disabled={projectStarted || cash < 25} onClick={onStart}>{projectStarted ? "Project in progress" : cash < 25 ? "Insufficient funds" : "Begin project"}<ArrowRight size={15} /></button><button className="button button-quiet full-width" onClick={() => announce("Choose a research branch to unlock targeted capabilities.")}>Explore research branches</button></aside></div>;
 }
-
 function GreenhousePage({ specimens, onSelect, onApplyEnvironment, announce }: { specimens: Specimen[]; onSelect: (id: string) => void; onApplyEnvironment: (humidity: number, temperature: number) => void; announce: (message: string) => void }) {
   const [humidity, setHumidity] = useState(68);
   const [temperature, setTemperature] = useState(24);
