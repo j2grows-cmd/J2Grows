@@ -565,48 +565,40 @@ function App() {
       announce("Choose two different available parent specimens.");
       return;
     }
-    const genusA = findSpecies(parentA.speciesId).latin.split(" ")[0];
-    const genusB = findSpecies(parentB.speciesId).latin.split(" ")[0];
+    if (!canBreed(parentA.stage, parentB.stage, parentA.health, parentB.health, Boolean(parentA.reservedByProjectId), Boolean(parentB.reservedByProjectId)) || parentA.dead || parentB.dead) {
+      announce("Both parents must be healthy, alive, Breeding-ready and available.");
+      return;
+    }
+    const speciesA = findSpecies(parentA.speciesId);
+    const speciesB = findSpecies(parentB.speciesId);
+    const genusA = speciesA.latin.split(" ")[0];
+    const genusB = speciesB.latin.split(" ")[0];
     if (genusA !== genusB) {
-      announce("This prototype only supports crosses within the same genus.");
+      announce("This prototype supports crosses within the same genus.");
       return;
     }
-    if (cash < 4) {
-      announce("You need £4 for supplies to run this cross.");
+    const rarityA = (getSpeciesEconomy(speciesA.id)?.rarity ?? speciesA.rarity) as RarityTier;
+    const rarityB = (getSpeciesEconomy(speciesB.id)?.rarity ?? speciesB.rarity) as RarityTier;
+    const cost = calculateBreedingCost(rarityA, rarityB, 1, research >= 100 ? 5 : 0);
+    if (cash < cost) {
+      announce(`This breeding project costs ${money(cost)}. You currently have ${money(cash)}.`);
       return;
     }
-    const parentAGenetics = parentA.genetics ?? createSpecimenGenetics(parentA.variegation);
-    const parentBGenetics = parentB.genetics ?? createSpecimenGenetics(parentB.variegation);
-    const inherited = inheritGenetics(parentAGenetics.genetics, parentBGenetics.genetics);
-    const inheritedMutations = [...parentAGenetics.research.mutations, ...parentBGenetics.research.mutations]
-      .filter((mutation, index, all) => all.findIndex((candidate) => candidate.id === mutation.id) === index)
-      .filter((mutation) => Math.random() < mutation.stability / 100);
-    const parentalMutationIds = new Set([...parentAGenetics.genetics.mutationIds, ...parentBGenetics.genetics.mutationIds]);
-    const spontaneousMutationIds = inherited.mutationIds.filter((id) => !parentalMutationIds.has(id));
-    inherited.mutationIds = [...inheritedMutations.map((mutation) => mutation.id), ...spontaneousMutationIds];
-    const spontaneousMutationRecords = spontaneousMutationIds.map((id) => ({ id, name: id.includes("colour") ? "Spontaneous colour shift" : "Spontaneous morphology variation", category: id.includes("colour") ? "colour" as const : "morphology" as const, rarity: "Rare" as const, inheritance: "mixed" as const, stability: 50, detected: false, beneficial: null }));
-    const inheritedVariation = Math.max(0, Math.min(100, Math.round((parentA.variegation + parentB.variegation + inherited.variegationPotential) / 3)));
-    const source = inherited.variegationPotential >= parentAGenetics.genetics.variegationPotential ? parentA : parentB;
-    const childNumber = String(specimens.length + 1).padStart(4, "0");
-    const child: Specimen = {
-      id: `J2G-${genusA.slice(0, 3).toUpperCase()}-${childNumber}-${Date.now().toString(36).slice(-3).toUpperCase()}`,
-      speciesId: source.speciesId,
-      nickname: "Seedling " + childNumber,
-      location: "Propagation Bench",
-      health: 88,
-      stage: "Juvenile",
-      value: 0,
-      protected: false,
-      variegation: inheritedVariation,
-      discovered: false,
-      genetics: { ...createSpecimenGenetics(inheritedVariation), genetics: inherited, research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: [...inheritedMutations.map((mutation) => ({ ...mutation, detected: false })), ...spontaneousMutationRecords] } },
+    const id = `BRD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+    const condition = (greenhouseEnvironment.light + greenhouseEnvironment.nutrition + greenhouseEnvironment.humidity + parentA.health + parentB.health) / 5;
+    const project: BreedingProject = {
+      id, parentAId, parentBId, startedDay: day,
+      completesOnDay: day + breedingDurationDays(5, analysisEquipmentLevel * 5),
+      cost, status: "active",
+      failureChance: breedingFailureChance(Math.floor(research / 50), condition),
+      lineId: `LINE-${Date.now().toString(36).toUpperCase()}`,
     };
-    child.value = specimenValue(child);
-    setCash((current) => current - 4);
-    setSpecimens((current) => [...current, child]);
-    setSelected(child.id);
-    setPage("Specimen Record");
-    announce(`Cross completed. ${child.nickname} inherited a blended genetic profile with ${inheritedVariation}% visible variegation. Mutation is possible but not guaranteed.`);
+    setCash((current) => current - cost);
+    setBreedingProjects((current) => [...current, project]);
+    setSpecimens((current) => current.map((item) =>
+      item.id === parentAId || item.id === parentBId ? { ...item, reservedByProjectId: id } : item
+    ));
+    announce(`Breeding project started for ${money(cost)}. Parents are reserved until day ${project.completesOnDay}; research can reduce failure risk.`);
   }
 
   function startResearch() {
