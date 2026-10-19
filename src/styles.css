@@ -2027,3 +2027,7 @@ body{
 .tutorial-inline-name input{width:min(100%,320px);min-width:0;padding:10px 12px;border:1px solid #536646;border-radius:8px;background:#10170d;color:var(--text);font:inherit}
 .tutorial-action-hint{margin:14px 0 0!important;padding:11px 13px;border-left:3px solid #b9dc77;border-radius:0 8px 8px 0;background:rgba(145,181,90,.1);color:#d4dfc3!important;font-size:14px!important;line-height:1.55!important}
 @media(max-width:680px){.tutorial-dialog{top:12px;bottom:auto}.tutorial-inline-name>div{align-items:stretch;flex-direction:column}.tutorial-inline-name input{width:100%}}
+
+/* Let gameplay remain clickable beneath the non-modal guide. */
+.tutorial-dialog{pointer-events:none}
+.tutorial-close{pointer-events:none}
