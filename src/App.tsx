@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Activity, AlertTriangle, ArrowDownRight, ArrowRight, Beaker, Bell,
-  BookOpen, BriefcaseBusiness, Building2, Check, ChevronDown, ChevronRight,
+  BookOpen, Building2, Check, ChevronDown, ChevronRight,
   CircleDollarSign, Clock3, Droplets, FlaskConical, Flower2, Gauge, Home, Leaf,
   Menu, Microscope, Plus, Search, Settings, ShieldCheck, ShoppingBag, Sparkles,
   Sprout, Sun, Thermometer, TrendingUp, Users, Wallet, X, Zap
