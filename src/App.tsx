@@ -221,11 +221,20 @@ function App() {
   function growTutorialCutting() {
     const cutting = specimens.find((item) => ["First Cutting", "First Corm", "First Mutation"].includes(item.nickname));
     if (!cutting) { setTutorialStep(1); setPage("Plant Catalogue"); announce("Acquire a plant and propagate it first."); return; }
-    advanceDay();
+    const nextSpecimens = advanceDay();
+    const nextCutting = nextSpecimens.find((item) => item.id === cutting.id);
     setSelected(cutting.id);
+    if (nextCutting?.propagation) {
+      setTutorialStep(3);
+      setPage("Greenhouse");
+      announce(nextCutting.propagation.phase === "Corm"
+        ? "One day passed. The corm is still establishing; advance another day and check its conditions."
+        : "One day passed. A shoot is developing; give it more time to establish.");
+      return;
+    }
     setTutorialStep(4);
     setPage("Specimen Record");
-    announce("One day passed. Your propagated specimen has grown; record an observation to begin building research evidence.");
+    announce("Your propagated specimen has established as a juvenile plant. Record an observation to begin building research evidence.");
   }
 
   function recordTutorialObservation() {
@@ -300,7 +309,7 @@ function App() {
     announce(`New game started: ${money(STARTING_CASH)}, no plants, and 0 research data.`);
   }
 
-  function advanceDay() {
+  function advanceDay(): Specimen[] {
     const nextDay = day + 1;
     let mutationMessage = "";
     const nextSpecimens = specimens.map((specimen) => {
@@ -358,6 +367,7 @@ function App() {
     setSpecimens(nextSpecimens);
     setResearch((current) => current + 5);
     announce(`Day ${nextDay}: plants grew, observations added research evidence and environmental conditions influenced variegation.${mutationMessage}`);
+    return nextSpecimens;
   }
 
   function observeSelectedSpecimen() {
