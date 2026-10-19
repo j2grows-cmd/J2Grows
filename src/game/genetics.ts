@@ -33,6 +33,8 @@ export type PlantMutation = {
   stability: number;
   detected: boolean;
   beneficial: boolean | null;
+  /** Number of distinct recorded observations supporting confirmation. */
+  evidenceCount?: number;
 };
 
 export type ResearchState = {
@@ -173,6 +175,7 @@ export function createMutation(random: () => number = Math.random): PlantMutatio
     stability,
     detected: false,
     beneficial: null,
+    evidenceCount: 0,
   };
 }
 
@@ -195,8 +198,12 @@ export function calculateHealthFactor(health: number): number {
   return 1;
 }
 
-export function calculateMaturityFactor(stage: "Juvenile" | "Growing" | "Mature"): number {
-  return stage === "Mature" ? 1.6 : stage === "Growing" ? 1.25 : 1;
+export function calculateMaturityFactor(stage: "Corm / Seedling" | "Juvenile" | "Growing" | "Mature" | "Breeding-ready"): number {
+  if (stage === "Breeding-ready") return 1.8;
+  if (stage === "Mature") return 1.6;
+  if (stage === "Growing") return 1.25;
+  if (stage === "Corm / Seedling") return 0.5;
+  return 1;
 }
 
 /** Multipliers are balance-tuning defaults; keep each property independent to avoid double-counting. */
