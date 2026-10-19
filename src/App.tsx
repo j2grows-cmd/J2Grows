@@ -1000,7 +1000,10 @@ function Dashboard({ specimens, cash, research, day, projectStarted, onNavigate,
   const averageHealth = Math.round(specimens.reduce((total, item) => total + item.health, 0) / Math.max(specimens.length, 1));
   const featured = specimens.slice(0, 4);
   const activeResearch = projectStarted;
-  const environmentStatus = environment.temperature >= 18 && environment.temperature <= 29 && environment.humidity >= 50 && environment.humidity <= 85 ? "Within target range" : "Review conditions";
+  const temperature = environment.temperature ?? 24;
+  const humidity = environment.humidity ?? 65;
+  const lightHours = environment.lightHours ?? 14;
+  const environmentStatus = temperature >= 18 && temperature <= 29 && humidity >= 50 && humidity <= 85 ? "Within target range" : "Review conditions";
   const timeLabel = `Year ${Math.floor((day - 1) / 112) + 1} · ${["Spring", "Summer", "Autumn", "Winter"][Math.floor(((day - 1) % 112) / 28)]}`;
   return <>
     <section className="dash-welcome">
@@ -1043,9 +1046,9 @@ function Dashboard({ specimens, cash, research, day, projectStarted, onNavigate,
       <section className="panel dash-widget">
         <SectionHeader title="Greenhouse conditions" subtitle="Your growing environment" action="View greenhouse" />
         <div className="dash-condition-grid">
-          <div className="dash-condition"><span className="condition-icon temperature"><Thermometer size={20} /></span><div><small>Temperature</small><strong>{environment.temperature}°C</strong><span>{environment.temperature >= 18 && environment.temperature <= 29 ? "Suitable for tropicals" : "Review temperature"}</span></div></div>
-          <div className="dash-condition"><span className="condition-icon humidity"><Droplets size={20} /></span><div><small>Humidity</small><strong>{environment.humidity}%</strong><span>{environment.humidity >= 60 ? "Humidity maintained" : "Could be increased"}</span></div></div>
-          <div className="dash-condition"><span className="condition-icon sunlight"><Sun size={20} /></span><div><small>Light schedule</small><strong>{environment.lightHours}h</strong><span>Daily light duration</span></div></div>
+          <div className="dash-condition"><span className="condition-icon temperature"><Thermometer size={20} /></span><div><small>Temperature</small><strong>{temperature}°C</strong><span>{temperature >= 18 && temperature <= 29 ? "Suitable for tropicals" : "Review temperature"}</span></div></div>
+          <div className="dash-condition"><span className="condition-icon humidity"><Droplets size={20} /></span><div><small>Humidity</small><strong>{humidity}%</strong><span>{humidity >= 60 ? "Humidity maintained" : "Could be increased"}</span></div></div>
+          <div className="dash-condition"><span className="condition-icon sunlight"><Sun size={20} /></span><div><small>Light schedule</small><strong>{lightHours}h</strong><span>Daily light duration</span></div></div>
           <div className="dash-condition"><span className="condition-icon airflow"><Gauge size={20} /></span><div><small>Environment</small><strong>{environmentStatus}</strong><span>Based on current settings</span></div></div>
         </div>
         <button className="dash-widget-link" onClick={() => onNavigate("Greenhouse")}>Manage environment <ArrowRight size={14} /></button>
