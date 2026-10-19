@@ -39,7 +39,7 @@ function fromSpeciesRow(row: SpeciesRow): Species {
   };
 }
 
-export async function loadSpeciesCatalog(): Promise<{ species: Species[]; source: "supabase" | "local" }> {
+export async function loadSpeciesCatalog(): Promise<{ species: Species[]; source: "supabase-table" | "storage-folders" | "local" }> {
   if (!supabase) return { species: prototypeSpecies, source: "local" };
 
   const { data: rows, error: tableError } = await supabase
@@ -91,5 +91,5 @@ export async function loadSpeciesCatalog(): Promise<{ species: Species[]; source
     catalog.push(...batch);
   }
 
-  return { species: catalog, source: "supabase" };
+  return { species: catalog, source: "storage-folders" };
 }
