@@ -82,7 +82,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
           day: parsed.day + days,
           projectStarted: Boolean(parsed.projectStarted),
           savedAt: Date.now(),
-          analysisEquipmentLevel: typeof parsed.analysisEquipmentLevel === "number" ? parsed.analysisEquipmentLevel : 0,
+          analysisEquipmentLevel: typeof parsed.analysisEquipmentLevel === "number" ? parsed.analysisEquipmentLevel : 0,\n          greenhouseEnvironment: parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT },
           offlineDays,
         };
       }
@@ -90,7 +90,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
   } catch {
     // A malformed or unavailable local save falls back to a fresh prototype save.
   }
-  return { version: 3, specimens: [], breedingProjects: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, offlineDays: 0 };
+  return { version: 3, specimens: [], breedingProjects: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, greenhouseEnvironment: { ...DEFAULT_ENVIRONMENT }, offlineDays: 0 };
 }
 
 function App() {
@@ -112,7 +112,11 @@ function App() {
   const [breedingProjects, setBreedingProjects] = useState<BreedingProject[]>(loadedSave.breedingProjects ?? []);
   const [cash, setCash] = useState(loadedSave.cash);
   const [research, setResearch] = useState(loadedSave.research);
-  const [greenhouseEnvironment, setGreenhouseEnvironment] = useState<PlantEnvironment>({ ...DEFAULT_ENVIRONMENT });
+  const [greenhouseEnvironment, setGreenhouseEnvironment] = useState<PlantEnvironment>(loadedSave.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
+  const [saveSlots, setSaveSlots] = useState<Record<string, GameSave | null>>(() => {
+    try { return JSON.parse(localStorage.getItem("j2grows.manual-save-slots.v1") || '{"1":null,"2":null,"3":null}') as Record<string, GameSave | null>; }
+    catch { return { "1": null, "2": null, "3": null }; }
+  });
   const [day, setDay] = useState(loadedSave.day);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All plants");
@@ -312,12 +316,35 @@ function App() {
   }
   useEffect(() => {
     try {
-      const save: GameSave = { version: 3, specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel, savedAt: Date.now() };
+      const save: GameSave = { version: 3, specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel, greenhouseEnvironment, savedAt: Date.now() };
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     } catch {
       setNotice("Local save unavailable. Your progress may not persist in this browser.");
     }
-  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel]);
+  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel, greenhouseEnvironment]);
+
+  useEffect(() => {
+    try { localStorage.setItem("j2grows.manual-save-slots.v1", JSON.stringify(saveSlots)); }
+    catch { setNotice("Manual save slots could not be written to browser storage."); }
+  }, [saveSlots]);
+
+  function saveToSlot(slot: string) {
+    const save: GameSave = { version: 3, specimens, breedingProjects, cash, research, day, projectStarted, analysisEquipmentLevel, greenhouseEnvironment, savedAt: Date.now() };
+    setSaveSlots((current) => ({ ...current, [slot]: save }));
+    announce(`Saved the current game to slot ${slot}.`);
+  }
+
+  function loadFromSlot(slot: string) {
+    const save = saveSlots[slot];
+    if (!save) { announce(`Save slot ${slot} is empty.`); return; }
+    setSpecimens(save.specimens.map((item) => ({ ...item, genetics: item.genetics ?? createSpecimenGenetics(item.variegation) })));
+    setBreedingProjects(save.breedingProjects ?? []);
+    setCash(save.cash); setResearch(save.research); setDay(save.day);
+    setProjectStarted(save.projectStarted); setAnalysisEquipmentLevel(save.analysisEquipmentLevel);
+    setGreenhouseEnvironment(save.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
+    setSelected(save.specimens[0]?.id ?? "");
+    announce(`Loaded save slot ${slot}.`);
+  }
 
   const activeSpecimen = specimens.find((item) => item.id === selected) ?? specimens[0];
   const activeSpecies = activeSpecimen ? findSpecies(activeSpecimen.speciesId) : findSpecies(initialSpecimens[0].speciesId);
@@ -655,7 +682,7 @@ function App() {
         {page === "Staff" && <StaffPage />}
         {page === "Shop" && <ShopPage specimens={specimens} species={catalogSpecies} cash={cash} day={day} onBuy={purchaseSpecies} onSell={sellSpecimen} />}
         {page === "Finances" && <FinancesPage cash={cash} specimens={specimens} />}
-        {page === "Settings" && <SettingsPage onReplayTutorial={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} onResetGame={resetGame} day={day} specimensCount={specimens.length} catalogSource={catalogSource} />}
+        {page === "Settings" && <SettingsPage onReplayTutorial={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} onResetGame={resetGame} day={day} specimensCount={specimens.length} catalogSource={catalogSource} saveSlots={saveSlots} onSaveSlot={saveToSlot} onLoadSlot={loadFromSlot} />}
       </div>
       <footer className="app-footer"><span>J2Grows <span className="footer-separator">/</span> Prototype 0.1</span><span>All specimen and economic values are early prototype data.</span><span><span className="online-dot" /> Offline-first</span></footer>
     </main>
@@ -755,12 +782,13 @@ function FinancesPage({ cash, specimens }: { cash: number; specimens: Specimen[]
 export default App;
 
 
-function SettingsPage({ onReplayTutorial, onResetGame, day, specimensCount, catalogSource }: { onReplayTutorial: () => void; onResetGame: () => void; day: number; specimensCount: number; catalogSource: "supabase" | "local" }) {
+function SettingsPage({ onReplayTutorial, onResetGame, day, specimensCount, catalogSource, saveSlots, onSaveSlot, onLoadSlot }: { onReplayTutorial: () => void; onResetGame: () => void; day: number; specimensCount: number; catalogSource: "supabase" | "local"; saveSlots: Record<string, GameSave | null>; onSaveSlot: (slot: string) => void; onLoadSlot: (slot: string) => void }) {
   return <div className="settings-layout">
     <section className="panel settings-panel"><div className="settings-heading"><div className="settings-icon"><Settings size={21} /></div><div><h2>Game settings</h2><p>Manage your J2Grows prototype experience.</p></div></div>
       <div className="settings-row"><div><strong>Getting started guide</strong><p>Replay the seven-step introduction to the nursery, collection and gameplay systems.</p></div><button className="button button-quiet" onClick={onReplayTutorial}><BookOpen size={15} /> Replay tutorial</button></div>
       <div className="settings-row"><div><strong>Species catalogue</strong><p>Current catalogue source: <span className="settings-status">{catalogSource === "supabase" ? "Supabase connected" : "Local prototype data"}</span></p></div><span className={`pill ${catalogSource === "supabase" ? "" : "subtle-pill"}`}>{catalogSource === "supabase" ? "Connected" : "Fallback mode"}</span></div>
       <div className="settings-row"><div><strong>Local save</strong><p>Your progress is stored in this browser. It is not currently synced between devices.</p></div><span className="settings-status"><span className="online-dot" /> Autosaving</span></div>
+      <div className="settings-row"><div><strong>Manual save slots</strong><p>Keep up to three named progression snapshots in this browser, including greenhouse settings and active breeding projects.</p></div><div className="save-slots">{["1","2","3"].map((slot) => <div className="save-slot" key={slot}><span>Slot {slot} · {saveSlots[slot] ? `Day ${saveSlots[slot]!.day}` : "Empty"}</span><button className="button button-quiet" onClick={() => onSaveSlot(slot)}>Save</button><button className="button button-quiet" disabled={!saveSlots[slot]} onClick={() => onLoadSlot(slot)}>Load</button></div>)}</div></div>
       <div className="settings-row"><div><strong>Current session</strong><p>Simulation day {day} · {specimensCount} individual specimens</p></div><span className="pill">Prototype 0.1</span></div>
     </section>
     <section className="panel settings-panel danger-panel"><div className="settings-heading"><div className="settings-icon danger-icon"><AlertTriangle size={21} /></div><div><h2>Reset game</h2><p>Start a new game from the original prototype state.</p></div></div><p className="danger-description">This will replace your current local save, start with £100, no plants and 0 research data, and show the tutorial again. This action cannot be undone.</p><button className="button button-danger" onClick={onResetGame}><AlertTriangle size={15} /> Reset all game progress</button></section>
