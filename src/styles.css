@@ -730,3 +730,9 @@ body{
 .species-library-card>.plant-art img{
   object-position:center 30%;
 }
+
+
+/* Align the top of each species image with the top of its artwork frame */
+.species-library-card>.plant-art img{
+  object-position:center top;
+}
