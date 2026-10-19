@@ -1010,7 +1010,7 @@ function Dashboard({ specimens, cash, research, day, projectStarted, onNavigate,
 
 function Catalogue({ specimens, species, catalogSource, query, setQuery, filter, setFilter, onSelect, onSell }: { specimens: Specimen[]; species: Species[]; catalogSource: "supabase-table" | "storage-folders" | "local"; query: string; setQuery: (value: string) => void; filter: string; setFilter: (value: string) => void; onSelect: (id: string) => void; onSell: (specimen: Specimen) => void }) {
   const [imageStates, setImageStates] = useState<Record<string, "loaded" | "fallback">>({});
-  const remoteCount = species.filter((plant) => /^https?:\\/\\//i.test(plant.image)).length;
+  const remoteCount = species.filter((plant) => (plant.image.startsWith("https://") || plant.image.startsWith("http://"))).length;
   const loadedCount = species.filter((plant) => imageStates[plant.id] === "loaded").length;
   const pendingCount = species.filter((plant) => /^https?:\\/\\//i.test(plant.image) && !imageStates[plant.id]).length;
   const fallbackCount = species.length - loadedCount - pendingCount;
