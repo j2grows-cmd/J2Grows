@@ -466,17 +466,69 @@ function App() {
           stage = "Mature";
           stageDays = 0;
           growthMessage = ` ${specimen.nickname} has reached maturity.`;
+        } else if (stage === "Mature" && health >= 70 && stageDays >= Math.ceil(14 * speciesFactor * conditionFactor)) {
+          stage = "Breeding-ready";
+          stageDays = 0;
+          growthMessage = ` ${specimen.nickname} is now breeding-ready.`;
         }
       }
       const updated = { ...specimen, health, dead: health <= 0, stage, stageDays, location, propagation, variegation: nextVariegation, discovered, genetics: { ...nextRecord, expression: nextVariegation, environment } };
       if (growthMessage) mutationMessage += growthMessage;
       return { ...updated, value: specimenValue(updated) };
     });
+    const activeProjects = breedingProjects.filter((project) => project.status === "active");
+    const finishedIds = new Set<string>();
+    const completedChildren: Specimen[] = [];
+    const completedProjects = activeProjects.map((project) => {
+      if (project.completesOnDay > nextDay) return project;
+      const parentA = nextSpecimens.find((item) => item.id === project.parentAId);
+      const parentB = nextSpecimens.find((item) => item.id === project.parentBId);
+      finishedIds.add(project.id);
+      if (!parentA || !parentB || parentA.dead || parentB.dead || parentA.health <= 0 || parentB.health <= 0) {
+        mutationMessage += ` Breeding project ${project.id} was cancelled because a parent died; its cost was lost.`;
+        return { ...project, status: "cancelled" as const };
+      }
+      if (Math.random() < project.failureChance) {
+        mutationMessage += ` Breeding project ${project.id} failed; its cost was lost, but both parents survived.`;
+        return { ...project, status: "cancelled" as const };
+      }
+      const recordA = parentA.genetics ?? createSpecimenGenetics(parentA.variegation);
+      const recordB = parentB.genetics ?? createSpecimenGenetics(parentB.variegation);
+      const inherited = inheritTraits(recordA.genetics, recordB.genetics);
+      const generation = Math.max(parentA.generation ?? 0, parentB.generation ?? 0) + 1;
+      const inheritedMutationIds = inherited.mutationIds;
+      const stabilityGenerations = Object.fromEntries(inheritedMutationIds.map((mutationId) => [mutationId, Math.max(parentA.stabilityGenerations?.[mutationId] ?? 0, parentB.stabilityGenerations?.[mutationId] ?? 0) + 1]));
+      const stableMutationIds = inheritedMutationIds.filter((mutationId) => (stabilityGenerations[mutationId] ?? 0) >= 3);
+      const inheritedMutationRecords = [...recordA.research.mutations, ...recordB.research.mutations]
+        .filter((mutation, index, all) => inheritedMutationIds.includes(mutation.id) && all.findIndex((candidate) => candidate.id === mutation.id) === index)
+        .map((mutation) => ({ ...mutation, detected: false, evidenceCount: 0 }));
+      const childId = `J2G-LINE-${nextDay.toString().padStart(4, "0")}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+      const childVariation = Math.round(inherited.variegationPotential);
+      const child: Specimen = {
+        id: childId, speciesId: parentA.speciesId, nickname: `Genetic Line ${generation} · ${completedChildren.length + 1}`,
+        location: "Propagation Bench", health: 88, stage: "Corm / Seedling", stageDays: 0,
+        geneticLineId: project.lineId, lineParentIds: [parentA.id, parentB.id], generation, stabilityGenerations, stableMutationIds,
+        value: 0, protected: false, variegation: childVariation, discovered: false,
+        genetics: { ...createSpecimenGenetics(childVariation), genetics: inherited, research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: stableMutationIds.length ? ["multi-generation-stability"] : [], mutations: inheritedMutationRecords } },
+      };
+      if (mutationOccurs("breeding", child.genetics!.environment, researchUnlocks.includes("mutation-screening") ? 2 : 0, researchUnlocks.includes("mutation-screening") ? 0.01 : 0)) {
+        const mutation = createMutation();
+        mutation.detected = false;
+        child.genetics = { ...child.genetics!, genetics: { ...child.genetics!.genetics, mutationIds: [...new Set([...child.genetics!.genetics.mutationIds, mutation.id])] }, research: { ...child.genetics!.research, mutations: [...child.genetics!.research.mutations, mutation] } };
+        mutationMessage += ` A potential mutation appeared in ${child.nickname}; recorded evidence is needed to confirm it.`;
+      }
+      child.value = specimenValue(child);
+      completedChildren.push(child);
+      mutationMessage += ` Breeding completed: ${child.nickname} was created from both recorded parents.`;
+      return { ...project, status: "completed" as const };
+    });
+    const releasedSpecimens = nextSpecimens.map((item) => item.reservedByProjectId && finishedIds.has(item.reservedByProjectId) ? { ...item, reservedByProjectId: undefined } : item);
+    const finalSpecimens = [...releasedSpecimens, ...completedChildren];
     setDay(nextDay);
-    setSpecimens(nextSpecimens);
-    setResearch((current) => current + 5);
-    announce(`Day ${nextDay}: plants grew, observations added research evidence and environmental conditions influenced variegation.${mutationMessage}`);
-    return nextSpecimens;
+    setSpecimens(finalSpecimens);
+    setBreedingProjects((current) => current.map((project) => completedProjects.find((finished) => finished.id === project.id) ?? project));
+    announce(`Day ${nextDay}: plant growth and conditions were processed. Research comes from recorded events, not time alone.${mutationMessage}`);
+    return finalSpecimens;
   }
 
   function observeSelectedSpecimen() {
