@@ -32,6 +32,8 @@ export type PlantMutation = {
   category: MutationCategory;
   rarity: "Minor" | "Unusual" | "Rare" | "Exceptional" | "Novel cultivar";
   inheritance: MutationInheritance;
+  /** Visible phenotype strength; separate from hidden heritable stability. */
+  strength: number;
   stability: number;
   detected: boolean;
   beneficial: boolean | null;
@@ -126,11 +128,18 @@ export function growVariegation(profile: GeneticProfile, environment: PlantEnvir
   return { expression: Math.round(expression), reverted, suitability: Math.round(suitability) };
 }
 
-export function observePlant(record: SpecimenGenetics, expression = record.expression): SpecimenGenetics {
+export function observePlant(record: SpecimenGenetics, expression = record.expression, equipmentAnalysisAvailable = false): SpecimenGenetics {
   const observations = [...record.observations, clamp(expression)].slice(-24);
   const observationCount = record.research.observationCount + 1;
   const points = record.research.points + 2 + (observations.length >= 3 ? 1 : 0);
-  const mutations = record.research.mutations.map((mutation) => mutation.detected ? mutation : { ...mutation, evidenceCount: (mutation.evidenceCount ?? 0) + 1, detected: (mutation.evidenceCount ?? 0) + 1 >= 3 });
+  const mutations = record.research.mutations.map((mutation) => {
+    if (mutation.detected) return mutation;
+    const evidenceCount = (mutation.evidenceCount ?? 0) + 1;
+    // Strong phenotypes are immediately observable. Weak phenotypes need repeated evidence
+    // unless the player has unlocked mutation screening and owns analysis equipment.
+    const detected = mutation.strength > 20 || evidenceCount >= 3 || equipmentAnalysisAvailable;
+    return { ...mutation, evidenceCount, detected };
+  });
   const discoveries = [...record.research.discoveredTraits];
   if (observations.length >= 3 && observations.every((value) => value >= 60) && !discoveries.includes("consistent-high-variegation")) {
     discoveries.push("consistent-high-variegation");
@@ -167,6 +176,7 @@ export function createMutation(random: () => number = Math.random): PlantMutatio
   const roll = random();
   const rarity: PlantMutation["rarity"] = roll < 0.58 ? "Minor" : roll < 0.83 ? "Unusual" : roll < 0.96 ? "Rare" : roll < 0.995 ? "Exceptional" : "Novel cultivar";
   const category = categories[Math.floor(random() * categories.length)];
+  const strength = Math.round(clamp(random() * 100));
   const stability = Math.round(clamp(20 + random() * 80));
   const inheritance: MutationInheritance = stability >= 75 ? "stable" : stability < 40 ? "unstable" : "mixed";
   const names: Record<MutationCategory, string[]> = {
@@ -182,6 +192,7 @@ export function createMutation(random: () => number = Math.random): PlantMutatio
     category,
     rarity,
     inheritance,
+    strength,
     stability,
     detected: false,
     beneficial: null,
