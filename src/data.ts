@@ -1,5 +1,6 @@
 import { getSpeciesEconomy, normalizeSpeciesName, SPECIES_ECONOMY, type RarityTier } from "./game/catalog.ts";
 import type { SpecimenGenetics } from "./game/genetics.ts";
+import { resolvePlantArtwork } from "./game/plant-artwork.ts";
 
 export type Species = {
   id: string;
@@ -233,7 +234,7 @@ export function setSpeciesCatalog(next: Species[]) {
 
 export function makeStorageSpecies(slug: string, image: string): Species {
   const local = offlineSpecies.find((plant) => plant.id === slug) ?? prototypeSpecies.find((plant) => plant.id === slug);
-  if (local) return { ...local, image: image || local.image };
+  if (local) return { ...local, image: resolvePlantArtwork(image, slug, local.image) };
   const name = slug.split("-").map((word) => word[0]?.toUpperCase() + word.slice(1)).join(" ");
   const economy = getSpeciesEconomy(name) ?? getSpeciesEconomy(slug);
   return {
@@ -244,7 +245,7 @@ export function makeStorageSpecies(slug: string, image: string): Species {
     difficulty: "Moderate",
     rarity: economy?.rarity ?? "Common",
     basePrice: economy?.basePrice ?? 15,
-    image: image || "hero",
+    image: resolvePlantArtwork(image, slug),
     summary: "Species details are not stored in the image catalogue yet.",
     light: "Not recorded",
     humidity: "Not recorded",
