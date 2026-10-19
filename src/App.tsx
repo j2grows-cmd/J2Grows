@@ -122,7 +122,7 @@ function App() {
     if (next < 0) return;
     if (next >= tutorialSteps.length) { finishTutorial(); return; }
     setTutorialStep(next);
-    setPage(tutorialSteps[next].page);
+    setPage(tutorialSteps[next].page === "Specimen Record" && !specimens.length ? "Plant Catalogue" : tutorialSteps[next].page);
     if (tutorialSteps[next].page === "Specimen Record" && specimens.length) setSelected(specimens[0].id);
   }
   useEffect(() => {
