@@ -360,16 +360,18 @@ function App() {
     const nextDay = day + 1;
     let mutationMessage = "";
     const nextSpecimens = specimens.map((specimen) => {
-      const health = Math.min(100, specimen.health + (specimen.health < 90 ? 2 : 0));
+      if (specimen.dead || specimen.health <= 0) return { ...specimen, health: 0, dead: true, value: 0 };
+      const environmentalMean = (greenhouseEnvironment.light + greenhouseEnvironment.nutrition + greenhouseEnvironment.humidity) / 3;
+      const health = Math.max(0, Math.min(100, environmentalMean < 35 ? specimen.health - 5 : environmentalMean < 50 ? specimen.health - 2 : environmentalMean >= 75 && specimen.health < 100 ? specimen.health + 2 : specimen.health));
       const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation);
       const environment = { ...greenhouseEnvironment, health };
       const growth = growVariegation(record.genetics, environment, specimen.variegation);
       let nextRecord: SpecimenGenetics = observePlant({ ...record, environment, expression: growth.expression }, growth.expression);
       let nextVariegation = growth.expression;
       let discovered = specimen.discovered;
-      if (shouldDiscoverMutation(record.genetics, environment, Math.max(record.research.analysisLevel + analysisEquipmentLevel + (projectStarted ? 1 : 0), Math.floor(research / 100)))) {
+      if (mutationOccurs("growth", environment, Math.floor(research / 50), analysisEquipmentLevel * 0.001)) {
         const mutation = createMutation();
-        mutation.detected = research > 0 || record.research.analysisLevel > 0;
+        mutation.detected = false;
         nextRecord = { ...nextRecord, genetics: { ...nextRecord.genetics, mutationIds: [...new Set([...nextRecord.genetics.mutationIds, mutation.id])] }, research: { ...nextRecord.research, mutations: [...nextRecord.research.mutations, mutation] } };
         if (mutation.category === "colour") { nextVariegation = Math.min(100, Math.max(nextVariegation, 35 + Math.round(Math.random() * 35))); nextRecord = { ...nextRecord, genetics: { ...nextRecord.genetics, variegationPotential: Math.max(nextRecord.genetics.variegationPotential, nextVariegation) } }; }
         if (mutation.detected) {
@@ -433,7 +435,7 @@ function App() {
           growthMessage = ` ${specimen.nickname} has reached maturity.`;
         }
       }
-      const updated = { ...specimen, health, stage, stageDays, location, propagation, variegation: nextVariegation, discovered, genetics: { ...nextRecord, expression: nextVariegation, environment } };
+      const updated = { ...specimen, health, dead: health <= 0, stage, stageDays, location, propagation, variegation: nextVariegation, discovered, genetics: { ...nextRecord, expression: nextVariegation, environment } };
       if (growthMessage) mutationMessage += growthMessage;
       return { ...updated, value: specimenValue(updated) };
     });
