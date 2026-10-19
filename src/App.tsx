@@ -943,7 +943,7 @@ function App() {
 
   return <div className="app-shell">
     <aside className={`sidebar ${showMenu ? "sidebar-open" : ""}`}>
-      <div className="brand"><div className="brand-mark"><Leaf size={27} /></div><div className="brand-name">J2Grows</div><div className="brand-tagline">CULTIVATE · DISCOVER · BREED · BUILD</div></div>
+      <div className="brand"><img className="brand-logo-image" src="https://lwaxzivcjzpmmantryor.supabase.co/storage/v1/object/public/Artwork/67da7ee1-380e-4773-8ea5-21304c39738c.png" alt="J2Grows botanical logo" /><div className="brand-tagline">CULTIVATE · DISCOVER · BREED · BUILD</div></div>
       <div className="institution-switch"><div className="institution-emblem"><Sprout size={19} /></div><div><strong>{instituteName || "Unnamed Institute"}</strong><span>Home institution</span></div><ChevronDown size={14} /></div>
       <nav className="main-nav">{nav.map(({ label, icon: Icon }) => <button key={label} className={`nav-item ${page === label || (page === "Specimen Record" && label === "Plant Catalogue") ? "active" : ""}`} onClick={() => { setPage(label); setShowMenu(false); }}><Icon size={17} /><span>{label}</span>{label === "Research" && <span className="nav-dot" />}</button>)}</nav>
       <div className="sidebar-bottom"><div className="facility-mini"><div className="facility-mini-top"><span>STARTER FACILITY</span><span className="status-dot" /></div><strong>Home greenhouse</strong><div className="facility-progress"><span style={{ width: "36%" }} /></div><small>36% capacity used</small></div><div className="season-card"><Sun size={18} /><div><strong>Year 1 · Spring</strong><span>Day {day}</span></div><button onClick={advanceDay} title="Advance one day"><ArrowRight size={16} /></button></div><div className="sidebar-footer"><span><span className="online-dot" /> Local save active</span><div className="sidebar-footer-actions"><button onClick={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} aria-label="Open tutorial" title="Tutorial"><BookOpen size={16} /></button><button onClick={() => { setPage("Settings"); setShowMenu(false); }} aria-label="Settings" title="Settings"><Settings size={16} /></button></div></div></div>
@@ -953,7 +953,7 @@ function App() {
       {notice && <div className="notice-banner" role="status"><span>{notice}</span><button onClick={() => setNotice("")} aria-label="Dismiss notification"><X size={15} /></button></div>}
       <header className="topbar">
         <button className="mobile-menu icon-button" onClick={() => setShowMenu((value) => !value)} aria-label="Toggle navigation"><Menu size={18} /></button>
-        <div className="top-institution"><span className="top-leaf"><Leaf size={21} /></span><div><strong>J2Grows</strong><span>{instituteName || "Name your institute"}</span></div></div>
+        <div className="top-institution"><img className="top-brand-logo" src="https://lwaxzivcjzpmmantryor.supabase.co/storage/v1/object/public/Artwork/67da7ee1-380e-4773-8ea5-21304c39738c.png" alt="" /><div><strong>J2Grows</strong><span>{instituteName || "Name your institute"}</span></div></div>
         <div className="top-resource"><span className="resource-symbol">£</span><div><strong>{money(cash)}</strong><small>Available funds</small></div></div>
         <div className="top-resource research-resource"><span className="resource-symbol"><Beaker size={17} /></span><div><strong>{research.toLocaleString("en-GB")}</strong><small>Research data</small></div></div>
         <div className="top-level"><div className="level-star"><Sprout size={18} /></div><div className="level-info"><div><strong>Institution level 1</strong><span>First roots</span></div><div className="progress-track"><span style={{ width: "28%" }} /></div></div></div>
@@ -1021,7 +1021,7 @@ function Dashboard({ specimens, cash, research, day, projectStarted, onNavigate,
           <button className="button button-primary" onClick={onAdvance}><Zap size={15} /> Advance day <ArrowRight size={14} /></button>
         </div>
       </div>
-      <div className="dash-feature-photo" role="img" aria-label="Lush tropical foliage in a botanical greenhouse">
+      <div className="dash-feature-photo" role="img" aria-label="J2Grows tropical botanical banner" style={{ backgroundImage: "url(https://lwaxzivcjzpmmantryor.supabase.co/storage/v1/object/public/Artwork/banner.png)" }}>
         <div className="dash-photo-caption"><span>J2GROWS · BOTANICAL JOURNAL</span><strong>New growth, new possibilities.</strong></div>
       </div>
     </section>
