@@ -23,3 +23,17 @@ test("UUID generation retries a collision and keeps existing IDs untouched", () 
 test("invalid UUID output is rejected and bounded retries fail clearly", () => {
   assert.throws(() => createUniqueSpecimenId([], () => "not-a-uuid"), /Unable to generate a unique specimen UUID/);
 });
+
+test("legacy specimen IDs and lineage references survive save-format round trips", () => {
+  const legacySave = {
+    version: 4,
+    specimens: [
+      { id: "J2G-PHI-0001", speciesId: "philodendron-white-princess", lineParentIds: [] },
+      { id: "J2G-LINE-0002-ABC12", speciesId: "philodendron-white-princess", lineParentIds: ["J2G-PHI-0001", "J2G-ALO-0007"] },
+    ],
+  };
+  const restored = JSON.parse(JSON.stringify(legacySave));
+  assert.deepEqual(restored, legacySave);
+  assert.equal(restored.specimens[1].id, "J2G-LINE-0002-ABC12");
+  assert.deepEqual(restored.specimens[1].lineParentIds, ["J2G-PHI-0001", "J2G-ALO-0007"]);
+});
