@@ -3,7 +3,7 @@ import {
   Activity, AlertTriangle, ArrowDownRight, ArrowRight, Beaker, Bell,
   BookOpen, BriefcaseBusiness, Building2, Check, ChevronDown, ChevronRight,
   CircleDollarSign, Clock3, Droplets, FlaskConical, Flower2, Gauge, Home, Leaf,
-  Menu, Microscope, Plus, Search, Settings, ShieldCheck, ShoppingBag,
+  Menu, Microscope, Plus, Search, Settings, ShieldCheck, ShoppingBag, Sparkles,
   Sprout, Sun, Thermometer, TrendingUp, Users, Wallet, X, Zap
 } from "lucide-react";
 import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeSpecies, type Species, type Specimen } from "./data";
