@@ -109,7 +109,7 @@ function App() {
   const tutorialSteps: { page: Page; title: string; body: string; tip: string }[] = [
     { page: "Dashboard", title: "Name your institute", body: "Every great botanical institution starts with a name. Choose one that will appear throughout your nursery.", tip: "You can change this later by replaying the introduction or through the institution settings." },
     { page: "Plant Catalogue", title: "Acquire your first plant", body: "Choose a starter species for £250. This is your first living specimen and the source of your first cutting.", tip: "You start with £1,000, so you will have funds left for propagation." },
-    { page: "Specimen Record", title: "Take your first cutting", body: "A cutting creates a new individual from your first plant. It costs £100 in this guided prototype and starts on the propagation bench.", tip: "The cutting gets its own specimen ID and record; it is not the same plant as its parent." },
+    { page: "Specimen Record", title: "Take your first cutting", body: "Create your first new specimen using a propagation method that fits your chosen plant. It costs £100 in this guided prototype.", tip: "Most aroids can be propagated in several ways, but Alocasia uses corms rather than stem cuttings here." },
     { page: "Greenhouse", title: "Give the cutting time to establish", body: "Advance one simulated day to let the cutting establish. This tutorial uses a scripted outcome so you can learn the discovery loop.", tip: "The full growth and environmental simulation is still being developed." },
     { page: "Specimen Record", title: "Discover your first mutation", body: "Your cutting develops a new variegation expression. The mutation is recorded on the specimen so you can inspect and protect this discovery.", tip: "This first mutation is scripted for onboarding; later genetics will use the game's inheritance and mutation rules." },
   ];
@@ -150,28 +150,33 @@ function App() {
 
   function takeTutorialCutting() {
     const parent = specimens.find((item) => item.id === selected) ?? specimens[0];
-    if (!parent) { setTutorialStep(1); setPage("Plant Catalogue"); announce("Acquire your first plant before taking a cutting."); return; }
-    if (specimens.some((item) => item.nickname === "First Cutting" || item.nickname === "First Mutation")) {
-      setTutorialStep(3); setPage("Greenhouse"); return;
+    if (!parent) { setTutorialStep(1); setPage("Plant Catalogue"); announce("Acquire your first plant before propagating it."); return; }
+    const existingOffspring = specimens.find((item) => ["First Cutting", "First Corm", "First Mutation"].includes(item.nickname));
+    if (existingOffspring) {
+      setTutorialStep(3); setSelected(existingOffspring.id); setPage("Greenhouse"); return;
     }
-    if (cash < 100) { announce("You need £100 for cutting supplies."); return; }
-    const cutting: Specimen = {
-      id: `J2G-CUT-${Date.now().toString().slice(-6)}`,
-      speciesId: parent.speciesId, nickname: "First Cutting", location: "Propagation Bench",
-      health: 85, stage: "Juvenile", value: Math.max(35, Math.round(parent.value * 0.6)),
+    const genus = findSpecies(parent.speciesId).latin.split(" ")[0].toLowerCase();
+    const isAlocasia = genus === "alocasia";
+    const cost = 100;
+    if (cash < cost) { announce(`You need ${money(cost)} for propagation supplies.`); return; }
+    const offspring: Specimen = {
+      id: `J2G-${isAlocasia ? "COR" : "CUT"}-${Date.now().toString().slice(-6)}`,
+      speciesId: parent.speciesId, nickname: isAlocasia ? "First Corm" : "First Cutting",
+      location: isAlocasia ? "Corm Nursery" : "Propagation Bench",
+      health: isAlocasia ? 75 : 85, stage: "Juvenile", value: Math.max(35, Math.round(parent.value * 0.6)),
       protected: false, variegation: parent.variegation, discovered: false,
     };
-    setCash((current) => current - 100);
-    setSpecimens((current) => [...current, cutting]);
-    setSelected(cutting.id);
+    setCash((current) => current - cost);
+    setSpecimens((current) => [...current, offspring]);
+    setSelected(offspring.id);
     setTutorialStep(3);
     setPage("Greenhouse");
-    announce("First cutting taken. The new specimen has its own identity and record.");
+    announce(isAlocasia ? "First Alocasia corm started. It has its own specimen record." : "First cutting taken. The new specimen has its own identity and record.");
   }
 
   function growTutorialCutting() {
-    const cutting = specimens.find((item) => item.nickname === "First Cutting" || item.nickname === "First Mutation");
-    if (!cutting) { setTutorialStep(1); setPage("Plant Catalogue"); announce("Acquire a plant and take a cutting first."); return; }
+    const cutting = specimens.find((item) => ["First Cutting", "First Corm", "First Mutation"].includes(item.nickname));
+    if (!cutting) { setTutorialStep(1); setPage("Plant Catalogue"); announce("Acquire a plant and propagate it first."); return; }
     setDay((current) => current + 1);
     setSpecimens((current) => current.map((item) => item.id === cutting.id ? { ...item, health: Math.min(100, item.health + 5) } : item));
     setSelected(cutting.id);
@@ -182,7 +187,7 @@ function App() {
 
   function discoverTutorialMutation() {
     const cutting = specimens.find((item) => item.nickname === "First Cutting" || item.nickname === "First Mutation");
-    if (!cutting) { announce("Take your first cutting before discovering a mutation."); return; }
+    if (!cutting) { announce("Propagate your first plant before discovering a mutation."); return; }
     setSpecimens((current) => current.map((item) => item.id === cutting.id
       ? { ...item, nickname: "First Mutation", variegation: Math.max(65, item.variegation), discovered: true, value: Math.max(item.value, 180) }
       : item));
@@ -372,10 +377,10 @@ function App() {
     {tutorialOpen && <div className="tutorial-backdrop" role="presentation"><section className="tutorial-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorial-title"><div className="tutorial-topline"><span className="tutorial-mark"><Sprout size={19} /></span><span>J2GROWS FIRST-GROW GUIDE</span><button className="tutorial-close" onClick={finishTutorial} aria-label="Close tutorial"><X size={17} /></button></div><div className="tutorial-progress-label"><span>YOUR FIRST DISCOVERY</span><span>{String(tutorialStep + 1).padStart(2, "0")} / {String(tutorialSteps.length).padStart(2, "0")}</span></div><div className="tutorial-progress-track"><span style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="tutorial-content"><div className="tutorial-eyebrow"><span className="eyebrow-line" /> GUIDED TUTORIAL</div><h2 id="tutorial-title">{tutorialSteps[tutorialStep].title}</h2><p>{tutorialSteps[tutorialStep].body}</p>
       {tutorialStep === 0 && <div className="guided-field"><label htmlFor="institute-name">Institute name</label><input id="institute-name" maxLength={40} value={instituteNameDraft} onChange={(event) => setInstituteNameDraft(event.target.value)} placeholder="e.g. Verdant Research Institute" autoFocus /><small>Up to 40 characters. You can rename it later.</small></div>}
       {tutorialStep === 1 && <div className="guided-field"><label htmlFor="starter-species">Choose your first plant · £250</label><select id="starter-species" value={starterSpeciesId} onChange={(event) => setStarterSpeciesId(event.target.value)}>{["alocasia-polly", "anthurium-clarinervium", "monstera-adansonii", "philodendron-birkin"].map((id) => { const plant = catalogSpecies.find((item) => item.id === id) ?? prototypeSpecies.find((item) => item.id === id); const labels: Record<string, string> = { "alocasia-polly": "Alocasia Polly", "anthurium-clarinervium": "Anthurium clarinervium", "monstera-adansonii": "Monstera Adansonii", "philodendron-birkin": "Philodendron Birkin" }; return <option key={id} value={id}>{labels[id]}{plant ? ` · ${plant.rarity}` : ""}</option>; })}</select><div className="guided-balance">Available funds: <strong>{money(cash)}</strong></div></div>}
-      {tutorialStep === 2 && <div className="guided-action-summary"><span className="guided-action-icon"><Sprout size={20} /></span><div><strong>Take one healthy cutting</strong><p>Cost: £100 · Creates a separate specimen record.</p></div></div>}
+      {tutorialStep === 2 && <div className="guided-action-summary"><span className="guided-action-icon"><Sprout size={20} /></span><div><strong>{starterSpeciesId === "alocasia-polly" ? "Start an Alocasia corm" : "Take one healthy cutting"}</strong><p>Cost: £100 · Creates a separate specimen record.</p></div></div>}
       {tutorialStep === 3 && <div className="guided-action-summary"><span className="guided-action-icon"><Sun size={20} /></span><div><strong>Advance one simulated day</strong><p>Your cutting will establish and become eligible for the scripted first mutation.</p></div></div>}
       {tutorialStep === 4 && <div className="guided-action-summary mutation-summary"><span className="guided-action-icon"><Sparkles size={20} /></span><div><strong>First mutation: variegation expression</strong><p>Your cutting will be recorded as “First Mutation” with 65% variegation expression. This is a guided, guaranteed discovery.</p></div></div>}
-      <div className="tutorial-tip"><Leaf size={16} /><span>{tutorialSteps[tutorialStep].tip}</span></div></div><div className="tutorial-footer"><button className="button button-quiet" onClick={finishTutorial}>Skip guide</button><div>{tutorialStep > 0 && <button className="button button-quiet tutorial-back" onClick={() => moveTutorial(-1)}>Back</button>}{tutorialStep === 0 ? <button className="button button-primary" onClick={saveInstituteName}>Name institute <ArrowRight size={15} /></button> : tutorialStep === 1 ? <button className="button button-primary" onClick={acquireStarterPlant} disabled={cash < 250}>Acquire plant · £250 <ArrowRight size={15} /></button> : tutorialStep === 2 ? <button className="button button-primary" onClick={takeTutorialCutting} disabled={cash < 100}>Take cutting · £100 <ArrowRight size={15} /></button> : tutorialStep === 3 ? <button className="button button-primary" onClick={growTutorialCutting}>Advance one day <ArrowRight size={15} /></button> : <button className="button button-primary" onClick={discoverTutorialMutation}><Sparkles size={15} /> Discover mutation</button>}</div></div></section></div>}
+      <div className="tutorial-tip"><Leaf size={16} /><span>{tutorialSteps[tutorialStep].tip}</span></div></div><div className="tutorial-footer"><button className="button button-quiet" onClick={finishTutorial}>Skip guide</button><div>{tutorialStep > 0 && <button className="button button-quiet tutorial-back" onClick={() => moveTutorial(-1)}>Back</button>}{tutorialStep === 0 ? <button className="button button-primary" onClick={saveInstituteName}>Name institute <ArrowRight size={15} /></button> : tutorialStep === 1 ? <button className="button button-primary" onClick={acquireStarterPlant} disabled={cash < 250}>Acquire plant · £250 <ArrowRight size={15} /></button> : tutorialStep === 2 ? <button className="button button-primary" onClick={takeTutorialCutting} disabled={cash < 100}>{starterSpeciesId === "alocasia-polly" ? "Start corm · £100" : "Take cutting · £100"} <ArrowRight size={15} /></button> : tutorialStep === 3 ? <button className="button button-primary" onClick={growTutorialCutting}>Advance one day <ArrowRight size={15} /></button> : <button className="button button-primary" onClick={discoverTutorialMutation}><Sparkles size={15} /> Discover mutation</button>}</div></div></section></div>}
   </div>;
 }
 
