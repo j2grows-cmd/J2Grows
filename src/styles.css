@@ -235,3 +235,100 @@ button:focus-visible,input:focus-visible,select:focus-visible{
 .notice-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 24px 0;padding:11px 14px;border:1px solid #455238;border-radius:10px;background:#182116;color:#dbe9c7;font-size:12px;line-height:1.5}.notice-banner button{display:grid;place-items:center;flex:0 0 28px;height:28px;border:1px solid #3a4831;border-radius:7px;background:#202b1a;color:#dbe9c7;cursor:pointer}.notice-banner button:hover{background:#2a3921}@media(max-width:640px){.notice-banner{margin:10px 12px 0}}
 
 .propagation-actions{display:flex;flex-wrap:wrap;gap:9px;margin:13px 0}.propagation-actions .button{display:inline-flex;align-items:center;gap:7px;white-space:normal;text-align:left}.propagation-actions .button svg{flex:0 0 auto}@media(max-width:640px){.propagation-actions{display:grid;grid-template-columns:1fr}.propagation-actions .button{width:100%;justify-content:flex-start}}
+
+
+/* Premium system-wide polish: consistent depth, focus states and responsive rhythm. */
+:root{
+  --bg:#0d0d0d;--panel:#121410;--panel2:#181b14;--border:rgba(181,199,146,.16);
+  --border-bright:rgba(181,211,134,.42);--olive:#8fa75a;--olive-bright:#bdd58b;
+  --gold:#c9ad68;--text:#ecebdd;--muted:#a5aa9a;--dim:#777e6e;--radius:14px;
+  color-scheme:dark;scroll-behavior:smooth;
+}
+body{background:radial-gradient(ellipse at 74% -10%,rgba(82,105,51,.22),transparent 34%),radial-gradient(ellipse at 0% 55%,rgba(53,66,37,.08),transparent 32%),var(--bg)}
+::selection{background:rgba(143,167,90,.38);color:#fff}
+button,input,select{accent-color:var(--olive)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-visible{
+  outline:2px solid var(--olive-bright);outline-offset:3px;
+}
+button{transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease}
+.button{min-height:38px;border-radius:9px;letter-spacing:.01em}
+.button-primary{background:linear-gradient(135deg,#c0d994 0%,#8fa75a 100%);border-color:rgba(214,233,176,.72);box-shadow:0 5px 18px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.24)}
+.button-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,0,0,.28),0 0 0 1px rgba(190,217,145,.16)}
+.button-quiet{background:linear-gradient(135deg,rgba(29,35,25,.96),rgba(18,22,16,.96));border-color:var(--border)}
+.button-quiet:hover:not(:disabled){border-color:var(--border-bright);transform:translateY(-1px)}
+.panel,.metric-card,.catalogue-card,.specimen-card,.upgrade-card,.facility-mini,.top-resource,.top-level{
+  box-shadow:0 10px 28px rgba(0,0,0,.12);
+}
+.panel{border-color:var(--border);border-radius:var(--radius);background:linear-gradient(145deg,rgba(22,26,19,.97),rgba(15,18,13,.98))}
+.metric-card{border-color:var(--border);border-radius:12px;background:linear-gradient(135deg,#171b13,#10130e)}
+.metric-icon{border-radius:11px}
+.hero-panel,.facility-hero{border-radius:16px;border-color:rgba(181,199,146,.24);box-shadow:0 18px 55px rgba(0,0,0,.14)}
+.hero-copy p,.page-heading p{max-width:62ch}
+.page-heading{margin-bottom:26px}
+.page-heading h1{letter-spacing:-1.2px}
+.section-header h2,.catalogue-card-content h3,.specimen-card-body>strong{letter-spacing:-.25px}
+.catalogue-card,.specimen-card,.species-library-card{border-color:var(--border);border-radius:12px;background:linear-gradient(160deg,#171b13,#10130e);transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.catalogue-card:hover,.specimen-card:hover,.species-library-card:hover{transform:translateY(-2px);border-color:var(--border-bright);box-shadow:0 12px 28px rgba(0,0,0,.2)}
+.plant-art{background-color:#141910}
+.pill{border-radius:999px;padding:5px 9px}
+.search-field,.parent-picker select,.guided-field input,.guided-field select{border-radius:10px}
+.search-field:focus-within{border-color:var(--olive-bright)}
+.toast{border-color:rgba(189,213,139,.42);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.48)}
+.sidebar{background:linear-gradient(180deg,#11140f 0%,#0c0e0b 100%);border-right-color:rgba(181,199,146,.13)}
+.brand-name{letter-spacing:-1.7px}
+.nav-item{border-radius:9px}
+.nav-item.active{box-shadow:inset 3px 0 var(--olive-bright),0 4px 18px rgba(0,0,0,.12)}
+.topbar{border-bottom-color:rgba(181,199,146,.13);background:rgba(13,13,13,.88)}
+.app-footer{color:#858b7b}
+.empty-panel{background:linear-gradient(145deg,rgba(24,29,20,.6),rgba(15,18,13,.6));border-color:var(--border)}
+input[type="range"]{width:100%;cursor:pointer}
+:disabled{cursor:not-allowed}
+@media(max-width:1100px){
+  .page-content{padding-left:22px;padding-right:22px}
+  .catalogue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .specimen-detail-grid{grid-template-columns:minmax(190px,.7fr) minmax(0,1.3fr)}
+  .specimen-detail-grid> :last-child{grid-column:1/-1}
+}
+@media(max-width:760px){
+  .sidebar{width:min(290px,86vw);transform:translateX(-102%);transition:transform .22s ease}
+  .sidebar.menu-open{transform:translateX(0)}
+  .main-area{margin-left:0}
+  .topbar{height:auto;min-height:64px;padding:12px 16px;gap:9px;flex-wrap:wrap}
+  .top-institution{min-width:0;flex:1}
+  .top-resource{min-width:0;padding:7px 9px}
+  .top-level{display:none}
+  .page-content{padding:20px 15px}
+  .page-heading{align-items:flex-start;flex-direction:column;gap:13px}
+  .heading-actions{width:100%;flex-wrap:wrap}
+  .hero-panel{grid-template-columns:1fr}
+  .hero-copy{padding:24px 21px}
+  .hero-art{min-height:205px}
+  .hero-index{left:22px}
+  .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .metric-card{padding:12px;gap:9px}
+  .metric-icon{width:33px;height:33px}
+  .dashboard-grid,.two-column-layout,.research-layout,.catalogue-layout{grid-template-columns:minmax(0,1fr)}
+  .catalogue-filters{position:static}
+  .specimen-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .specimen-detail-grid{grid-template-columns:minmax(0,1fr)}
+  .specimen-detail-grid> :last-child{grid-column:auto}
+  .specimen-portrait{min-height:270px}
+  .catalogue-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .app-footer{padding:14px 15px;flex-wrap:wrap}
+}
+@media(max-width:440px){
+  .topbar{gap:7px}
+  .top-resource{flex:1}
+  .top-resource small{display:none}
+  .page-heading h1{font-size:31px}
+  .metric-grid{grid-template-columns:minmax(0,1fr)}
+  .catalogue-grid{grid-template-columns:minmax(0,1fr)}
+  .catalogue-art-button .plant-art{height:180px}
+  .breeding-parent-grid{grid-template-columns:minmax(0,1fr)}
+  .experiment-summary{grid-template-columns:minmax(0,1fr)}
+  .section-header{align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){
+  :root{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
