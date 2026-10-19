@@ -346,3 +346,141 @@ input[type="range"]{width:100%;cursor:pointer}
 .research-node{align-items:center}
 .research-node .button{white-space:nowrap}
 @media(max-width:600px){.save-slot{grid-template-columns:1fr auto auto}.research-node{flex-wrap:wrap}.research-node .button{margin-left:48px}}
+
+
+/* Premium botanical dashboard refresh — shared across every game screen */
+:root{
+  --bg:#080d09;--panel:#101810;--panel2:#151f15;--border:#39462b;--border-bright:#667d43;
+  --olive:#8fa75a;--olive-bright:#b9d982;--gold:#d9b765;--text:#f0eddf;--muted:#a4a995;--dim:#737d6b;
+  --radius:11px;
+  font-family:"DM Sans",sans-serif;
+  background:#080d09;
+}
+body{
+  background:
+    radial-gradient(ellipse at 82% 0%,rgba(52,73,34,.25),transparent 34%),
+    radial-gradient(ellipse at 8% 85%,rgba(32,49,26,.18),transparent 30%),
+    #080d09;
+}
+.sidebar{
+  width:250px;padding:22px 14px 15px;
+  background:linear-gradient(180deg,rgba(8,14,9,.98),rgba(5,9,6,.99));
+  border-right:1px solid rgba(217,183,101,.24);
+}
+.brand{padding-bottom:23px}
+.brand-mark{color:#b6d982}
+.brand-name{font-size:38px;color:#f2e6c8}
+.brand-tagline{font-size:9px;letter-spacing:2px}
+.main-area{margin-left:250px}
+.main-nav{gap:5px}
+.nav-item{padding:12px 13px;font-size:13px;gap:13px}
+.nav-item svg{width:19px;height:19px;color:#dfc078}
+.nav-item.active{
+  background:linear-gradient(100deg,rgba(67,88,40,.78),rgba(29,43,22,.92));
+  border-color:rgba(185,217,130,.58);
+  box-shadow:inset 3px 0 #d8e8a6,0 5px 18px rgba(0,0,0,.2);
+}
+.topbar{
+  height:78px;padding:0 24px;gap:11px;
+  background:rgba(7,12,8,.91);border-bottom:1px solid rgba(217,183,101,.19);
+}
+.top-resource,.top-level{
+  background:linear-gradient(145deg,rgba(19,29,18,.97),rgba(11,17,11,.97));
+  border-color:rgba(217,183,101,.25);border-radius:10px;
+}
+.top-resource{min-width:125px}
+.top-resource:first-of-type{min-width:150px}
+.resource-symbol{background:#24331c;color:#dce9b0}
+.page-content{max-width:1900px;margin:0 auto;padding:25px 24px 30px}
+.page-heading{margin-bottom:20px}
+.page-heading h1{
+  font-family:"Playfair Display",Georgia,serif;font-size:clamp(32px,2.4vw,45px);
+  font-weight:500;letter-spacing:-1.3px;color:#f3e9d5;
+}
+.page-heading p{font-size:14px;line-height:1.65;color:#b3b7a6}
+.eyebrow{color:#c9b477;letter-spacing:1.7px;font-size:10px}
+.panel{
+  background:linear-gradient(145deg,rgba(17,26,17,.97),rgba(9,15,10,.98));
+  border:1px solid rgba(217,183,101,.35);border-radius:11px;
+  box-shadow:0 12px 34px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.018);
+}
+.section-header h2,.panel h2{
+  font-family:"Playfair Display",Georgia,serif;font-size:19px;font-weight:500;color:#f1e9d8;
+}
+.metric-card{
+  background:linear-gradient(140deg,rgba(24,35,22,.98),rgba(12,18,12,.99));
+  border:1px solid rgba(217,183,101,.3);border-radius:10px;
+}
+.metric-icon{background:linear-gradient(145deg,#24341c,#111b11);color:#e4c36e}
+.button{border-radius:8px}
+.button-primary{background:linear-gradient(135deg,#d8e8a6,#93b65e);color:#14200e;border-color:#dce9b2}
+.button-quiet{background:linear-gradient(135deg,#182319,#101710);border-color:rgba(217,183,101,.28)}
+.pill{border:1px solid rgba(217,183,101,.25)}
+.hero-panel{
+  position:relative;isolation:isolate;overflow:hidden;
+  grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);
+  min-height:300px;border-radius:12px;
+  border:1px solid rgba(217,183,101,.55);
+  background:
+    linear-gradient(90deg,rgba(5,12,7,.98) 0%,rgba(6,14,8,.92) 42%,rgba(7,14,8,.43) 100%),
+    url("https://images.unsplash.com/photo-1497250681960-ef046c08a56e?auto=format&fit=crop&w=1800&q=85") center 45%/cover,
+    #101910;
+  box-shadow:0 18px 55px rgba(0,0,0,.25);
+}
+.hero-copy{padding:30px 32px 34px}
+.hero-copy h2{font-family:"Playfair Display",Georgia,serif;font-size:clamp(38px,3.4vw,58px);line-height:1.06;letter-spacing:-1.6px;color:#f4ead6}
+.hero-copy h2 em{color:#d7c18a;font-weight:500}
+.hero-copy p{max-width:58ch;color:#e0e1d2;font-size:14px;line-height:1.7}
+.hero-art{background:transparent;min-height:280px}
+.hero-art .plant-art{background:transparent;filter:drop-shadow(0 18px 25px rgba(0,0,0,.35))}
+.hero-art-glow{background:radial-gradient(ellipse,rgba(130,164,77,.2),transparent 68%)}
+.hero-caption{background:rgba(5,10,6,.72);border:1px solid rgba(217,183,101,.28);backdrop-filter:blur(12px)}
+.hero-index{color:#d9c68c}
+.dashboard-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:14px}
+.attention-panel,.activity-panel,.collection-panel{padding:18px}
+.attention-item{border-color:rgba(217,183,101,.12);border-radius:8px}
+.milestone-card{background:linear-gradient(140deg,rgba(36,49,27,.72),rgba(15,22,14,.9));border-color:rgba(217,183,101,.2)}
+.specimen-strip{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.specimen-card,.add-specimen-card{
+  border-color:rgba(217,183,101,.28);background:linear-gradient(160deg,#172117,#0b110c);
+}
+.specimen-card .plant-art{height:170px}
+.specimen-card-body{padding:13px}
+.specimen-card-body>strong{font-family:"Playfair Display",Georgia,serif;font-size:16px}
+.catalogue-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.catalogue-card,.species-library-card,.upgrade-card{
+  border-color:rgba(217,183,101,.23);background:linear-gradient(155deg,#172117,#0b110c);
+}
+.plant-art{background-color:#131c12}
+.search-field,.parent-picker select,.guided-field input,.guided-field select{
+  background:#0d150e;border-color:#3a482d;color:var(--text)
+}
+.toast,.tutorial-dialog{background:linear-gradient(145deg,#182319,#0c130d);border-color:rgba(217,183,101,.4)}
+.app-footer{border-top-color:rgba(217,183,101,.16)}
+@media(min-width:1500px){
+  .page-content{padding-left:30px;padding-right:30px}
+  .hero-panel{min-height:310px}
+  .dashboard-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .specimen-card .plant-art{height:190px}
+}
+@media(max-width:1250px){
+  .sidebar{width:218px}
+  .main-area{margin-left:218px}
+  .topbar{padding:0 16px;gap:8px}
+  .profile-chip{display:none}
+  .top-resource{min-width:110px}
+  .specimen-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .sidebar{width:min(290px,86vw)}
+  .main-area{margin-left:0}
+  .page-content{padding:20px 15px}
+  .hero-panel{grid-template-columns:minmax(0,1fr);background-position:center}
+  .hero-copy{padding:25px 22px}
+  .hero-art{min-height:190px}
+  .dashboard-grid{grid-template-columns:minmax(0,1fr)}
+  .specimen-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero-panel,.metric-card,.panel,.specimen-card{transition:none}
+}
