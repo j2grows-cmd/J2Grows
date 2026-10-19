@@ -1860,3 +1860,14 @@ body{
  .brand-logo-image{width:112px;height:92px}
  .top-brand-logo{width:36px;height:36px;flex-basis:36px}
 }
+
+
+/* Final brand and full-bleed hero polish */
+.top-institution{display:flex;align-items:center;justify-content:center;min-width:146px}
+.top-brand-logo{object-position:center;align-self:center}
+.dash-feature-hero{position:relative;isolation:isolate}
+.dash-feature-copy{background:linear-gradient(90deg,#09110a 0%,rgba(9,17,10,.96) 68%,rgba(9,17,10,.74) 100%)}
+.dash-feature-photo{background-size:cover!important;background-position:center!important}
+@media(max-width:850px){
+ .top-institution{min-width:0}
+}
