@@ -910,3 +910,35 @@ body{
  .care-grid{grid-template-columns:1fr}
  .propagation-actions .button{width:100%}
 }
+
+
+/* Specimen record finishing pass: denser centre column, clearer lower actions */
+@media(min-width:1251px) and (min-height:800px){
+  .specimen-detail-grid{gap:12px;grid-template-columns:minmax(270px,.76fr) minmax(0,1.52fr) minmax(245px,.72fr)}
+  .specimen-detail-main{padding:15px 17px}
+  .specimen-detail-main>.section-header{padding-bottom:9px;margin-bottom:9px}
+  .detail-stat-grid{gap:7px}
+  .detail-stat-grid>div{padding:9px 11px}
+  .detail-stat-grid strong{font-size:19px}
+  .specimen-health-track{margin-top:7px;height:4px}
+  .detail-section{padding:11px 0}
+  .detail-section h3{font-size:16px;margin-bottom:7px}
+  .detail-section>p:not(.muted-copy){line-height:1.55}
+  .care-grid{margin-top:9px;gap:7px}
+  .care-grid>div{padding:8px}
+  .larger-pills span{padding:4px 7px}
+  .muted-copy{line-height:1.5}
+  .propagation-actions{margin-top:8px;gap:6px}
+  .detail-actions{padding-top:10px}
+  .specimen-detail-main .button{padding:8px 10px;font-size:10px}
+  .provenance-panel{padding:14px}
+  .provenance-item{padding:10px 0}
+  .provenance-panel .button{margin-top:10px}
+}
+@media(min-width:1251px) and (max-height:900px){
+  .specimen-portrait{min-height:600px}
+  .specimen-detail-main{padding-top:13px;padding-bottom:13px}
+  .detail-section{padding:9px 0}
+  .care-grid{margin-top:7px}
+  .provenance-item{padding:8px 0}
+}
