@@ -105,7 +105,7 @@ function App() {
   const [instituteNameDraft, setInstituteNameDraft] = useState(() => {
     try { return localStorage.getItem("j2grows.institute.name.v1") || ""; } catch { return ""; }
   });
-  const [starterSpeciesId, setStarterSpeciesId] = useState("philodendron-white-princess");
+  const [starterSpeciesId, setStarterSpeciesId] = useState("alocasia-polly");
   const tutorialSteps: { page: Page; title: string; body: string; tip: string }[] = [
     { page: "Dashboard", title: "Name your institute", body: "Every great botanical institution starts with a name. Choose one that will appear throughout your nursery.", tip: "You can change this later by replaying the introduction or through the institution settings." },
     { page: "Plant Catalogue", title: "Acquire your first plant", body: "Choose a starter species for £250. This is your first living specimen and the source of your first cutting.", tip: "You start with £1,000, so you will have funds left for propagation." },
@@ -133,7 +133,7 @@ function App() {
     if (specimens.length > 0) { setTutorialStep(2); setSelected(specimens[0].id); setPage("Specimen Record"); return; }
     const cost = 250;
     if (cash < cost) { announce("You need £250 to acquire your first plant."); return; }
-    const plant = catalogSpecies.find((item) => item.id === starterSpeciesId) ?? prototypeSpecies[0];
+    const plant = catalogSpecies.find((item) => item.id === starterSpeciesId) ?? prototypeSpecies.find((item) => item.id === starterSpeciesId) ?? prototypeSpecies[0];
     const id = `J2G-${plant.latin.split(" ")[0].slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-6)}`;
     const specimen: Specimen = {
       id, speciesId: plant.id, nickname: plant.name, location: "Home greenhouse",
@@ -370,7 +370,7 @@ function App() {
     </main>
     {tutorialOpen && <div className="tutorial-backdrop" role="presentation"><section className="tutorial-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorial-title"><div className="tutorial-topline"><span className="tutorial-mark"><Sprout size={19} /></span><span>J2GROWS FIRST-GROW GUIDE</span><button className="tutorial-close" onClick={finishTutorial} aria-label="Close tutorial"><X size={17} /></button></div><div className="tutorial-progress-label"><span>YOUR FIRST DISCOVERY</span><span>{String(tutorialStep + 1).padStart(2, "0")} / {String(tutorialSteps.length).padStart(2, "0")}</span></div><div className="tutorial-progress-track"><span style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="tutorial-content"><div className="tutorial-eyebrow"><span className="eyebrow-line" /> GUIDED TUTORIAL</div><h2 id="tutorial-title">{tutorialSteps[tutorialStep].title}</h2><p>{tutorialSteps[tutorialStep].body}</p>
       {tutorialStep === 0 && <div className="guided-field"><label htmlFor="institute-name">Institute name</label><input id="institute-name" maxLength={40} value={instituteNameDraft} onChange={(event) => setInstituteNameDraft(event.target.value)} placeholder="e.g. Verdant Research Institute" autoFocus /><small>Up to 40 characters. You can rename it later.</small></div>}
-      {tutorialStep === 1 && <div className="guided-field"><label htmlFor="starter-species">Choose your first plant · £250</label><select id="starter-species" value={starterSpeciesId} onChange={(event) => setStarterSpeciesId(event.target.value)}>{catalogSpecies.map((plant) => <option key={plant.id} value={plant.id}>{plant.name} · {plant.rarity}</option>)}</select><div className="guided-balance">Available funds: <strong>{money(cash)}</strong></div></div>}
+      {tutorialStep === 1 && <div className="guided-field"><label htmlFor="starter-species">Choose your first plant · £250</label><select id="starter-species" value={starterSpeciesId} onChange={(event) => setStarterSpeciesId(event.target.value)}>{["alocasia-polly", "anthurium-clarinervium", "monstera-adansonii", "philodendron-birkin"].map((id) => { const plant = catalogSpecies.find((item) => item.id === id) ?? prototypeSpecies.find((item) => item.id === id); const labels: Record<string, string> = { "alocasia-polly": "Alocasia Polly", "anthurium-clarinervium": "Anthurium clarinervium", "monstera-adansonii": "Monstera Adansonii", "philodendron-birkin": "Philodendron Birkin" }; return <option key={id} value={id}>{labels[id]}{plant ? ` · ${plant.rarity}` : ""}</option>; })}</select><div className="guided-balance">Available funds: <strong>{money(cash)}</strong></div></div>}
       {tutorialStep === 2 && <div className="guided-action-summary"><span className="guided-action-icon"><Sprout size={20} /></span><div><strong>Take one healthy cutting</strong><p>Cost: £100 · Creates a separate specimen record.</p></div></div>}
       {tutorialStep === 3 && <div className="guided-action-summary"><span className="guided-action-icon"><Sun size={20} /></span><div><strong>Advance one simulated day</strong><p>Your cutting will establish and become eligible for the scripted first mutation.</p></div></div>}
       {tutorialStep === 4 && <div className="guided-action-summary mutation-summary"><span className="guided-action-icon"><Sparkles size={20} /></span><div><strong>First mutation: variegation expression</strong><p>Your cutting will be recorded as “First Mutation” with 65% variegation expression. This is a guided, guaranteed discovery.</p></div></div>}
