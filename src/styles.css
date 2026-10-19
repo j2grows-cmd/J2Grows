@@ -332,3 +332,17 @@ input[type="range"]{width:100%;cursor:pointer}
   :root{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+
+/* Progression systems */
+.save-slots{display:grid;gap:10px;min-width:min(100%,360px)}
+.save-slot{display:grid;grid-template-columns:minmax(70px,1fr) auto auto;gap:8px;align-items:center;padding:10px;border:1px solid var(--border);border-radius:10px}
+.save-slot>span{font-size:12px;color:var(--muted)}
+.lineage-list,.active-projects{display:grid;gap:10px;margin-top:16px}
+.lineage-item{display:grid;gap:5px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--panel2)}
+.lineage-item strong{font-size:13px}
+.lineage-item span,.lineage-item small{font-size:12px;color:var(--muted);line-height:1.5}
+.active-projects h3{margin:0;font-size:14px}
+.research-node{align-items:center}
+.research-node .button{white-space:nowrap}
+@media(max-width:600px){.save-slot{grid-template-columns:1fr auto auto}.research-node{flex-wrap:wrap}.research-node .button{margin-left:48px}}
