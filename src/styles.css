@@ -2018,3 +2018,12 @@ body{
   .tutorial-progress-label{padding:14px 20px 8px}
   .tutorial-progress-track{margin:0 20px}
 }
+
+
+.tutorial-dialog{top:clamp(16px,3vh,34px);bottom:auto}
+.tutorial-inline-name{max-width:520px;margin:18px 0;padding:15px 17px;border:1px solid rgba(195,226,135,.35);border-radius:12px;background:rgba(15,24,12,.92);box-shadow:0 10px 30px rgba(0,0,0,.22)}
+.tutorial-inline-name label{display:block;margin-bottom:8px;color:#d5e5b8;font-size:13px;font-weight:700;letter-spacing:.04em}
+.tutorial-inline-name>div{display:flex;align-items:center;gap:9px}
+.tutorial-inline-name input{width:min(100%,320px);min-width:0;padding:10px 12px;border:1px solid #536646;border-radius:8px;background:#10170d;color:var(--text);font:inherit}
+.tutorial-action-hint{margin:14px 0 0!important;padding:11px 13px;border-left:3px solid #b9dc77;border-radius:0 8px 8px 0;background:rgba(145,181,90,.1);color:#d4dfc3!important;font-size:14px!important;line-height:1.55!important}
+@media(max-width:680px){.tutorial-dialog{top:12px;bottom:auto}.tutorial-inline-name>div{align-items:stretch;flex-direction:column}.tutorial-inline-name input{width:100%}}
