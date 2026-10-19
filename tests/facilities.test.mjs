@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { DEFAULT_ENVIRONMENT } from "../src/game/genetics.ts";
-import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, propagationDaysRequired, weeklyFacilityOperatingCost } from "../src/game/facilities.ts";
+import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, normalizeFacilityLevels, propagationDaysRequired, weeklyFacilityOperatingCost } from "../src/game/facilities.ts";
 
 const empty = { propagationBench: 0, environmentalController: 0 };
 
@@ -36,4 +36,11 @@ test("propagation bench shortens each phase but never makes it instantaneous", (
 test("weekly operating costs include owned facilities and automation", () => {
   assert.equal(weeklyFacilityOperatingCost(empty, 0, false), 0);
   assert.equal(weeklyFacilityOperatingCost({ propagationBench: 2, environmentalController: 1 }, 1, true), 26);
+});
+
+test("facility levels migrate safely from old saves and clamp malformed or excessive values", () => {
+  assert.deepEqual(normalizeFacilityLevels(undefined), empty);
+  assert.deepEqual(normalizeFacilityLevels({ propagationBench: 2 }), { propagationBench: 2, environmentalController: 0 });
+  assert.deepEqual(normalizeFacilityLevels({ propagationBench: 99, environmentalController: -3 }), empty === null ? empty : { propagationBench: 3, environmentalController: 0 });
+  assert.deepEqual(normalizeFacilityLevels({ propagationBench: Number.NaN, environmentalController: 1.8 }), { propagationBench: 0, environmentalController: 1 });
 });
