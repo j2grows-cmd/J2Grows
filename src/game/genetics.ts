@@ -55,6 +55,19 @@ export const DEFAULT_ENVIRONMENT: PlantEnvironment = {
 const clamp = (value: number, min = 0, max = 100) => Math.min(max, Math.max(min, value));
 const varied = (value: number, random: () => number, spread = 8) => clamp(value + (random() * 2 - 1) * spread);
 
+
+export function createSpecimenGenetics(expression = 0, random: () => number = Math.random): SpecimenGenetics {
+  const genetics = createGeneticProfile(random);
+  genetics.variegationPotential = clamp(Math.max(expression, genetics.variegationPotential));
+  return {
+    genetics,
+    expression: clamp(expression),
+    environment: { ...DEFAULT_ENVIRONMENT },
+    observations: expression > 0 ? [clamp(expression)] : [],
+    research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: [] },
+  };
+}
+
 export function createGeneticProfile(random: () => number = Math.random): GeneticProfile {
   return {
     variegationPotential: clamp(10 + random() * 30),
