@@ -83,6 +83,9 @@ function loadGameSave(): GameSave & { offlineDays: number } {
           if (current.genetics && typeof current.genetics.genetics.mutationGenePresent !== "boolean") {
             current.genetics = { ...current.genetics, genetics: { ...current.genetics.genetics, mutationGenePresent: Math.random() < 0.2 } };
           }
+          if (current.genetics) {
+            current.genetics = { ...current.genetics, research: { ...current.genetics.research, mutations: current.genetics.research.mutations.map((mutation) => ({ ...mutation, strength: typeof mutation.strength === "number" ? mutation.strength : 20 })) } };
+          }
           if (current.dead || current.health <= 0) return { ...current, health: 0, dead: true };
           const genus = findSpecies(current.speciesId).latin.split(" ")[0].toLowerCase();
           const speciesFactor = genus === "anthurium" ? 1.25 : genus === "alocasia" ? 1.1 : ["monstera", "philodendron"].includes(genus) ? 0.9 : 1;
