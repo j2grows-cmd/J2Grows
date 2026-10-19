@@ -140,12 +140,18 @@ export function observePlant(record: SpecimenGenetics, expression = record.expre
 }
 
 export function analyseGenetics(record: SpecimenGenetics, cost = 25): SpecimenGenetics | null {
-  if (record.research.points < cost) return null;
+  if (record.research.points < cost || record.research.observationCount < 3 || record.research.analysisLevel >= 3) return null;
   const nextLevel = record.research.analysisLevel + 1;
   const discoveries = [...record.research.discoveredTraits];
-  if (nextLevel >= 1 && !discoveries.includes("stability-profile")) discoveries.push("stability-profile");
-  if (nextLevel >= 2 && record.genetics.hiddenPotential >= 60 && !discoveries.includes("hidden-potential")) discoveries.push("hidden-potential");
-  if (nextLevel >= 3 && !discoveries.includes("inheritance-profile")) discoveries.push("inheritance-profile");
+  if (nextLevel === 1 && !discoveries.includes("visible-trait-profile")) discoveries.push("visible-trait-profile");
+  if (nextLevel >= 2) {
+    if (!discoveries.includes("hidden-potential")) discoveries.push("hidden-potential");
+    if (!discoveries.includes("inheritance-profile")) discoveries.push("inheritance-profile");
+  }
+  if (nextLevel >= 3) {
+    if (!discoveries.includes("mutation-details")) discoveries.push("mutation-details");
+    if (!discoveries.includes("stability-profile")) discoveries.push("stability-profile");
+  }
   return {
     ...record,
     research: { ...record.research, points: record.research.points - cost, analysisLevel: nextLevel, discoveredTraits: discoveries },
