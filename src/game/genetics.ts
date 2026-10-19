@@ -90,7 +90,7 @@ export function inheritGenetics(parentA: GeneticProfile, parentB: GeneticProfile
     mutationIds,
   };
   if (random() < 0.025) {
-    const mutation = random() < 0.5 ? "spontaneous-colour-shift" : "spontaneous-morphology";
+    const mutation = (random() < 0.5 ? "spontaneous-colour-shift" : "spontaneous-morphology") + "-" + Math.round(random() * 1e9).toString(36);
     child.mutationIds = [...new Set([...child.mutationIds, mutation])];
     if (mutation === "spontaneous-colour-shift") child.variegationPotential = varied(Math.max(child.variegationPotential, 55), random, 20);
     else child.growthPotential = varied(child.growthPotential, random, 28);
