@@ -71,7 +71,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
   } catch {
     // A malformed or unavailable local save falls back to a fresh prototype save.
   }
-  return { version: 1, specimens: initialSpecimens, cash: 48250, research: 1320, day: 48, projectStarted: false, savedAt: Date.now(), offlineDays: 0 };
+  return { version: 1, specimens: [], cash: 1000, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), offlineDays: 0 };
 }
 
 function App() {
@@ -153,18 +153,18 @@ function App() {
     const confirmed = window.confirm("Reset J2Grows? This permanently replaces your current local save with a fresh game and cannot be undone.");
     if (!confirmed) return;
     try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem("j2grows.tutorial.completed.v1"); } catch { /* State can still reset for this session. */ }
-    setSpecimens(initialSpecimens.map((specimen) => ({ ...specimen })));
-    setCash(48250);
-    setResearch(1320);
-    setDay(48);
+    setSpecimens([]);
+    setCash(1000);
+    setResearch(0);
+    setDay(1);
     setProjectStarted(false);
-    setSelected(initialSpecimens[0].id);
+    setSelected("");
     setQuery("");
     setFilter("All plants");
     setPage("Dashboard");
     setTutorialStep(0);
     setTutorialOpen(true);
-    announce("A fresh J2Grows save has been started.");
+    announce("New game started: £1,000, no plants, and 0 research data.");
   }
 
   function advanceDay() {
@@ -373,6 +373,6 @@ function SettingsPage({ onReplayTutorial, onResetGame, day, specimensCount, cata
       <div className="settings-row"><div><strong>Local save</strong><p>Your progress is stored in this browser. It is not currently synced between devices.</p></div><span className="settings-status"><span className="online-dot" /> Autosaving</span></div>
       <div className="settings-row"><div><strong>Current session</strong><p>Simulation day {day} · {specimensCount} individual specimens</p></div><span className="pill">Prototype 0.1</span></div>
     </section>
-    <section className="panel settings-panel danger-panel"><div className="settings-heading"><div className="settings-icon danger-icon"><AlertTriangle size={21} /></div><div><h2>Reset game</h2><p>Start a new game from the original prototype state.</p></div></div><p className="danger-description">This will replace your current local save, restore the starting funds, research and specimen collection, and show the tutorial again. This action cannot be undone.</p><button className="button button-danger" onClick={onResetGame}><AlertTriangle size={15} /> Reset all game progress</button></section>
+    <section className="panel settings-panel danger-panel"><div className="settings-heading"><div className="settings-icon danger-icon"><AlertTriangle size={21} /></div><div><h2>Reset game</h2><p>Start a new game from the original prototype state.</p></div></div><p className="danger-description">This will replace your current local save, start with £1,000, no plants and 0 research data, and show the tutorial again. This action cannot be undone.</p><button className="button button-danger" onClick={onResetGame}><AlertTriangle size={15} /> Reset all game progress</button></section>
   </div>;
 }
