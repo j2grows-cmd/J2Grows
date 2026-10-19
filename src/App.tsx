@@ -215,12 +215,9 @@ function App() {
   const [instituteNameDraft, setInstituteNameDraft] = useState(() => {
     try { return localStorage.getItem("j2grows.institute.name.v1") || ""; } catch { return ""; }
   });
-  const [starterSpeciesId, setStarterSpeciesId] = useState("alocasia-polly");
-  const starterPlant = catalogSpecies.find((item) => item.id === starterSpeciesId) ?? prototypeSpecies.find((item) => item.id === starterSpeciesId) ?? prototypeSpecies[0];
-  const starterPrice = getSpeciesEconomy(starterPlant.id)?.basePrice ?? starterPlant.basePrice ?? 15;
   const tutorialSteps: { page: Page; title: string; body: string; tip: string }[] = [
     { page: "Dashboard", title: "Name your institute", body: "Every great botanical institution starts with a name. Choose one that will appear throughout your nursery.", tip: "You can change this later by replaying the introduction or through the institution settings." },
-    { page: "Plant Catalogue", title: "Acquire your first plant", body: "Choose an affordable starter species using its base price. This is your first living specimen and the source of your first propagation.", tip: "You start with £100 and can buy a common starter plant for around £10–£20." },
+    { page: "Shop", title: "Acquire your first plant", body: "Choose an affordable plant from today’s shop stock. It becomes your first living specimen and source for your first propagation.", tip: "Compare the base price with your available funds before choosing a plant." },
     { page: "Specimen Record", title: "Practise propagation", body: "Use the protected mature demonstration plant to practise propagation straight away. Your ordinary shop purchase remains juvenile, and every normal corm or cutting still requires a mature parent.", tip: "Stem cuttings reset their parent to juvenile and trigger recovery. The demonstration plant is protected so it cannot be accidentally sold." },
     { page: "Greenhouse", title: "Give your new plant time to establish", body: "Advance one simulated day to let your new specimen establish and record its first growth cycle.", tip: "Growing conditions affect new growth, but they do not guarantee a particular outcome." },
     { page: "Specimen Record", title: "Record your first observation", body: "Record the new growth on your propagated plant. Observations build research evidence and help reveal variegation stability over time.", tip: "Mutations are rare and not guaranteed. Research improves your understanding rather than forcing a result." },
@@ -234,9 +231,11 @@ function App() {
     if (!tutorialOpen) return;
     document.querySelectorAll(".tutorial-spotlight-target").forEach((element) => element.classList.remove("tutorial-spotlight-target"));
     const pageTarget = tutorialStep === 1
-      ? document.querySelector(".starter-empty")
+      ? document.querySelector(".shop-listing .button-primary:not(:disabled)")
       : tutorialStep === 2
         ? Array.from(document.querySelectorAll(".detail-section")).find((element) => element.querySelector("h3")?.textContent?.includes("Propagation methods"))
+        : tutorialStep === 0
+        ? document.querySelector(".tutorial-inline-name")
         : tutorialStep === 3
           ? document.querySelector(".page-heading .button-primary, .dash-hero-controls .button-primary")
           : tutorialStep === 4
@@ -255,7 +254,7 @@ function App() {
     setInstituteNameDraft(name);
     try { localStorage.setItem("j2grows.institute.name.v1", name); } catch { /* Keep the name for this session. */ }
     setTutorialStep(1);
-    setPage("Plant Catalogue");
+    setPage("Shop");
     announce(`${name} is ready to grow.`);
   }
 
@@ -323,10 +322,6 @@ function App() {
     }
   }
 
-  function acquireStarterPlant() {
-    if (specimens.length > 0) { setTutorialStep(2); setSelected(specimens[0].id); setPage("Specimen Record"); return; }
-    acquireSpecies(starterPlant, true);
-  }
 
   function takeTutorialCutting() {
     const parent = specimens.find((item) => item.id === selected) ?? specimens[0];
@@ -981,31 +976,31 @@ function App() {
         {page !== "Dashboard" && (
           <section className="page-heading">
             <div><div className="eyebrow"><span className="eyebrow-line" /> YOUR BOTANICAL INSTITUTION</div><h1>{pageTitle}</h1><p>{page === "Plant Catalogue" ? "Browse your collection, compare traits and manage every individual specimen." : page === "Specimen Record" ? "An individual record of genetics, health, lineage and provenance." : page === "Breeding" ? "Choose parent plants, explore possibilities and build remarkable genetic lines." : page === "Research" ? "Turn observations into knowledge, methods and new capabilities." : page === "Greenhouse" ? "Keep your plants healthy and tune their growing environments." : page === "Facilities" ? "Grow from a home greenhouse into a specialist botanical institution." : page === "Staff" ? "Build a capable team and gradually automate your daily work." : page === "Shop" ? "Sell remarkable specimens and reinvest in your institution." : page === "Settings" ? "Manage your local save and game preferences." : "Understand your cash flow and plan sustainable expansion."}</p></div>
-            <div className="heading-actions"><button className="button button-quiet" onClick={() => announce("Your collection has been saved locally in this session.")}><ShieldCheck size={15} /> Save status</button><button className="button button-primary" onClick={advanceDay}><Zap size={15} /> Advance day <ArrowRight size={14} /></button></div>
+            <div className="heading-actions"><button className="button button-quiet" onClick={() => announce("Your collection has been saved locally in this session.")}><ShieldCheck size={15} /> Save status</button><button className="button button-primary" onClick={tutorialOpen && tutorialStep === 3 ? growTutorialCutting : advanceDay}><Zap size={15} /> Advance day <ArrowRight size={14} /></button></div>
           </section>
         )}
 
-        {page === "Dashboard" && <Dashboard specimens={specimens} cash={cash} research={research} day={day} projectStarted={projectStarted} environment={greenhouseEnvironment} onNavigate={setPage} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onAdvance={advanceDay} />}
+        {page === "Dashboard" && <Dashboard specimens={specimens} cash={cash} research={research} day={day} projectStarted={projectStarted} environment={greenhouseEnvironment} onNavigate={setPage} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onAdvance={tutorialStep === 3 ? growTutorialCutting : advanceDay} tutorialNameActive={tutorialOpen && tutorialStep === 0} instituteNameDraft={instituteNameDraft} onInstituteNameChange={setInstituteNameDraft} onSaveInstituteName={saveInstituteName} />}
         {page === "Plant Catalogue" && <Catalogue specimens={filteredSpecimens} allSpecimens={specimens} species={catalogSpecies} catalogSource={catalogSource} query={query} setQuery={setQuery} filter={filter} setFilter={setFilter} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onSell={sellSpecimen} onNavigate={setPage} />}
-        {page === "Specimen Record" && <SpecimenPage specimen={activeSpecimen} plant={activeSpecies} onPropagate={(method) => propagateSpecimen(activeSpecimen, method)} onSell={() => sellSpecimen(activeSpecimen)} onObserve={observeSelectedSpecimen} onAnalyse={analyseSelectedSpecimen} researchPoints={research} currentDay={day} mutationStabilityVisible={researchUnlocks.includes("mutation-screening") && analysisEquipmentLevel > 0} onToggleProtection={() => setSpecimens((current) => current.map((item) => item.id === activeSpecimen.id ? { ...item, protected: !item.protected } : item))} onBack={() => setPage("Plant Catalogue")} announce={announce} />}
+        {page === "Specimen Record" && <SpecimenPage specimen={activeSpecimen} plant={activeSpecies} onPropagate={(method) => tutorialOpen && tutorialStep === 2 ? takeTutorialCutting() : propagateSpecimen(activeSpecimen, method)} onSell={() => sellSpecimen(activeSpecimen)} onObserve={tutorialOpen && tutorialStep === 4 ? recordTutorialObservation : observeSelectedSpecimen} onAnalyse={analyseSelectedSpecimen} researchPoints={research} currentDay={day} mutationStabilityVisible={researchUnlocks.includes("mutation-screening") && analysisEquipmentLevel > 0} onToggleProtection={() => setSpecimens((current) => current.map((item) => item.id === activeSpecimen.id ? { ...item, protected: !item.protected } : item))} onBack={() => setPage("Plant Catalogue")} announce={announce} />}
         {page === "Breeding" && <BreedingPage specimens={specimens} researchUnlocks={researchUnlocks} projects={breedingProjects} day={day} traitTargetingUnlocked={researchUnlocks.includes("inheritance-mapping")} onCross={runCross} />}
         {page === "Research" && <ResearchPage specimens={specimens} cash={cash} research={research} day={day} projectStarted={projectStarted} analysisTargetSpecimenId={analysisTargetSpecimenId} analysisStartedDay={analysisStartedDay} onStart={startResearch} announce={announce} researchUnlocks={researchUnlocks} onUnlockResearch={unlockResearchNode} />}
         {page === "Greenhouse" && <GreenhousePage specimens={specimens} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onChangeEnvironment={(humidity, temperature, autoCare) => setGreenhouseEnvironment((current) => ({ ...current, humidity, temperature, autoCare, lightHours: 14, light: 70, nutrition: Math.max(20, 100 - Math.abs(temperature - 24) * 7) }))} environment={greenhouseEnvironment} autoCareUnlocked={researchUnlocks.includes("routine-automation")} />}
         {page === "Facilities" && <FacilitiesPage cash={cash} analysisEquipmentLevel={analysisEquipmentLevel} facilityLevels={facilityLevels} routineAutomationUnlocked={researchUnlocks.includes("routine-automation")} onBuy={(name) => { const cost = nextFacilityUpgradeCost(name, facilityLevels, analysisEquipmentLevel); if (cost === null || !canPurchaseFacilityUpgrade(name, facilityLevels, analysisEquipmentLevel, cash)) { announce(cost === null ? "That facility is already at its maximum level or is not available." : "Not enough funds for this upgrade."); return; } setCash((value) => value - cost); if (name === "Analysis workstation") setAnalysisEquipmentLevel((level) => level + 1); else setFacilityLevels((levels) => ({ ...levels, [name === "Propagation bench" ? "propagationBench" : "environmentalController"]: levels[name === "Propagation bench" ? "propagationBench" : "environmentalController"] + 1 })); announce(`${name} upgraded for ${money(cost)}. The benefit is active immediately; facility running costs apply every seventh day.`); }} />}
         {page === "Staff" && <StaffPage cash={cash} staffState={staffState} onToggleCare={() => setStaffState((current) => ({ ...current, routineCareEnabled: !current.routineCareEnabled }))} onStartTraining={() => { if (!canStartStaffTraining(cash, staffState)) { announce(cash < STAFF_TRAINING_COST ? `Training costs ${money(STAFF_TRAINING_COST)}.` : staffState.trainingLevel >= 3 ? "Your assistant has reached the maximum training level." : "Training is already in progress."); return; } const next = startStaffTraining(staffState); if (!next) return; setCash((current) => current - STAFF_TRAINING_COST); setStaffState(next); announce(`Basic plant-care training started for ${money(STAFF_TRAINING_COST)}. It completes after ${next.trainingDaysRemaining} simulated days.`); }} /> }
-        {page === "Shop" && <ShopPage specimens={specimens} species={catalogSpecies} cash={cash} day={day} onBuy={purchaseSpecies} onSell={sellSpecimen} />}
+        {page === "Shop" && <ShopPage specimens={specimens} species={catalogSpecies} cash={cash} day={day} onBuy={(plant) => tutorialOpen && tutorialStep === 1 ? acquireSpecies(plant, true) : purchaseSpecies(plant)} />}
         {page === "Finances" && <FinancesPage cash={cash} specimens={specimens} />}
         {page === "Settings" && <SettingsPage onReplayTutorial={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} onResetGame={resetGame} day={day} specimensCount={specimens.length} catalogSource={catalogSource} saveSlots={saveSlots} onSaveSlot={saveToSlot} onLoadSlot={loadFromSlot} offlineProgressEnabled={offlineProgressEnabled} onToggleOfflineProgress={toggleOfflineProgress} />}
       </div>
       <footer className="app-footer"><span>J2Grows <span className="footer-separator">/</span> Prototype 0.1</span><span>All specimen and economic values are early prototype data.</span><span><span className="online-dot" /> Offline-first</span></footer>
     </main>
     {tutorialOpen && <div className="tutorial-backdrop" role="presentation"><section className="tutorial-dialog" role="region" aria-labelledby="tutorial-title"><div className="tutorial-topline"><span className="tutorial-mark"><Sprout size={19} /></span><span>J2GROWS FIRST-GROW GUIDE</span><button className="tutorial-close" onClick={finishTutorial} aria-label="Close tutorial"><X size={17} /></button></div><div className="tutorial-progress-label"><span>YOUR FIRST DISCOVERY</span><span>{String(tutorialStep + 1).padStart(2, "0")} / {String(tutorialSteps.length).padStart(2, "0")}</span></div><div className="tutorial-progress-track"><span style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="tutorial-content"><div className="tutorial-eyebrow"><span className="eyebrow-line" /> GUIDED TUTORIAL</div><h2 id="tutorial-title">{tutorialSteps[tutorialStep].title}</h2><p>{tutorialSteps[tutorialStep].body}</p>
-      {tutorialStep === 0 && <div className="guided-field"><label htmlFor="institute-name">Institute name</label><input id="institute-name" maxLength={40} value={instituteNameDraft} onChange={(event) => setInstituteNameDraft(event.target.value)} placeholder="e.g. Verdant Research Institute" autoFocus /><small>Up to 40 characters. You can rename it later.</small></div>}
-      {tutorialStep === 1 && <div className="guided-field"><label htmlFor="starter-species">Choose your first plant · base price</label><select id="starter-species" value={starterSpeciesId} onChange={(event) => setStarterSpeciesId(event.target.value)}>{["alocasia-polly", "anthurium-clarinervium", "monstera-adansonii", "philodendron-birkin"].map((id) => { const plant = catalogSpecies.find((item) => item.id === id) ?? prototypeSpecies.find((item) => item.id === id); const labels: Record<string, string> = { "alocasia-polly": "Alocasia Polly", "anthurium-clarinervium": "Anthurium clarinervium", "monstera-adansonii": "Monstera Adansonii", "philodendron-birkin": "Philodendron Birkin" }; return <option key={id} value={id}>{labels[id]}{plant ? ` · ${plant.rarity}` : ""}</option>; })}</select><div className="guided-balance">Base price: <strong>{money(starterPrice)}</strong> · Available funds: <strong>{money(cash)}</strong></div></div>}
-      {tutorialStep === 2 && <div className="guided-action-summary"><span className="guided-action-icon"><Sprout size={20} /></span><div><strong>{starterSpeciesId === "alocasia-polly" ? "Start an Alocasia corm" : "Take one healthy cutting"}</strong><p>Cost: {money(starterSpeciesId === "alocasia-polly" ? 2 : 4)} · Creates a separate specimen record.</p></div></div>}
-      {tutorialStep === 3 && <div className="guided-action-summary"><span className="guided-action-icon"><Sun size={20} /></span><div><strong>Advance one simulated day</strong><p>Your plant will grow under current conditions. Mutations remain rare and uncertain.</p></div></div>}
-      {tutorialStep === 4 && <div className="guided-action-summary mutation-summary"><span className="guided-action-icon"><Sparkles size={20} /></span><div><strong>First observation: variegation expression</strong><p>Record the current expression and add evidence to your specimen’s research record. Mutations are not guaranteed.</p></div></div>}
-      <div className="tutorial-tip"><Leaf size={16} /><span>{tutorialSteps[tutorialStep].tip}</span></div></div><div className="tutorial-footer"><button className="button button-quiet" onClick={finishTutorial}>Skip guide</button><div>{tutorialStep > 0 && <button className="button button-quiet tutorial-back" onClick={() => moveTutorial(-1)}>Back</button>}{tutorialStep === 0 ? <button className="button button-primary" onClick={saveInstituteName}>Name institute <ArrowRight size={15} /></button> : tutorialStep === 1 ? <button className="button button-primary" onClick={acquireStarterPlant} disabled={cash < starterPrice}>Acquire plant · {money(starterPrice)} <ArrowRight size={15} /></button> : tutorialStep === 2 ? <button className="button button-primary" onClick={takeTutorialCutting} disabled={cash < (starterSpeciesId === "alocasia-polly" ? 2 : 4)}>{starterSpeciesId === "alocasia-polly" ? "Start corm · £2" : "Take cutting · £4"} <ArrowRight size={15} /></button> : tutorialStep === 3 ? <button className="button button-primary" onClick={growTutorialCutting}>Advance one day <ArrowRight size={15} /></button> : <button className="button button-primary" onClick={recordTutorialObservation}><Sparkles size={15} /> Record observation</button>}</div></div></section></div>}
+      {tutorialStep === 0 && <p className="tutorial-action-hint">Use the highlighted name field on your dashboard, then save it to continue.</p>}
+      {tutorialStep === 1 && <p className="tutorial-action-hint">Choose an affordable plant from today’s shop stock using its highlighted Buy button.</p>}
+      {tutorialStep === 2 && <p className="tutorial-action-hint">Choose a propagation method in the highlighted section of this specimen record.</p>}
+      {tutorialStep === 3 && <p className="tutorial-action-hint">Click the highlighted Advance day button to grow your new plant.</p>}
+      {tutorialStep === 4 && <p className="tutorial-action-hint">Click Record observation in the highlighted specimen controls.</p>}
+      <div className="tutorial-tip"><Leaf size={16} /><span>{tutorialSteps[tutorialStep].tip}</span></div></div><div className="tutorial-footer"><button className="button button-quiet" onClick={finishTutorial}>Skip guide</button><div>{tutorialStep > 0 && <button className="button button-quiet tutorial-back" onClick={() => moveTutorial(-1)}>Back</button>}</div></div></section></div>}
   </div>;
 }
 
@@ -1013,7 +1008,7 @@ function SectionHeader({ title, subtitle, action }: { title: string; subtitle?: 
   return <div className="section-header"><div><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div>{action && <button className="text-action">{action}<ArrowRight size={14} /></button>}</div>;
 }
 
-function Dashboard({ specimens, cash, research, day, projectStarted, onNavigate, onSelect, onAdvance, environment }: { specimens: Specimen[]; cash: number; research: number; day: number; projectStarted: boolean; onNavigate: (page: Page) => void; onSelect: (id: string) => void; onAdvance: () => void; environment: PlantEnvironment }) {
+function Dashboard({ specimens, cash, research, day, projectStarted, onNavigate, onSelect, onAdvance, environment, tutorialNameActive, instituteNameDraft, onInstituteNameChange, onSaveInstituteName }: { specimens: Specimen[]; cash: number; research: number; day: number; projectStarted: boolean; onNavigate: (page: Page) => void; onSelect: (id: string) => void; onAdvance: () => void; environment: PlantEnvironment; tutorialNameActive: boolean; instituteNameDraft: string; onInstituteNameChange: (value: string) => void; onSaveInstituteName: () => void }) {
   const needsAttention = specimens.filter((item) => item.health < 80);
   const averageHealth = Math.round(specimens.reduce((total, item) => total + item.health, 0) / Math.max(specimens.length, 1));
   const featured = specimens.slice(0, 4);
@@ -1031,6 +1026,7 @@ function Dashboard({ specimens, cash, research, day, projectStarted, onNavigate,
         <div className="eyebrow"><span className="eyebrow-line" /> YOUR BOTANICAL INSTITUTION</div>
         <h2>Welcome to your nursery</h2>
         <p>Your nursery is growing. Here's an overview of your plants, facilities and progress.</p>
+        {tutorialNameActive && <div className="tutorial-inline-name"><label htmlFor="institute-name">Institute name</label><div><input id="institute-name" maxLength={40} value={instituteNameDraft} onChange={(event) => onInstituteNameChange(event.target.value)} placeholder="e.g. Verdant Research Institute" /><button className="button button-primary" onClick={onSaveInstituteName}>Save name <ArrowRight size={15} /></button></div></div>}
         <div className="dash-hero-controls">
           <span className="dash-season"><Sun size={17} /> {timeLabel}<small>Day {day}</small></span>
           <button className="button button-quiet" onClick={() => onNavigate("Settings")}><Settings size={15} /> Settings</button>
