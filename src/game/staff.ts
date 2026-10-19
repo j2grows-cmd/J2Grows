@@ -50,3 +50,8 @@ export function effectiveStaffCareCondition(environment: PlantEnvironment, state
   const floor = Math.min(75, 55 + clampLevel(state.trainingLevel) * 5);
   return Math.max(floor, raw);
 }
+
+/** Weekly wage for the starter assistant while routine care automation is enabled. */
+export function weeklyStaffOperatingCost(state: StaffState): number {
+  return state.routineCareEnabled ? 8 : 0;
+}
