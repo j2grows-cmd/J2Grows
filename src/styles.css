@@ -1831,3 +1831,32 @@ body{
  .topbar>.profile-chip{flex:0 1 180px!important;min-width:150px!important;padding-left:8px!important;gap:7px}
  .profile-avatar{width:34px;height:34px;flex-basis:34px}
 }
+
+
+/* Official J2Grows brand assets */
+.brand{align-items:center;gap:10px}
+.brand-logo-image{
+  display:block;
+  width:142px;
+  height:116px;
+  object-fit:contain;
+  object-position:center;
+  filter:drop-shadow(0 5px 15px rgba(0,0,0,.28));
+}
+.brand-tagline{text-align:center;max-width:190px}
+.top-institution{gap:11px}
+.top-brand-logo{
+  display:block;
+  width:43px;height:43px;flex:0 0 43px;
+  object-fit:contain;
+  border-radius:50%;
+  filter:drop-shadow(0 2px 7px rgba(0,0,0,.3));
+}
+.dash-feature-photo{
+  background-size:cover!important;
+  background-position:center 47%!important;
+}
+@media(max-width:850px){
+ .brand-logo-image{width:112px;height:92px}
+ .top-brand-logo{width:36px;height:36px;flex-basis:36px}
+}
