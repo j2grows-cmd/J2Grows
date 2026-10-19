@@ -1973,8 +1973,8 @@ body{
   align-items:center;
 }
 .sidebar .brand-logo-image{
-  transform:translateX(12px);
+  transform:translateX(11px);
 }
 @media(max-width:850px){
-  .sidebar .brand-logo-image{transform:translateX(8px)}
+  .sidebar .brand-logo-image{transform:translateX(7px)}
 }
