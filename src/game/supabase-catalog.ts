@@ -8,7 +8,10 @@ export type ValidatedSpeciesRow = {
 };
 
 const DIFFICULTIES = new Set(["Easy", "Moderate", "Advanced"]);
-const RARITIES = new Set(["Common", "Uncommon", "Rare", "Epic", "Legendary"]);
+const RARITY_BY_LABEL = new Map(
+  ["Common", "Uncommon", "Rare", "Very Rare", "Ultra Rare", "Mythic"]
+    .map((rarity) => [rarity.toLowerCase(), rarity as Species["rarity"]]),
+);
 const IMAGE_EXTENSIONS = /\.(png|jpe?g|webp|avif)$/i;
 
 function optionalText(value: unknown): string | null {
@@ -30,7 +33,7 @@ export function normalizeSpeciesRow(value: unknown): ValidatedSpeciesRow | null 
     ? [...new Set(row.traits.filter((item): item is string => typeof item === "string" && item.trim().length > 0).map((item) => item.trim()))]
     : [];
   const difficulty = typeof row.difficulty === "string" && DIFFICULTIES.has(row.difficulty) ? row.difficulty as Species["difficulty"] : null;
-  const rarity = typeof row.rarity === "string" && RARITIES.has(row.rarity) ? row.rarity as Species["rarity"] : null;
+  const rarity = typeof row.rarity === "string" ? RARITY_BY_LABEL.get(row.rarity.trim().toLowerCase()) ?? null : null;
 
   return {
     id, name,
