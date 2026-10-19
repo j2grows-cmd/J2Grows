@@ -4,7 +4,8 @@ import {
   GROWTH_STAGES, canBreed, calculateBreedingCost, breedingDurationDays,
   breedingFailureChance, calculateElapsedDays, advanceClock, mutationChance,
   mutationOccurs, mutationConfirmed, stableAcrossGenerations, canUnlockResearch,
-  unlockResearch, RESEARCH_TREE, geneticLineValue, inheritTraits,
+  unlockResearch, RESEARCH_TREE, geneticLineValue, inheritTraits, applyTraitTargeting,
+  calculateTargetedBreedingCost, calculateTargetedFailureChance,
 } from "../src/game/progression.ts";
 import { createGeneticProfile, DEFAULT_ENVIRONMENT } from "../src/game/genetics.ts";
 
@@ -50,6 +51,22 @@ test("mutation discovery requires evidence and stability takes three generations
   assert.equal(mutationConfirmed(3), true);
   assert.equal(stableAcrossGenerations(2), false);
   assert.equal(stableAcrossGenerations(3), true);
+});
+
+test("targeted breeding probabilistically biases a chosen trait and applies cost/risk trade-offs", () => {
+  const parentA = { variegationPotential: 90, stability: 50, hiddenPotential: 45, growthPotential: 55, mutationGenePresent: false, mutationIds: [] };
+  const parentB = { variegationPotential: 40, stability: 75, hiddenPotential: 60, growthPotential: 35, mutationGenePresent: true, mutationIds: [] };
+  const inherited = { variegationPotential: 50, stability: 60, hiddenPotential: 55, growthPotential: 45, mutationGenePresent: false, mutationIds: [] };
+  const targeted = applyTraitTargeting(inherited, parentA, parentB, "variegationPotential", () => 0);
+  assert.equal(targeted.variegationPotential, 62, "a successful targeting roll nudges the trait towards the stronger parent");
+  assert.equal(targeted.stability, inherited.stability, "unselected traits remain unchanged");
+  const missed = applyTraitTargeting(inherited, parentA, parentB, "variegationPotential", () => 0.99);
+  assert.equal(missed.variegationPotential, inherited.variegationPotential, "targeting can fail to improve the selected trait");
+  assert.equal(applyTraitTargeting(inherited, parentA, parentB, undefined, () => 0), inherited);
+  assert.equal(calculateTargetedBreedingCost(20, false), 20);
+  assert.equal(calculateTargetedBreedingCost(20, true), 25);
+  assert.equal(calculateTargetedFailureChance(0.1, false), 0.1);
+  assert.equal(calculateTargetedFailureChance(0.1, true), 0.18);
 });
 
 test("research tree enforces prerequisites and consumes points", () => {
