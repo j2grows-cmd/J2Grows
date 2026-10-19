@@ -24,6 +24,8 @@ export type Specimen = {
   location: string;
   health: number;
   stage: "Juvenile" | "Growing" | "Mature";
+  /** Development state for a newly propagated specimen; omitted for established plants. */
+  propagation?: { method: "corm" | "cutting" | "division" | "tissue-culture"; phase: "Corm" | "Sprouting" | "Establishing"; daysInPhase: number; daysToSprout: number; daysToEstablish: number };
   value: number;
   protected: boolean;
   variegation: number;
