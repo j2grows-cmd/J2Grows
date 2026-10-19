@@ -207,3 +207,24 @@ button:focus-visible,input:focus-visible,select:focus-visible{
 .tutorial-footer .button:disabled{opacity:.35}
 @keyframes tutorialFadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:520px){.tutorial-backdrop{padding:12px}.tutorial-topline{padding:15px 17px}.tutorial-content{padding:22px 19px}.tutorial-progress-label{padding-left:19px;padding-right:19px}.tutorial-progress-track{margin-left:19px;margin-right:19px}.tutorial-footer{padding:13px 15px;align-items:stretch}.tutorial-footer .button{padding:9px 10px}.tutorial-footer>div{gap:5px}}
+
+
+/* Settings */
+.settings-layout{display:grid;gap:20px;max-width:1000px}
+.settings-panel{padding:24px}
+.settings-heading{display:flex;align-items:center;gap:14px;padding-bottom:20px;border-bottom:1px solid var(--border,#293126)}
+.settings-icon{width:44px;height:44px;display:grid;place-items:center;border:1px solid #34442b;border-radius:13px;background:#182116;color:#b4ce85;flex-shrink:0}
+.settings-heading h2{margin:0 0 5px;font-size:19px}
+.settings-heading p,.settings-row p{margin:0;color:var(--muted,#9ba393);font-size:13px;line-height:1.55}
+.settings-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:19px 0;border-bottom:1px solid var(--border,#293126)}
+.settings-row:last-child{border-bottom:0;padding-bottom:0}
+.settings-row strong{display:block;font-size:14px;margin-bottom:5px}
+.settings-row .button{flex-shrink:0}
+.settings-status{display:inline-flex;align-items:center;gap:7px;color:#b4ce85;font-size:12px;white-space:nowrap}
+.danger-panel{border-color:#49302a}
+.danger-icon{background:#261714;border-color:#62372d;color:#e59a83}
+.danger-description{color:var(--muted,#9ba393);font-size:13px;line-height:1.65;max-width:720px;margin:18px 0}
+.button-danger{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#572b24;color:#ffe8e0;border:1px solid #87483a;border-radius:9px;padding:11px 15px;font:inherit;font-size:13px;font-weight:650;cursor:pointer;transition:background .15s ease,border-color .15s ease}
+.button-danger:hover{background:#71382d;border-color:#a95c49}
+.button-danger:focus-visible,.settings-row button:focus-visible{outline:2px solid #b4ce85;outline-offset:3px}
+@media(max-width:640px){.settings-panel{padding:17px}.settings-row{align-items:flex-start;flex-direction:column;gap:12px}.settings-row .button{width:100%}.settings-heading h2{font-size:17px}}
