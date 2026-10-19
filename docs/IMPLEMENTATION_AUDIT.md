@@ -106,6 +106,13 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **Current state:** Node's test runner is configured and regression tests now cover genetics, observation thresholds, trait targeting and specimen UUID generation/collision handling.
 - **Remaining gap:** No browser-level end-to-end smoke test yet covers fresh game → acquire → propagate → save/reload, and some findings still require integration/runtime coverage.
 
+### A18. Offset propagation allowed from immature specimens — resolved on the development branch
+- **Previous evidence:** Division / offset propagation was available from any living, unreserved specimen, including corms and juveniles.
+- **Decision:** Offsets may only be taken from plants at the `Mature` or `Breeding-ready` stage. Corm, seedling, juvenile and growing specimens must develop before producing offsets.
+- **Current state:** The propagation action now checks the specimen's growth stage and explains that the plant must reach maturity first when blocked for this reason. Other propagation methods retain their existing eligibility rules.
+- **Tests:** Added a stage eligibility regression test covering Corm, Seedling, Juvenile, Growing, Mature, Breeding-ready and unknown stages.
+- **Verification:** Awaiting CI for the current implementation commit.
+
 ## Suggested repair order
 
 1. **A01** — first plant acquisition; otherwise the new-game state is a softlock.
