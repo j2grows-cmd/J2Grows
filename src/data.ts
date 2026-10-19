@@ -1,4 +1,4 @@
-import { getSpeciesEconomy, type RarityTier } from "./game/catalog";
+import { getSpeciesEconomy, normalizeSpeciesName, SPECIES_ECONOMY, type RarityTier } from "./game/catalog";
 import type { SpecimenGenetics } from "./game/genetics";
 
 export type Species = {
@@ -175,15 +175,42 @@ const prototypeSpecies: Species[] = [
   },
 ];
 
+const offlineSpecies: Species[] = [
+  ...prototypeSpecies,
+  ...SPECIES_ECONOMY.filter((entry) => !prototypeSpecies.some((local) => {
+    const genus = entry.name.split(" ")[0].toLowerCase();
+    return local.latin.split(" ")[0].toLowerCase() === genus
+      && (normalizeSpeciesName(entry.name) === normalizeSpeciesName(local.name)
+        || normalizeSpeciesName(entry.name).endsWith(" " + normalizeSpeciesName(local.name)));
+  })).map((entry) => ({
+    id: normalizeSpeciesName(entry.name).replace(/ /g, "-"),
+    name: entry.name,
+    latin: entry.name,
+    family: "Araceae",
+    difficulty: "Moderate" as const,
+    rarity: entry.rarity,
+    basePrice: entry.basePrice,
+    image: "hero",
+    summary: "Catalogue species. Further botanical and care notes can be researched in-game.",
+    light: "Bright, indirect",
+    humidity: "60–80%",
+    water: "Keep appropriately moist for the species",
+    traits: ["Catalogue species", "Genetic traits can be discovered"],
+  })),
+].map((plant) => {
+  const economy = getSpeciesEconomy(plant.name);
+  return { ...plant, rarity: economy?.rarity ?? plant.rarity, basePrice: economy?.basePrice ?? plant.basePrice ?? 15 };
+});
+
 // The local catalogue remains available when Supabase is not configured or unreachable.
-export let species: Species[] = prototypeSpecies;
+export let species: Species[] = offlineSpecies;
 
 export function setSpeciesCatalog(next: Species[]) {
-  species = next.length ? next : prototypeSpecies;
+  species = next.length ? next : offlineSpecies;
 }
 
 export function makeStorageSpecies(slug: string, image: string): Species {
-  const local = prototypeSpecies.find((plant) => plant.id === slug);
+  const local = offlineSpecies.find((plant) => plant.id === slug) ?? prototypeSpecies.find((plant) => plant.id === slug);
   if (local) return { ...local, image: image || local.image };
   const name = slug.split("-").map((word) => word[0]?.toUpperCase() + word.slice(1)).join(" ");
   const economy = getSpeciesEconomy(name) ?? getSpeciesEconomy(slug);
@@ -213,4 +240,4 @@ export const initialSpecimens: Specimen[] = [
   { id: "J2G-ALO-0015", speciesId: "alocasia-dragon-scale", nickname: "Scale Study", location: "Propagation Bench", health: 68, stage: "Juvenile", value: 75, protected: false, variegation: 0 },
 ];
 
-export const findSpecies = (id: string) => species.find((plant) => plant.id === id) ?? prototypeSpecies.find((plant) => plant.id === id) ?? prototypeSpecies[0];
+export const findSpecies = (id: string) => species.find((plant) => plant.id === id) ?? offlineSpecies.find((plant) => plant.id === id) ?? prototypeSpecies.find((plant) => plant.id === id) ?? offlineSpecies[0];
