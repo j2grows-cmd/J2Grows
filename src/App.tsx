@@ -243,18 +243,18 @@ function App() {
     };
     offspring.value = specimenValue(offspring);
     setCash((current) => current - cost);
-    setSpecimens((current) => {
-      const updated = current.map((item) => item.id !== parent.id ? item : isAlocasia ? item : {
+    setSpecimens((current) => [...current.map((item) => {
+      if (item.id !== parent.id || isAlocasia) return item;
+      const recoveringParent: Specimen = {
         ...item,
-        stage: "Juvenile" as const,
+        stage: "Juvenile",
         stageDays: 0,
         health: Math.max(35, item.health - 15),
         location: "Recovery · Greenhouse",
-      });
-      const recoveringParent = updated.find((item) => item.id === parent.id);
-      if (recoveringParent && !isAlocasia) recoveringParent.value = specimenValue(recoveringParent);
-      return [...updated, offspring];
-    });
+      };
+      recoveringParent.value = specimenValue(recoveringParent);
+      return recoveringParent;
+    }), offspring]);
     setSelected(offspring.id);
     setTutorialStep(3);
     setPage("Greenhouse");
