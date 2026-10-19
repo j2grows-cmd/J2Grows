@@ -199,7 +199,7 @@ export function calculateMaturityFactor(stage: "Juvenile" | "Growing" | "Mature"
 export function calculateSpecimenValue(input: {
   basePrice: number;
   health: number;
-  stage: "Juvenile" | "Growing" | "Mature";
+  stage: "Corm / Seedling" | "Juvenile" | "Growing" | "Mature" | "Breeding-ready";
   variegationStrength: number;
   stability: number;
   geneticsBonus?: number;
