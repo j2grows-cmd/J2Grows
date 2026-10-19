@@ -68,7 +68,7 @@ test("observation earns research and genetic analysis spends it", () => {
   const analysed = analyseGenetics(funded, 25);
   assert.ok(analysed);
   assert.equal(analysed.research.points, 5);
-  assert.ok(analysed.research.discoveredTraits.includes("stability-profile"));
+  assert.ok(analysed.research.discoveredTraits.includes("visible-trait-profile"));
 });
 
 test("rarity affects shop availability", () => {
