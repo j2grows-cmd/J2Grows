@@ -74,6 +74,26 @@ test("observation earns research and genetic analysis spends it", () => {
   assert.ok(analysed.research.discoveredTraits.includes("visible-trait-profile"));
 });
 
+test("mutation strength controls observation confirmation and equipment can confirm weak phenotypes", () => {
+  const base = {
+    genetics: { variegationPotential: 0, stability: 70, hiddenPotential: 50, growthPotential: 50, mutationGenePresent: false, mutationIds: ["strong", "weak"] },
+    expression: 0, environment: { light: 65, nutrition: 65, humidity: 65, health: 100 },
+    observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: [
+      { id: "strong", name: "Strong phenotype", category: "colour", rarity: "Rare", inheritance: "mixed", strength: 21, stability: 64, detected: false, beneficial: null, evidenceCount: 0 },
+      { id: "weak", name: "Weak phenotype", category: "growth", rarity: "Minor", inheritance: "unstable", strength: 20, stability: 28, detected: false, beneficial: null, evidenceCount: 0 },
+    ] },
+  };
+  const first = observePlant(base);
+  assert.equal(first.research.mutations.find((mutation) => mutation.id === "strong").detected, true, "strength above 20% confirms on first observation");
+  assert.equal(first.research.mutations.find((mutation) => mutation.id === "weak").detected, false, "strength at 20% is not above the threshold");
+  const second = observePlant(first);
+  assert.equal(second.research.mutations.find((mutation) => mutation.id === "weak").detected, false);
+  const third = observePlant(second);
+  assert.equal(third.research.mutations.find((mutation) => mutation.id === "weak").detected, true, "three observations confirm a weak phenotype");
+  const equipmentConfirmed = observePlant(base, base.expression, true);
+  assert.equal(equipmentConfirmed.research.mutations.find((mutation) => mutation.id === "weak").detected, true, "equipped analysis can confirm a weak phenotype");
+});
+
 test("rarity affects shop availability", () => {
   assert.equal(getShopAvailability("Common", () => 0.5), true);
   assert.equal(getShopAvailability("Mythic", () => 0.5), false);
