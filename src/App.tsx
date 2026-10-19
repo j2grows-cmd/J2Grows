@@ -75,9 +75,31 @@ function loadGameSave(): GameSave & { offlineDays: number } {
       if ((parsed.version === 1 || parsed.version === 2 || parsed.version === 3) && Array.isArray(parsed.specimens) && typeof parsed.cash === "number" && typeof parsed.research === "number" && typeof parsed.day === "number" && typeof parsed.savedAt === "number") {
         const offlineDays = Math.min(14, Math.floor(Math.max(0, Date.now() - parsed.savedAt) / (10 * 60 * 1000)));
         const days = offlineDays;
+        const savedEnvironment = parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT };
+        const progressedSpecimens = parsed.specimens.map((specimen) => {
+          let current = { ...specimen };
+          if (current.dead || current.health <= 0) return { ...current, health: 0, dead: true };
+          const genus = findSpecies(current.speciesId).latin.split(" ")[0].toLowerCase();
+          const speciesFactor = genus === "anthurium" ? 1.25 : genus === "alocasia" ? 1.1 : ["monstera", "philodendron"].includes(genus) ? 0.9 : 1;
+          for (let elapsed = 0; elapsed < days; elapsed += 1) {
+            const condition = (savedEnvironment.light + savedEnvironment.nutrition + savedEnvironment.humidity) / 3;
+            const effectiveCondition = savedEnvironment.autoCare ? Math.max(60, condition) : condition;
+            const health = Math.max(0, Math.min(100, effectiveCondition < 35 ? current.health - 5 : effectiveCondition < 50 ? current.health - 2 : effectiveCondition >= 75 && current.health < 100 ? current.health + 2 : current.health));
+            if (health <= 0) { current = { ...current, health: 0, dead: true }; break; }
+            let stage = current.stage;
+            let stageDays = (current.stageDays ?? 0) + 1;
+            const conditionFactor = effectiveCondition < 45 ? 1.5 : effectiveCondition < 65 ? 1.2 : effectiveCondition >= 85 ? 0.85 : 1;
+            if (stage === "Corm / Seedling" && health >= 40 && stageDays >= 5) { stage = "Juvenile"; stageDays = 0; }
+            else if (stage === "Juvenile" && health >= 40 && stageDays >= Math.ceil(10 * speciesFactor * conditionFactor)) { stage = "Growing"; stageDays = 0; }
+            else if (stage === "Growing" && health >= 50 && stageDays >= Math.ceil(21 * speciesFactor * conditionFactor)) { stage = "Mature"; stageDays = 0; }
+            else if (stage === "Mature" && health >= 70 && stageDays >= Math.ceil(14 * speciesFactor * conditionFactor)) { stage = "Breeding-ready"; stageDays = 0; }
+            current = { ...current, health, stage, stageDays };
+          }
+          return current;
+        });
         return {
           version: 3,
-          specimens: parsed.specimens.map((specimen) => ({ ...specimen, health: Math.min(100, Math.max(0, specimen.health + (specimen.health < 90 ? days * 2 : 0))) })),
+          specimens: progressedSpecimens,
           breedingProjects: Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects : [],
           researchUnlocks: Array.isArray(parsed.researchUnlocks) ? parsed.researchUnlocks.filter((item): item is string => typeof item === "string") : [],
           cash: parsed.cash,
