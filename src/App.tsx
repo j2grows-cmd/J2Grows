@@ -423,11 +423,13 @@ function App() {
     const plant = findSpecies(parent.speciesId);
     const genus = plant.latin.split(" ")[0].toLowerCase();
     const allowed = method === "division" || method === "tissue-culture"
-      || (method === "cutting" && ["monstera", "philodendron", "anthurium"].includes(genus))
+      || (method === "cutting" && ["monstera", "philodendron", "anthurium"].includes(genus) && parent.stage === "Mature")
       || (method === "corm" && genus === "alocasia" && parent.stage === "Mature");
     if (!allowed) {
       announce(method === "cutting"
-        ? "Stem cuttings are available for Monstera, Philodendron and Anthurium in this game."
+        ? ["monstera", "philodendron", "anthurium"].includes(genus)
+          ? "Stem cuttings can only be taken from a mature plant. Grow this specimen to maturity first."
+          : "Stem cuttings are available for Monstera, Philodendron and Anthurium in this game."
         : method === "corm" && genus === "alocasia"
           ? "You can only harvest corms from a mature Alocasia. Grow this plant to maturity first."
           : "Corm propagation is reserved for Alocasia.");
@@ -441,27 +443,43 @@ function App() {
       "tissue-culture": { prefix: "TC", label: "Tissue culture", location: "Tissue Culture Lab", health: 70, nickname: "Tissue Culture" },
     };
     const detail = { ...details[method], cost: propagationCost(method, rarity) };
-    if (cash < detail.cost) { announce(`Not enough funds. ${detail.label} propagation costs ${money(detail.cost)}.`); return; }
-    const suffix = `${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
-    const child: Specimen = {
-      id: `J2G-${detail.prefix}-${suffix}`,
-      speciesId: parent.speciesId,
-      nickname: `${plant.name} ${detail.nickname}`,
-      location: detail.location,
-      health: detail.health,
-      stage: "Juvenile",
-      propagation: { method, phase: method === "corm" ? "Corm" : "Establishing", daysInPhase: 0, daysToSprout: method === "corm" ? 2 + Math.floor(Math.random() * 4) : 0, daysToEstablish: 3 + Math.floor(Math.random() * 3) },
+    const count = method === "cutting" ? 1 + Math.floor(Math.random() * 3) : 1;
+    const totalCost = detail.cost * count;
+    if (cash < totalCost) { announce(`Not enough funds. ${count > 1 ? `${count} cuttings cost ${money(totalCost)} in total` : `${detail.label} propagation costs ${money(totalCost)}`}.`); return; }
+    const children: Specimen[] = Array.from({ length: count }, (_, index) => {
+      const suffix = `${Date.now().toString(36).toUpperCase()}-${index}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+      const child: Specimen = {
+        id: `J2G-${detail.prefix}-${suffix}`,
+        speciesId: parent.speciesId,
+        nickname: `${plant.name} ${detail.nickname}${count > 1 ? ` ${index + 1}` : ""}`,
+        location: detail.location,
+        health: detail.health,
+        stage: "Juvenile",
+        propagation: { method, phase: method === "corm" ? "Corm" : "Establishing", daysInPhase: 0, daysToSprout: method === "corm" ? 2 + Math.floor(Math.random() * 4) : 0, daysToEstablish: 3 + Math.floor(Math.random() * 3) },
+        value: 0,
+        protected: false,
+        variegation: parent.variegation,
+        discovered: false,
+        genetics: parent.genetics ? { ...parent.genetics, genetics: { ...parent.genetics.genetics, mutationIds: [...parent.genetics.genetics.mutationIds] }, observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: parent.genetics.research.mutations.map((mutation) => ({ ...mutation, detected: false })) } } : createSpecimenGenetics(parent.variegation),
+      };
+      child.value = specimenValue(child);
+      return child;
+    });
+    const parentAfterCutting = method === "cutting" ? {
+      ...parent,
+      stage: "Juvenile" as const,
+      stageDays: 0,
+      health: Math.max(35, parent.health - 15 * count),
+      location: "Recovery · Greenhouse",
       value: 0,
-      protected: false,
-      variegation: parent.variegation,
-      discovered: false,
-      genetics: parent.genetics ? { ...parent.genetics, genetics: { ...parent.genetics.genetics, mutationIds: [...parent.genetics.genetics.mutationIds] }, observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: parent.genetics.research.mutations.map((mutation) => ({ ...mutation, detected: false })) } } : createSpecimenGenetics(parent.variegation),
-    };
-    child.value = specimenValue(child);
-    setCash((current) => current - detail.cost);
-    setSpecimens((current) => [...current, child]);
-    setSelected(child.id);
-    announce(`${detail.label} started for ${money(detail.cost)}. ${child.nickname} has its own specimen record.`);
+    } : parent;
+    if (method === "cutting") parentAfterCutting.value = specimenValue(parentAfterCutting);
+    setCash((current) => current - totalCost);
+    setSpecimens((current) => [...current.filter((item) => item.id !== parent.id), parentAfterCutting, ...children]);
+    setSelected(children[0].id);
+    announce(method === "cutting"
+      ? `Took ${count} cutting${count === 1 ? "" : "s"} for ${money(totalCost)}. ${parent.nickname} is recovering and must regrow before reaching maturity again.`
+      : `${detail.label} started for ${money(totalCost)}. ${children[0].nickname} has its own specimen record.`);
   }
 
   function sellSpecimen(specimen: Specimen) {
