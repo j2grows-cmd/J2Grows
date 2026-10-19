@@ -1,4 +1,4 @@
-import type { RarityTier } from "./catalog";
+import type { RarityTier } from "./catalog.ts";
 
 export type GeneticProfile = {
   /** Inherited propensity for visible variegation, 0–100. */
