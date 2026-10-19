@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeSpecies, type Species, type Specimen } from "./data";
 import { createUniqueSpecimenId } from "./game/specimen-id.ts";
+import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, propagationDaysRequired, type FacilityLevels } from "./game/facilities.ts";
 import { loadSpeciesCatalog } from "./supabase";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
 import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, observePlant, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
@@ -53,7 +54,7 @@ function Metric({ label, value, detail, icon: Icon, tone = "green" }: { label: s
 }
 
 type GameSave = {
-  version: 1 | 2 | 3 | 4;
+  version: 1 | 2 | 3 | 4 | 5;
   specimens: Specimen[];
   breedingProjects: BreedingProject[];
   cash: number;
@@ -66,6 +67,7 @@ type GameSave = {
   analysisEquipmentLevel: number;
   greenhouseEnvironment?: PlantEnvironment;
   researchUnlocks?: string[];
+  facilityLevels?: FacilityLevels;
 };
 
 const SAVE_KEY = "j2grows.prototype.save.v1";
@@ -75,10 +77,12 @@ function loadGameSave(): GameSave & { offlineDays: number } {
     const raw = localStorage.getItem(SAVE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<GameSave>;
-      if ((parsed.version === 1 || parsed.version === 2 || parsed.version === 3 || parsed.version === 4) && Array.isArray(parsed.specimens) && typeof parsed.cash === "number" && typeof parsed.research === "number" && typeof parsed.day === "number" && typeof parsed.savedAt === "number") {
+      if ((parsed.version === 1 || parsed.version === 2 || parsed.version === 3 || parsed.version === 4 || parsed.version === 5) && Array.isArray(parsed.specimens) && typeof parsed.cash === "number" && typeof parsed.research === "number" && typeof parsed.day === "number" && typeof parsed.savedAt === "number") {
         const offlineDays = Math.min(14, Math.floor(Math.max(0, Date.now() - parsed.savedAt) / (10 * 60 * 1000)));
         const days = offlineDays;
         const savedEnvironment = parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT };
+        const savedFacilityLevels: FacilityLevels = { propagationBench: Number.isInteger(parsed.facilityLevels?.propagationBench) ? Math.max(0, Math.min(3, parsed.facilityLevels!.propagationBench!)) : 0, environmentalController: Number.isInteger(parsed.facilityLevels?.environmentalController) ? Math.max(0, Math.min(3, parsed.facilityLevels!.environmentalController!)) : 0 };
+        const progressedEnvironment = applyEnvironmentalController(savedEnvironment, savedFacilityLevels.environmentalController);
         const progressedSpecimens = parsed.specimens.map((specimen) => {
           let current = { ...specimen };
           if (current.genetics && typeof current.genetics.genetics.mutationGenePresent !== "boolean") {
@@ -91,8 +95,8 @@ function loadGameSave(): GameSave & { offlineDays: number } {
           const genus = findSpecies(current.speciesId).latin.split(" ")[0].toLowerCase();
           const speciesFactor = genus === "anthurium" ? 1.25 : genus === "alocasia" ? 1.1 : ["monstera", "philodendron"].includes(genus) ? 0.9 : 1;
           for (let elapsed = 0; elapsed < days; elapsed += 1) {
-            const condition = (savedEnvironment.light + savedEnvironment.nutrition + savedEnvironment.humidity) / 3;
-            const effectiveCondition = savedEnvironment.autoCare ? Math.max(60, condition) : condition;
+            const condition = (progressedEnvironment.light + progressedEnvironment.nutrition + progressedEnvironment.humidity) / 3;
+            const effectiveCondition = progressedEnvironment.autoCare ? Math.max(60, condition) : condition;
             const health = Math.max(0, Math.min(100, effectiveCondition < 35 ? current.health - 5 : effectiveCondition < 50 ? current.health - 2 : effectiveCondition >= 75 && current.health < 100 ? current.health + 2 : current.health));
             if (health <= 0) { current = { ...current, health: 0, dead: true }; break; }
             let stage = current.stage;
@@ -107,7 +111,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
           return current;
         });
         return {
-          version: 4,
+          version: 5,
           specimens: progressedSpecimens,
           breedingProjects: Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects : [],
           researchUnlocks: Array.isArray(parsed.researchUnlocks) ? parsed.researchUnlocks.filter((item): item is string => typeof item === "string") : [],
@@ -120,6 +124,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
           savedAt: Date.now(),
           analysisEquipmentLevel: typeof parsed.analysisEquipmentLevel === "number" ? parsed.analysisEquipmentLevel : 0,
           greenhouseEnvironment: parsed.greenhouseEnvironment && typeof parsed.greenhouseEnvironment === "object" ? parsed.greenhouseEnvironment as PlantEnvironment : { ...DEFAULT_ENVIRONMENT },
+          facilityLevels: savedFacilityLevels,
           offlineDays,
         };
       }
@@ -127,7 +132,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
   } catch {
     // A malformed or unavailable local save falls back to a fresh prototype save.
   }
-  return { version: 4, specimens: [], breedingProjects: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, greenhouseEnvironment: { ...DEFAULT_ENVIRONMENT }, offlineDays: 0 };
+  return { version: 5, specimens: [], breedingProjects: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, greenhouseEnvironment: { ...DEFAULT_ENVIRONMENT }, facilityLevels: { propagationBench: 0, environmentalController: 0 }, offlineDays: 0 };
 }
 
 function App() {
@@ -151,6 +156,7 @@ function App() {
   const [cash, setCash] = useState(loadedSave.cash);
   const [research, setResearch] = useState(loadedSave.research);
   const [greenhouseEnvironment, setGreenhouseEnvironment] = useState<PlantEnvironment>(loadedSave.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
+  const [facilityLevels, setFacilityLevels] = useState<FacilityLevels>(loadedSave.facilityLevels ?? { propagationBench: 0, environmentalController: 0 });
   const [saveSlots, setSaveSlots] = useState<Record<string, GameSave | null>>(() => {
     try { return JSON.parse(localStorage.getItem("j2grows.manual-save-slots.v1") || '{"1":null,"2":null,"3":null}') as Record<string, GameSave | null>; }
     catch { return { "1": null, "2": null, "3": null }; }
@@ -358,12 +364,12 @@ function App() {
   }
   useEffect(() => {
     try {
-      const save: GameSave = { version: 4, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, savedAt: Date.now() };
+      const save: GameSave = { version: 5, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, savedAt: Date.now() };
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     } catch {
       setNotice("Local save unavailable. Your progress may not persist in this browser.");
     }
-  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks]);
+  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels]);
 
   useEffect(() => {
     try { localStorage.setItem("j2grows.manual-save-slots.v1", JSON.stringify(saveSlots)); }
@@ -385,6 +391,7 @@ function App() {
     setCash(save.cash); setResearch(save.research); setDay(save.day);
     setProjectStarted(save.projectStarted); setAnalysisEquipmentLevel(save.analysisEquipmentLevel);
     setGreenhouseEnvironment(save.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
+    setFacilityLevels({ propagationBench: Math.max(0, Math.min(3, save.facilityLevels?.propagationBench ?? 0)), environmentalController: Math.max(0, Math.min(3, save.facilityLevels?.environmentalController ?? 0)) });
     setSelected(save.specimens[0]?.id ?? "");
     announce(`Loaded save slot ${slot}.`);
   }
@@ -416,6 +423,7 @@ function App() {
     setAnalysisTargetSpecimenId(undefined);
     setAnalysisStartedDay(undefined);
     setAnalysisEquipmentLevel(0);
+    setFacilityLevels({ propagationBench: 0, environmentalController: 0 });
     setSelected("");
     setInstituteName("");
     setInstituteNameDraft("");
@@ -433,11 +441,12 @@ function App() {
     let mutationMessage = "";
     const nextSpecimens = specimens.map((specimen) => {
       if (specimen.dead || specimen.health <= 0) return { ...specimen, health: 0, dead: true, value: 0 };
-      const rawEnvironmentalMean = (greenhouseEnvironment.light + greenhouseEnvironment.nutrition + greenhouseEnvironment.humidity) / 3;
-      const environmentalMean = greenhouseEnvironment.autoCare ? Math.max(60, rawEnvironmentalMean) : rawEnvironmentalMean;
+      const simulationEnvironment = applyEnvironmentalController(greenhouseEnvironment, facilityLevels.environmentalController);
+      const rawEnvironmentalMean = (simulationEnvironment.light + simulationEnvironment.nutrition + simulationEnvironment.humidity) / 3;
+      const environmentalMean = simulationEnvironment.autoCare ? Math.max(60, rawEnvironmentalMean) : rawEnvironmentalMean;
       const health = Math.max(0, Math.min(100, environmentalMean < 35 ? specimen.health - 5 : environmentalMean < 50 ? specimen.health - 2 : environmentalMean >= 75 && specimen.health < 100 ? specimen.health + 2 : specimen.health));
       const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation);
-      const environment = { ...greenhouseEnvironment, health };
+      const environment = { ...simulationEnvironment, health };
       const growth = growVariegation(record.genetics, environment, specimen.variegation);
       let nextRecord: SpecimenGenetics = { ...record, environment, expression: growth.expression };
       let nextVariegation = growth.expression;
@@ -454,22 +463,23 @@ function App() {
       let stageDays = specimen.stageDays ?? 0;
       let location = specimen.location;
       let growthMessage = "";
-      const suitability = (greenhouseEnvironment.light + greenhouseEnvironment.nutrition + greenhouseEnvironment.humidity + health) / 4;
+      const suitability = (simulationEnvironment.light + simulationEnvironment.nutrition + simulationEnvironment.humidity + health) / 4;
       const conditionFactor = suitability < 45 ? 1.5 : suitability < 65 ? 1.2 : suitability >= 85 ? 0.85 : 1;
       const genus = findSpecies(specimen.speciesId).latin.split(" ")[0].toLowerCase();
       const speciesFactor = genus === "anthurium" ? 1.25 : genus === "alocasia" ? 1.1 : ["monstera", "philodendron"].includes(genus) ? 0.9 : 1;
       if (propagation) {
         const delay = suitability < 45 ? 2 : suitability < 65 ? 1 : 0;
+        const propagationDays = (baseDays: number) => propagationDaysRequired(baseDays + delay, facilityLevels.propagationBench);
         propagation = { ...propagation, daysInPhase: propagation.daysInPhase + 1 };
-        if (propagation.phase === "Cutting" && propagation.daysInPhase >= propagation.daysToSprout + delay) {
+        if (propagation.phase === "Cutting" && propagation.daysInPhase >= propagationDays(propagation.daysToSprout)) {
           propagation = { ...propagation, phase: "Rooting", daysInPhase: 0 };
           location = "Propagation Bench · Rooting";
           growthMessage = ` ${specimen.nickname} has begun rooting.`;
-        } else if (propagation.phase === "Rooting" && propagation.daysInPhase >= propagation.daysToEstablish + delay) {
+        } else if (propagation.phase === "Rooting" && propagation.daysInPhase >= propagationDays(propagation.daysToEstablish)) {
           propagation = { ...propagation, phase: "New Growth", daysInPhase: 0 };
           location = "Propagation Bench · New Growth";
           growthMessage = ` ${specimen.nickname} is showing new growth.`;
-        } else if (propagation.phase === "New Growth" && propagation.daysInPhase >= (propagation.daysToJuvenile ?? 5) + delay) {
+        } else if (propagation.phase === "New Growth" && propagation.daysInPhase >= propagationDays(propagation.daysToJuvenile ?? 5)) {
           propagation = undefined;
           stage = "Juvenile";
           stageDays = 0;
@@ -613,7 +623,7 @@ function App() {
       setAnalysisTargetSpecimenId(undefined);
       setAnalysisStartedDay(undefined);
     }
-    const weeklyOperatingCost = analysisEquipmentLevel * 5 + (researchUnlocks.includes("routine-automation") ? 10 : 0);
+    const weeklyOperatingCost = analysisEquipmentLevel * 5 + facilityLevels.propagationBench * 3 + facilityLevels.environmentalController * 5 + (researchUnlocks.includes("routine-automation") ? 10 : 0);
     if (nextDay % 7 === 0 && weeklyOperatingCost > 0) {
       setCash((current) => current - weeklyOperatingCost);
       mutationMessage += ` Weekly facility operating costs: £${weeklyOperatingCost}.`;
@@ -892,7 +902,7 @@ function App() {
         {page === "Breeding" && <BreedingPage specimens={specimens} researchUnlocks={researchUnlocks} projects={breedingProjects} day={day} traitTargetingUnlocked={researchUnlocks.includes("inheritance-mapping")} onCross={runCross} />}
         {page === "Research" && <ResearchPage specimens={specimens} cash={cash} research={research} day={day} projectStarted={projectStarted} analysisTargetSpecimenId={analysisTargetSpecimenId} analysisStartedDay={analysisStartedDay} onStart={startResearch} announce={announce} researchUnlocks={researchUnlocks} onUnlockResearch={unlockResearchNode} />}
         {page === "Greenhouse" && <GreenhousePage specimens={specimens} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onApplyEnvironment={(humidity, temperature, autoCare) => setGreenhouseEnvironment({ ...greenhouseEnvironment, humidity, temperature, autoCare, lightHours: 14, light: 70, nutrition: Math.max(20, 100 - Math.abs(temperature - 24) * 7) })} environment={greenhouseEnvironment} autoCareUnlocked={researchUnlocks.includes("routine-automation")} announce={announce} />}
-        {page === "Facilities" && <FacilitiesPage cash={cash} analysisEquipmentLevel={analysisEquipmentLevel} onBuy={(name, cost) => { if (cash < cost) announce("Not enough funds for this upgrade."); else { setCash((value) => value - cost); if (name === "Analysis workstation") setAnalysisEquipmentLevel((level) => level + 1); announce(name === "Analysis workstation" ? "Analysis workstation upgraded. Mutation detection and research are more effective." : "Facility upgrade purchased. New capacity is being prepared."); } }} />}
+        {page === "Facilities" && <FacilitiesPage cash={cash} analysisEquipmentLevel={analysisEquipmentLevel} facilityLevels={facilityLevels} onBuy={(name) => { const cost = nextFacilityUpgradeCost(name, facilityLevels, analysisEquipmentLevel); if (cost === null || !canPurchaseFacilityUpgrade(name, facilityLevels, analysisEquipmentLevel, cash)) { announce(cost === null ? "That facility is already at its maximum level or is not available." : "Not enough funds for this upgrade."); return; } setCash((value) => value - cost); if (name === "Analysis workstation") setAnalysisEquipmentLevel((level) => level + 1); else setFacilityLevels((levels) => ({ ...levels, [name === "Propagation bench" ? "propagationBench" : "environmentalController"]: levels[name === "Propagation bench" ? "propagationBench" : "environmentalController"] + 1 })); announce(`${name} upgraded for ${money(cost)}. The benefit is active immediately; facility running costs apply every seventh day.`); }} />}
         {page === "Staff" && <StaffPage />}
         {page === "Shop" && <ShopPage specimens={specimens} species={catalogSpecies} cash={cash} day={day} onBuy={purchaseSpecies} onSell={sellSpecimen} />}
         {page === "Finances" && <FinancesPage cash={cash} specimens={specimens} />}
