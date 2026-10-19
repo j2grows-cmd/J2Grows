@@ -91,7 +91,7 @@ export function normalizeSpecimens(value: unknown): SpecimenRecovery {
 
 export function checkSaveEnvelope(value: unknown): SaveEnvelopeCheck {
   if (!isRecord(value)) return { valid: false, reason: "Save data is not an object." };
-  if (![1, 2, 3, 4, 5, 6, 7].includes(Number(value.version))) return { valid: false, reason: "Save version is missing or unsupported." };
+  if (![1, 2, 3, 4, 5, 6, 7, 8].includes(Number(value.version))) return { valid: false, reason: "Save version is missing or unsupported." };
   if (!Array.isArray(value.specimens)) return { valid: false, reason: "Specimen collection is missing or malformed." };
   for (const key of ["cash", "research", "day", "savedAt"]) if (typeof value[key] !== "number" || !Number.isFinite(value[key])) return { valid: false, reason: `Save field '${key}' is missing or invalid.` };
   return { valid: true };
@@ -103,7 +103,15 @@ export function normalizeManualSaveSlots(value: unknown): Record<string, unknown
   for (const key of Object.keys(slots)) {
     const candidate = value[key];
     if (candidate === null || candidate === undefined) continue;
-    if (checkSaveEnvelope(candidate).valid) slots[key] = candidate;
+    if (checkSaveEnvelope(candidate).valid && isRecord(candidate)) {
+      const recovered = normalizeSpecimens(candidate.specimens);
+      slots[key] = { ...candidate, version: 8, specimens: recovered.specimens,
+        cash: finite(candidate.cash, 0, 0, 1_000_000_000),
+        research: finite(candidate.research, 0, 0, 1_000_000_000),
+        day: finite(candidate.day, 1, 1, 1_000_000_000, true),
+        savedAt: finite(candidate.savedAt, Date.now(), 0, Number.MAX_SAFE_INTEGER),
+      };
+    }
   }
   return slots;
 }
