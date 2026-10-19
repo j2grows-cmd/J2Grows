@@ -33,7 +33,7 @@ function fromSpeciesRow(row: SpeciesRow): Species {
   const imagePath = imagePathOverrides[row.id] ?? row.image_path;
   const image = supabase!.storage.from("plant-images").getPublicUrl(imagePath).data.publicUrl;
   const fallback = makeStorageSpecies(row.id, image);
-  const economy = getSpeciesEconomy(row.name) ?? getSpeciesEconomy(row.id);
+  const economy = getSpeciesEconomy(row.id) ?? getSpeciesEconomy(row.name);
 
   return {
     ...fallback,
