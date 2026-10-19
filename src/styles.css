@@ -1025,3 +1025,10 @@ body{
 @media(max-width:560px){
  .catalogue-art-button .plant-art{width:95%;height:95%;flex-basis:95%}
 }
+
+
+/* Fill the catalogue card's artwork area at 100%, centered */
+.catalogue-art-button .plant-art{width:100%;height:100%;flex-basis:100%}
+@media(max-width:560px){
+ .catalogue-art-button .plant-art{width:100%;height:100%;flex-basis:100%}
+}
