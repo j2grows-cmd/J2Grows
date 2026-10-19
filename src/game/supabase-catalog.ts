@@ -9,7 +9,7 @@ export type ValidatedSpeciesRow = {
 
 const DIFFICULTIES = new Set(["Easy", "Moderate", "Advanced"]);
 const RARITIES = new Set(["Common", "Uncommon", "Rare", "Epic", "Legendary"]);
-const IMAGE_EXTENSIONS = /\\.(png|jpe?g|webp|avif)$/i;
+const IMAGE_EXTENSIONS = /\.(png|jpe?g|webp|avif)$/i;
 
 function optionalText(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
@@ -23,7 +23,7 @@ export function normalizeSpeciesRow(value: unknown): ValidatedSpeciesRow | null 
   if (!id || !name || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(id)) return null;
 
   const rawPath = optionalText(row.image_path);
-  const imagePath = rawPath && !rawPath.startsWith("/") && !rawPath.includes("..") && !rawPath.includes("\\\\") && !/[?#]/.test(rawPath) && IMAGE_EXTENSIONS.test(rawPath)
+  const imagePath = rawPath && !rawPath.startsWith("/") && !rawPath.includes("..") && !rawPath.includes("\\") && !/[?#]/.test(rawPath) && IMAGE_EXTENSIONS.test(rawPath)
     ? rawPath
     : "";
   const traits = Array.isArray(row.traits)
