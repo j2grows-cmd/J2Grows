@@ -126,6 +126,7 @@ export function applyTraitTargeting(
 }
 
 export function calculateTargetedBreedingCost(baseCost: number, targeted: boolean): number {
+  if (!Number.isFinite(baseCost) || baseCost <= 0) return 0;
   return Math.max(1, Math.ceil(baseCost * (targeted ? 1.25 : 1)));
 }
 
