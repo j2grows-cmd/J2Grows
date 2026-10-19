@@ -838,3 +838,75 @@ body{
 .species-library-card .species-rarity{display:inline-flex!important;visibility:visible;opacity:1;white-space:nowrap;overflow:visible;text-overflow:clip;margin-top:0}
 .species-library-card .species-library-card-copy{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px 12px 13px}
 .species-library-card .species-library-card-copy>strong{display:block;width:100%;white-space:normal;overflow:visible;text-overflow:clip}
+
+
+/* Specimen Record: premium collector profile with a clearer hierarchy */
+.specimen-detail-grid{grid-template-columns:minmax(250px,.78fr) minmax(0,1.55fr) minmax(230px,.72fr);gap:14px;align-items:stretch}
+.specimen-portrait{min-height:620px;max-height:calc(100vh - 190px);position:sticky;top:92px;align-self:start;border-color:rgba(201,173,104,.38);box-shadow:0 18px 42px rgba(0,0,0,.2)}
+.specimen-portrait>.plant-art{background:radial-gradient(ellipse at 50% 32%,rgba(125,151,82,.23),transparent 62%),#111a10}
+.specimen-portrait>.plant-art img{object-fit:cover;object-position:center top}
+.portrait-overlay{padding:88px 20px 20px;background:linear-gradient(0deg,rgba(7,12,7,.98) 0%,rgba(7,12,7,.88) 35%,rgba(7,12,7,.08) 100%)}
+.portrait-overlay .eyebrow{font-size:9px;letter-spacing:1.7px;color:#d3bb77}
+.portrait-title-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.portrait-overlay h2{font-size:clamp(23px,2vw,31px);line-height:1.15;letter-spacing:-.5px;margin:9px 0 4px;overflow-wrap:anywhere}
+.portrait-overlay p{font-size:12px;color:#c4cbb7;line-height:1.5}
+.specimen-rarity-badge{flex:0 0 auto;display:inline-flex;align-items:center;padding:5px 8px;border:1px solid rgba(201,173,104,.45);border-radius:999px;background:rgba(13,19,10,.8);color:#e2c77f;font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase}
+.specimen-rarity-badge.rarity-common{color:#c2cabb;border-color:#68715d}
+.specimen-rarity-badge.rarity-uncommon{color:#b9dc91;border-color:#5c7840}
+.specimen-rarity-badge.rarity-rare{color:#a9d8f1;border-color:#4e7792}
+.specimen-rarity-badge.rarity-epic{color:#d8b8f4;border-color:#805a9e}
+.specimen-rarity-badge.rarity-legendary{color:#f0d48b;border-color:#a47a30}
+.specimen-detail-main{padding:19px 20px}
+.specimen-detail-main>.section-header{padding-bottom:13px;border-bottom:1px solid rgba(201,173,104,.18);margin-bottom:13px}
+.specimen-detail-main .section-header h2,.provenance-panel .section-header h2{font-size:20px}
+.specimen-detail-main .section-header p{font-size:11px}
+.detail-stat-grid{gap:9px}
+.detail-stat-grid>div{padding:12px 13px;background:linear-gradient(145deg,rgba(25,34,22,.94),rgba(16,22,14,.94));border-color:rgba(201,173,104,.17);min-width:0}
+.detail-stat-grid span{font-size:10px;letter-spacing:.1px}
+.detail-stat-grid strong{font-size:21px;line-height:1.2;overflow-wrap:anywhere}
+.detail-health-stat{position:relative}
+.specimen-health-track{height:5px;overflow:hidden;border-radius:99px;background:#2a3324;margin-top:10px}
+.specimen-health-track span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#78974b,#c0df8a)}
+.detail-health-stat:has(.health-low) .specimen-health-track span{background:linear-gradient(90deg,#9e643c,#e2b06c)}
+.detail-section{padding:16px 0;border-bottom-color:rgba(201,173,104,.15)}
+.detail-section h3{font-size:17px;margin-bottom:9px;color:#f0e6d0}
+.detail-section>p:not(.muted-copy){font-size:11px;line-height:1.75;color:#b7beaa}
+.care-grid{gap:10px;margin-top:14px}
+.care-grid>div{padding:10px;border:1px solid rgba(201,173,104,.12);border-radius:8px;background:rgba(23,31,20,.55);grid-template-columns:18px minmax(0,1fr)}
+.care-grid strong{font-size:11px;line-height:1.45;overflow-wrap:anywhere}
+.larger-pills{gap:6px}
+.larger-pills span{font-size:10px;padding:5px 8px}
+.muted-copy{font-size:10px;line-height:1.65}
+.propagation-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.propagation-actions .button{white-space:normal;text-align:left;justify-content:flex-start;line-height:1.4}
+.detail-actions{padding-top:14px;border-top:1px solid rgba(201,173,104,.2)}
+.provenance-panel{align-self:start;position:sticky;top:92px;padding:17px}
+.provenance-panel .section-header{padding-bottom:11px;border-bottom:1px solid rgba(201,173,104,.18);margin-bottom:4px}
+.provenance-item{padding:13px 0;border-bottom-color:rgba(201,173,104,.13)}
+.provenance-item span{font-size:10px;line-height:1.5}
+.provenance-item strong{max-width:58%;font-size:10px;line-height:1.5;overflow-wrap:anywhere}
+.provenance-panel .button{margin-top:14px}
+@media(min-width:1600px){
+ .specimen-detail-grid{grid-template-columns:minmax(280px,.78fr) minmax(0,1.55fr) minmax(250px,.72fr);gap:16px}
+ .specimen-detail-main{padding:22px 23px}
+ .specimen-portrait{min-height:660px}
+}
+@media(max-width:1250px){
+ .specimen-detail-grid{grid-template-columns:minmax(210px,.78fr) minmax(0,1.5fr)}
+ .provenance-panel{position:static;grid-column:1/-1}
+}
+@media(max-width:850px){
+ .specimen-portrait{position:relative;top:auto;max-height:none;min-height:360px}
+ .provenance-panel{grid-column:auto}
+ .specimen-detail-main{padding:15px}
+}
+@media(max-width:520px){
+ .specimen-portrait{min-height:320px}
+ .portrait-overlay{padding:70px 15px 16px}
+ .portrait-overlay h2{font-size:24px}
+ .detail-stat-grid{gap:7px}
+ .detail-stat-grid>div{padding:10px}
+ .detail-stat-grid strong{font-size:18px}
+ .care-grid{grid-template-columns:1fr}
+ .propagation-actions .button{width:100%}
+}
