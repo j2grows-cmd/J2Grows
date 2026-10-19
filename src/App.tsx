@@ -952,7 +952,7 @@ function BreedingPage({ specimens, researchUnlocks, projects, day, traitTargetin
   const rarityOf = (item: Specimen | undefined) => item ? (getSpeciesEconomy(item.speciesId)?.rarity ?? findSpecies(item.speciesId).rarity) as RarityTier : "Common" as RarityTier;
   const baseCost = selectedA && selectedB ? calculateBreedingCost(rarityOf(selectedA), rarityOf(selectedB), 1, researchUnlocks.includes("selective-breeding") ? 10 : 0) : 0;
   const targetingEnabled = traitTargetingUnlocked && Boolean(selectedA && selectedB);
-  const cost = calculateTargetedBreedingCost(baseCost, traitTargetingUnlocked);
+  const cost = calculateTargetedBreedingCost(baseCost, targetingEnabled);
   const duration = breedingDurationDays(5, researchUnlocks.includes("selective-breeding") ? 15 : 0);
   return <div className="two-column-layout"><section className="panel"><SectionHeader title="Breeding workbench" subtitle="Only healthy, available breeding-ready plants can be committed to a timed project." />
     {eligible.length < 2 && <p className="muted-copy">You need at least two healthy breeding-ready specimens from the same genus. Grow plants through Mature and into Breeding-ready first.</p>}
