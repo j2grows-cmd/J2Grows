@@ -518,7 +518,7 @@ function App() {
     const genus = plant.latin.split(" ")[0].toLowerCase();
     const allowed = !parent.dead && !parent.reservedByProjectId && (method === "division" || method === "tissue-culture"
       || (method === "cutting" && ["monstera", "philodendron", "anthurium"].includes(genus) && (parent.stage === "Mature" || parent.stage === "Breeding-ready"))
-      || (method === "corm" && genus === "alocasia" && parent.stage === "Mature"));
+      || (method === "corm" && genus === "alocasia" && (parent.stage === "Mature" || parent.stage === "Breeding-ready")));
     if (!allowed) {
       announce(method === "cutting"
         ? ["monstera", "philodendron", "anthurium"].includes(genus)
