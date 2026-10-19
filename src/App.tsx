@@ -553,6 +553,11 @@ function App() {
     return finalSpecimens;
   }
 
+  useEffect(() => {
+    const timer = window.setInterval(() => advanceDay(), 10 * 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, [day, specimens, greenhouseEnvironment, breedingProjects, research, analysisEquipmentLevel, researchUnlocks, projectStarted]);
+
   function observeSelectedSpecimen() {
     if (!activeSpecimen) return;
     if (activeSpecimen.lastObservedDay === day) {
