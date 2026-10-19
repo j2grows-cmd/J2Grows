@@ -216,12 +216,11 @@ function App() {
   function growTutorialCutting() {
     const cutting = specimens.find((item) => ["First Cutting", "First Corm", "First Mutation"].includes(item.nickname));
     if (!cutting) { setTutorialStep(1); setPage("Plant Catalogue"); announce("Acquire a plant and propagate it first."); return; }
-    setDay((current) => current + 1);
-    setSpecimens((current) => current.map((item) => item.id === cutting.id ? { ...item, health: Math.min(100, item.health + 5) } : item));
+    advanceDay();
     setSelected(cutting.id);
     setTutorialStep(4);
     setPage("Specimen Record");
-    announce("One day passed. Your propagated specimen has grown; you can now record an observation.");
+    announce("One day passed. Your propagated specimen has grown; record an observation to begin building research evidence.");
   }
 
   function recordTutorialObservation() {
@@ -343,7 +342,7 @@ function App() {
     const analysed = analyseGenetics(analysedRecord, 25);
     if (!analysed) { announce("More observation evidence is needed before analysis."); return; }
     setResearch((current) => current - 25);
-    setSpecimens((current) => current.map((item) => item.id === activeSpecimen.id ? { ...item, genetics: { ...analysed, research: { ...analysed.research, mutations: analysed.research.mutations.map((mutation) => ({ ...mutation, detected: true })) } } } : item));
+    setSpecimens((current) => current.map((item) => { if (item.id !== activeSpecimen.id) return item; const updated = { ...item, genetics: { ...analysed, research: { ...analysed.research, mutations: analysed.research.mutations.map((mutation) => ({ ...mutation, detected: true })) } } }; return { ...updated, value: specimenValue(updated) }; }));
     announce(`Analysis complete for ${activeSpecimen.nickname}. Research level ${analysed.research.analysisLevel} unlocked.`);
   }
 
@@ -463,11 +462,11 @@ function App() {
       announce("Mutation Analysis is already in progress.");
       return;
     }
-    if (cash < 250) {
+    if (cash < 25) {
       announce("Not enough funds to start this research project.");
       return;
     }
-    setCash((current) => current - 250);
+    setCash((current) => current - 25);
     setProjectStarted(true);
     announce("Mutation Analysis started for £25. Your research team is on it.");
   }
@@ -518,7 +517,7 @@ function App() {
       {tutorialStep === 0 && <div className="guided-field"><label htmlFor="institute-name">Institute name</label><input id="institute-name" maxLength={40} value={instituteNameDraft} onChange={(event) => setInstituteNameDraft(event.target.value)} placeholder="e.g. Verdant Research Institute" autoFocus /><small>Up to 40 characters. You can rename it later.</small></div>}
       {tutorialStep === 1 && <div className="guided-field"><label htmlFor="starter-species">Choose your first plant · base price</label><select id="starter-species" value={starterSpeciesId} onChange={(event) => setStarterSpeciesId(event.target.value)}>{["alocasia-polly", "anthurium-clarinervium", "monstera-adansonii", "philodendron-birkin"].map((id) => { const plant = catalogSpecies.find((item) => item.id === id) ?? prototypeSpecies.find((item) => item.id === id); const labels: Record<string, string> = { "alocasia-polly": "Alocasia Polly", "anthurium-clarinervium": "Anthurium clarinervium", "monstera-adansonii": "Monstera Adansonii", "philodendron-birkin": "Philodendron Birkin" }; return <option key={id} value={id}>{labels[id]}{plant ? ` · ${plant.rarity}` : ""}</option>; })}</select><div className="guided-balance">Base price: <strong>{money(starterPrice)}</strong> · Available funds: <strong>{money(cash)}</strong></div></div>}
       {tutorialStep === 2 && <div className="guided-action-summary"><span className="guided-action-icon"><Sprout size={20} /></span><div><strong>{starterSpeciesId === "alocasia-polly" ? "Start an Alocasia corm" : "Take one healthy cutting"}</strong><p>Cost: {money(starterSpeciesId === "alocasia-polly" ? 2 : 4)} · Creates a separate specimen record.</p></div></div>}
-      {tutorialStep === 3 && <div className="guided-action-summary"><span className="guided-action-icon"><Sun size={20} /></span><div><strong>Advance one simulated day</strong><p>Your cutting will establish and become eligible for the scripted first mutation.</p></div></div>}
+      {tutorialStep === 3 && <div className="guided-action-summary"><span className="guided-action-icon"><Sun size={20} /></span><div><strong>Advance one simulated day</strong><p>Your plant will grow under current conditions. Mutations remain rare and uncertain.</p></div></div>}
       {tutorialStep === 4 && <div className="guided-action-summary mutation-summary"><span className="guided-action-icon"><Sparkles size={20} /></span><div><strong>First observation: variegation expression</strong><p>Record the current expression and add evidence to your specimen’s research record. Mutations are not guaranteed.</p></div></div>}
       <div className="tutorial-tip"><Leaf size={16} /><span>{tutorialSteps[tutorialStep].tip}</span></div></div><div className="tutorial-footer"><button className="button button-quiet" onClick={finishTutorial}>Skip guide</button><div>{tutorialStep > 0 && <button className="button button-quiet tutorial-back" onClick={() => moveTutorial(-1)}>Back</button>}{tutorialStep === 0 ? <button className="button button-primary" onClick={saveInstituteName}>Name institute <ArrowRight size={15} /></button> : tutorialStep === 1 ? <button className="button button-primary" onClick={acquireStarterPlant} disabled={cash < starterPrice}>Acquire plant · {money(starterPrice)} <ArrowRight size={15} /></button> : tutorialStep === 2 ? <button className="button button-primary" onClick={takeTutorialCutting} disabled={cash < 100}>{starterSpeciesId === "alocasia-polly" ? "Start corm · £100" : "Take cutting · £100"} <ArrowRight size={15} /></button> : tutorialStep === 3 ? <button className="button button-primary" onClick={growTutorialCutting}>Advance one day <ArrowRight size={15} /></button> : <button className="button button-primary" onClick={recordTutorialObservation}><Sparkles size={15} /> Record observation</button>}</div></div></section></div>}
   </div>;
