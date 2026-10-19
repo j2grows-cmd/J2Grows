@@ -64,11 +64,13 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **Verification:** GitHub Actions passed `npm test`, `npm run typecheck` and `npm run build` on implementation commit `c6650acb00d6c3b70f9a4ccd182f17615b61f30e`.
 - **Remaining check:** Browser-test recovery against deliberately corrupted localStorage and verify that backup data can be inspected/restored through a future recovery UI.
 
-### A09. Empty image paths can produce blank plant artwork
-- **Evidence:** Storage fallback calls `makeStorageSpecies(name, "")` when a folder has no recognised image. `PlantArt` then receives an empty image type and renders a generic artwork container without a known CSS art class or image.
-- **Impact:** Catalogue entries may appear blank.
-- **Recommended fix:** Use a guaranteed fallback artwork key when no valid image URL exists, and validate image paths and URL responses.
-
+### A09. Empty image paths can produce blank plant artwork — implemented on the development branch
+- **Previous evidence:** Storage fallback called `makeStorageSpecies(name, "")` for folders without a recognised image, while `PlantArt` could render an unhelpful or blank generic illustration. Database rows with an empty image path could also produce a public URL for an empty path.
+- **Current state:** Added `src/game/plant-artwork.ts` to select existing CSS botanical illustrations by plant slug/genus (Alocasia, Monstera/Rhaphidophora, Philodendron/Epipremnum/Pothos/Scindapsus, Anthurium/Syngonium), with a premium hero illustration as the final fallback. Existing local artwork is preserved, and valid remote image URLs take priority.
+- **Broken remote images:** `PlantArt` now detects image-load failures and switches to the genus-matched illustration rather than leaving a broken image. The Supabase catalogue loader avoids generating a public URL when the image path is empty. No Supabase data or storage was changed.
+- **Tests:** Added `tests/plant-artwork.test.mjs` covering genus matching, unknown-species fallback, valid image priority, local artwork preference and invalid/missing URLs.
+- **Verification:** GitHub Actions passed `npm test`, `npm run typecheck` and `npm run build` on implementation commit `5e3e73ea71fb98dfef8ef9123e0b951504d721d3`.
+- **Remaining check:** Browser-test real catalogue entries with missing and broken image objects, including the visual quality of each fallback class.
 ### A10. Supabase row data is trusted without runtime validation
 - **Evidence:** `fromSpeciesRow` assumes `row.traits` is a non-null array and `row.image_path` is a usable string, although TypeScript's `SpeciesRow` type does not validate API payloads at runtime.
 - **Impact:** Unexpected nulls or schema drift can throw during catalogue mapping or create broken image URLs.
