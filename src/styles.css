@@ -800,3 +800,20 @@ body{
 @media(max-width:560px){
   .species-library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+
+/* Species cards: show one prominent common name, without the duplicate subtitle */
+.species-library-card>div:last-child{padding:12px 12px 13px}
+.species-library-card>div:last-child strong{
+  font-size:15px;
+  line-height:1.3;
+  font-weight:650;
+  color:#f0ead8;
+  white-space:normal;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  min-height:2.6em;
+}
+.species-library-card>div:last-child span{display:none}
