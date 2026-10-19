@@ -205,7 +205,7 @@ function App() {
       speciesId: parent.speciesId, nickname: isAlocasia ? "First Corm" : "First Cutting",
       location: isAlocasia ? "Corm Nursery" : "Propagation Bench",
       health: isAlocasia ? 75 : 85, stage: "Juvenile",
-      propagation: isAlocasia ? { method: "corm", phase: "Corm", daysInPhase: 0, daysToSprout: 2 + Math.floor(Math.random() * 4) + (parent.health < 60 ? 2 : 0), daysToEstablish: 2 + Math.floor(Math.random() * 3) } : { method: "cutting", phase: "Establishing", daysInPhase: 0, daysToSprout: 0, daysToEstablish: 2 + Math.floor(Math.random() * 3) },
+      propagation: isAlocasia ? { method: "corm", phase: "Corm", daysInPhase: 0, daysToSprout: 2 + Math.floor(Math.random() * 4), daysToEstablish: 3 + Math.floor(Math.random() * 3) } : { method: "cutting", phase: "Establishing", daysInPhase: 0, daysToSprout: 0, daysToEstablish: 2 + Math.floor(Math.random() * 3) },
       value: 0,
       protected: false, variegation: parent.variegation, discovered: false, genetics: parent.genetics ? { ...parent.genetics, genetics: { ...parent.genetics.genetics, mutationIds: [...parent.genetics.genetics.mutationIds] }, observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: parent.genetics.research.mutations.map((mutation) => ({ ...mutation, detected: false })) } } : createSpecimenGenetics(parent.variegation),
     };
@@ -332,10 +332,14 @@ function App() {
       }
       let propagation = specimen.propagation;
       let stage = specimen.stage;
+      let stageDays = specimen.stageDays ?? 0;
       let location = specimen.location;
       let growthMessage = "";
+      const suitability = (greenhouseEnvironment.light + greenhouseEnvironment.nutrition + greenhouseEnvironment.humidity + health) / 4;
+      const conditionFactor = suitability < 45 ? 1.5 : suitability < 65 ? 1.2 : suitability >= 85 ? 0.85 : 1;
+      const genus = findSpecies(specimen.speciesId).latin.split(" ")[0].toLowerCase();
+      const speciesFactor = genus === "anthurium" ? 1.25 : genus === "alocasia" ? 1.1 : ["monstera", "philodendron"].includes(genus) ? 0.9 : 1;
       if (propagation) {
-        const suitability = (greenhouseEnvironment.light + greenhouseEnvironment.nutrition + greenhouseEnvironment.humidity + health) / 4;
         const delay = suitability < 45 ? 2 : suitability < 65 ? 1 : 0;
         propagation = { ...propagation, daysInPhase: propagation.daysInPhase + 1 };
         if (propagation.phase === "Corm" && propagation.daysInPhase >= propagation.daysToSprout + delay) {
@@ -345,21 +349,30 @@ function App() {
         } else if (propagation.phase === "Sprouting" && propagation.daysInPhase >= propagation.daysToEstablish + delay) {
           propagation = undefined;
           stage = "Juvenile";
+          stageDays = 0;
           location = "Greenhouse · Establishing";
           growthMessage = ` ${specimen.nickname} has established as a juvenile plant.`;
         } else if (propagation.phase === "Establishing" && propagation.daysInPhase >= propagation.daysToEstablish + delay) {
           propagation = undefined;
           stage = "Juvenile";
+          stageDays = 0;
           location = "Greenhouse";
           growthMessage = ` ${specimen.nickname} has established as a juvenile plant.`;
         }
         if (propagation?.phase === "Sprouting") stage = "Juvenile";
-      } else if (stage === "Juvenile" && health >= 50 && Math.random() < 0.35) {
-        stage = "Growing";
-      } else if (stage === "Growing" && health >= 60 && Math.random() < 0.12) {
-        stage = "Mature";
+      } else {
+        stageDays += 1;
+        if (stage === "Juvenile" && health >= 40 && stageDays >= Math.ceil(10 * speciesFactor * conditionFactor)) {
+          stage = "Growing";
+          stageDays = 0;
+          growthMessage = ` ${specimen.nickname} has entered the growing stage.`;
+        } else if (stage === "Growing" && health >= 50 && stageDays >= Math.ceil(21 * speciesFactor * conditionFactor)) {
+          stage = "Mature";
+          stageDays = 0;
+          growthMessage = ` ${specimen.nickname} has reached maturity.`;
+        }
       }
-      const updated = { ...specimen, health, stage, location, propagation, variegation: nextVariegation, discovered, genetics: { ...nextRecord, expression: nextVariegation, environment } };
+      const updated = { ...specimen, health, stage, stageDays, location, propagation, variegation: nextVariegation, discovered, genetics: { ...nextRecord, expression: nextVariegation, environment } };
       if (growthMessage) mutationMessage += growthMessage;
       return { ...updated, value: specimenValue(updated) };
     });
@@ -425,7 +438,7 @@ function App() {
       location: detail.location,
       health: detail.health,
       stage: "Juvenile",
-      propagation: { method, phase: method === "corm" ? "Corm" : "Establishing", daysInPhase: 0, daysToSprout: method === "corm" ? 2 + Math.floor(Math.random() * 4) + (parent.health < 60 ? 2 : 0) : 0, daysToEstablish: 2 + Math.floor(Math.random() * 3) },
+      propagation: { method, phase: method === "corm" ? "Corm" : "Establishing", daysInPhase: 0, daysToSprout: method === "corm" ? 2 + Math.floor(Math.random() * 4) : 0, daysToEstablish: 3 + Math.floor(Math.random() * 3) },
       value: 0,
       protected: false,
       variegation: parent.variegation,
