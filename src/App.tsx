@@ -568,6 +568,11 @@ function App() {
     });
     const releasedSpecimens = nextSpecimens.map((item) => item.reservedByProjectId && finishedIds.has(item.reservedByProjectId) ? { ...item, reservedByProjectId: undefined } : item);
     const finalSpecimens = [...releasedSpecimens, ...completedChildren];
+    const weeklyOperatingCost = analysisEquipmentLevel * 5 + (researchUnlocks.includes("routine-automation") ? 10 : 0);
+    if (nextDay % 7 === 0 && weeklyOperatingCost > 0) {
+      setCash((current) => current - weeklyOperatingCost);
+      mutationMessage += ` Weekly facility operating costs: £${weeklyOperatingCost}.`;
+    }
     setDay(nextDay);
     setSpecimens(finalSpecimens);
     setBreedingProjects((current) => current.map((project) => completedProjects.find((finished) => finished.id === project.id) ?? project));
