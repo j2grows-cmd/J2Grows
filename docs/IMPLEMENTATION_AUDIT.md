@@ -38,10 +38,10 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **Tests:** Added coverage for progressive prices, invalid/underfunded/max-level purchases, environmental bounds, propagation duration, running costs, and old-save level migration.
 - **Remaining check:** Confirm CI and browser-test purchase → save/reload → effect → seventh-day operating cost.
 
-### A06. Greenhouse and staff controls are transient
-- **Evidence:** Temperature, humidity and auto-care state live inside `GreenhousePage`; staff auto-care and training state live inside `StaffPage`. These components unmount on navigation, so their local state resets. They are not included in the save.
-- **Impact:** Controls appear to accept changes but do not retain them, and auto-care/training have no simulation effect.
-- **Recommended fix:** Lift real settings into application state and save them. If they are intentionally decorative, disable them or label them as visual-only directly beside the controls.
+### A06. Staff controls are transient; greenhouse draft controls require Apply
+- **Evidence:** Greenhouse temperature/humidity/auto-care drafts live in `GreenhousePage` and are committed to app state only by Apply; committed greenhouse settings are saved. Navigating away before applying loses the draft. Separately, staff auto-care and training state live only in `StaffPage`, reset on navigation, and do not affect simulation.
+- **Impact:** Staff toggles and training look like management features but have no durable state or gameplay effect; unapplied greenhouse edits can be lost.
+- **Recommended fix:** Decide whether to implement a persistent staff system with defined simulation effects or mark staff controls as future/disabled. Optionally make greenhouse draft/apply behaviour clearer or persist changes immediately.
 
 ### A07. “Advance day” has no coherent time/economy model
 - **Evidence:** Every click adds 25 research and improves some plant health; it does not apply growth stages, costs, research completion, plant needs or greenhouse conditions. Offline progress separately grants the same research and health increments.
