@@ -70,7 +70,7 @@ export function createSpecimenGenetics(expression = 0, random: () => number = Ma
 
 export function createGeneticProfile(random: () => number = Math.random): GeneticProfile {
   return {
-    variegationPotential: clamp(10 + random() * 30),
+    variegationPotential: random() < 0.15 ? clamp(10 + random() * 20) : 0,
     stability: clamp(35 + random() * 45),
     hiddenPotential: clamp(20 + random() * 70),
     growthPotential: clamp(30 + random() * 60),
@@ -108,6 +108,7 @@ export function environmentalSuitability(environment: PlantEnvironment): number 
 /** Environment affects expression and future risk; it never guarantees a perfect leaf. */
 export function growVariegation(profile: GeneticProfile, environment: PlantEnvironment, previousExpression: number, random: () => number = Math.random): { expression: number; reverted: boolean; suitability: number } {
   const suitability = environmentalSuitability(environment);
+  if (profile.variegationPotential < 20 && previousExpression < 15) return { expression: 0, reverted: false, suitability: Math.round(suitability) };
   const environmentalModifier = (suitability - 50) * 0.22;
   const baseline = profile.variegationPotential * 0.72 + previousExpression * 0.28;
   const reversionRisk = clamp(42 - profile.stability * 0.32 + (100 - suitability) * 0.35, 1, 75) / 100;
