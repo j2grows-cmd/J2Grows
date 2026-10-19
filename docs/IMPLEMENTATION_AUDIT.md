@@ -55,10 +55,14 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **CI:** Passed on implementation commit `b3834ff9` (`npm test`, `npm run typecheck`, `npm run build`).
 - **Remaining check:** Browser-level validation of a return from a long absence, settings persistence, and queued daily progression.
 
-### A08. Save validation is too shallow
-- **Evidence:** `loadGameSave` checks top-level types and `Array.isArray(specimens)`, then trusts each specimen's fields and numeric ranges. Malformed but parseable local data can introduce missing health, invalid species IDs or bad values into the UI.
-- **Impact:** A stale or manually corrupted save can cause rendering errors or invalid gameplay.
-- **Recommended fix:** Validate/migrate each field against a schema, clamp bounded values, reject invalid specimen records, and retain a recoverable backup before replacing a bad save.
+### A08. Save validation is too shallow — implemented on the development branch
+- **Previous evidence:** `loadGameSave` checked only a few top-level types and trusted specimen fields and numeric ranges. Malformed but parseable local data could introduce invalid records and values into gameplay.
+- **Current state:** Added `src/game/save-validation.ts` to validate supported save envelopes (versions 1–8), drop malformed and duplicate specimen records, clamp health/value/variegation and genetic/environment fields, sanitize propagation and genetics data, and reject malformed breeding projects. Invalid top-level saves are backed up before the app falls back to a fresh game. Recoverable saves are backed up before repairs are autosaved.
+- **Manual slots:** Slot loading now normalizes each slot independently, preserves valid slots when another is malformed, clamps values and filters invalid specimens/projects, and backs up the original manual-slot payload before normalization. Analysis references are restored only when their specimen still exists.
+- **User feedback:** The app announces when it has recovered a save and reports what was repaired or skipped.
+- **Tests:** Added regression tests for supported legacy versions, invalid envelopes, duplicate/malformed specimens, clamping and malformed manual slots.
+- **Verification:** GitHub Actions passed `npm test`, `npm run typecheck` and `npm run build` on implementation commit `c6650acb00d6c3b70f9a4ccd182f17615b61f30e`.
+- **Remaining check:** Browser-test recovery against deliberately corrupted localStorage and verify that backup data can be inspected/restored through a future recovery UI.
 
 ### A09. Empty image paths can produce blank plant artwork
 - **Evidence:** Storage fallback calls `makeStorageSpecies(name, "")` when a folder has no recognised image. `PlantArt` then receives an empty image type and renders a generic artwork container without a known CSS art class or image.
