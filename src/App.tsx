@@ -58,6 +58,7 @@ type GameSave = {
   day: number;
   projectStarted: boolean;
   savedAt: number;
+  analysisEquipmentLevel: number;
 };
 
 const SAVE_KEY = "j2grows.prototype.save.v1";
@@ -78,6 +79,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
           day: parsed.day + days,
           projectStarted: Boolean(parsed.projectStarted),
           savedAt: Date.now(),
+          analysisEquipmentLevel: typeof parsed.analysisEquipmentLevel === "number" ? parsed.analysisEquipmentLevel : 0,
           offlineDays,
         };
       }
@@ -85,7 +87,7 @@ function loadGameSave(): GameSave & { offlineDays: number } {
   } catch {
     // A malformed or unavailable local save falls back to a fresh prototype save.
   }
-  return { version: 2, specimens: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), offlineDays: 0 };
+  return { version: 2, specimens: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, offlineDays: 0 };
 }
 
 function App() {
@@ -113,6 +115,7 @@ function App() {
   const [selected, setSelected] = useState<string>(initialSpecimens[0].id);
   const [notice, setNotice] = useState(loadedSave.offlineDays > 0 ? `Welcome back. ${loadedSave.offlineDays} simulated day(s) of eligible offline progress applied.` : "");
   const [projectStarted, setProjectStarted] = useState(loadedSave.projectStarted);
+  const [analysisEquipmentLevel, setAnalysisEquipmentLevel] = useState(loadedSave.analysisEquipmentLevel);
   const [showMenu, setShowMenu] = useState(false);
   const [instituteName, setInstituteName] = useState(() => {
     try { return localStorage.getItem("j2grows.institute.name.v1") || ""; } catch { return ""; }
@@ -251,12 +254,12 @@ function App() {
   }
   useEffect(() => {
     try {
-      const save: GameSave = { version: 2, specimens, cash, research, day, projectStarted, savedAt: Date.now() };
+      const save: GameSave = { version: 2, specimens, cash, research, day, projectStarted, analysisEquipmentLevel, savedAt: Date.now() };
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     } catch {
       setNotice("Local save unavailable. Your progress may not persist in this browser.");
     }
-  }, [specimens, cash, research, day, projectStarted]);
+  }, [specimens, cash, research, day, projectStarted, analysisEquipmentLevel]);
 
   const activeSpecimen = specimens.find((item) => item.id === selected) ?? specimens[0];
   const activeSpecies = activeSpecimen ? findSpecies(activeSpecimen.speciesId) : findSpecies(initialSpecimens[0].speciesId);
@@ -282,6 +285,7 @@ function App() {
     setResearch(0);
     setDay(1);
     setProjectStarted(false);
+    setAnalysisEquipmentLevel(0);
     setSelected("");
     setInstituteName("");
     setInstituteNameDraft("");
@@ -305,7 +309,7 @@ function App() {
       let nextRecord: SpecimenGenetics = observePlant({ ...record, environment, expression: growth.expression }, growth.expression);
       let nextVariegation = growth.expression;
       let discovered = specimen.discovered;
-      if (shouldDiscoverMutation(record.genetics, environment, Math.max(record.research.analysisLevel, Math.floor(research / 100)))) {
+      if (shouldDiscoverMutation(record.genetics, environment, Math.max(record.research.analysisLevel + analysisEquipmentLevel, Math.floor(research / 100)))) {
         const mutation = createMutation();
         mutation.detected = research > 0 || record.research.analysisLevel > 0;
         nextRecord = { ...nextRecord, genetics: { ...nextRecord.genetics, mutationIds: [...new Set([...nextRecord.genetics.mutationIds, mutation.id])] }, research: { ...nextRecord.research, mutations: [...nextRecord.research.mutations, mutation] } };
@@ -505,7 +509,7 @@ function App() {
         {page === "Breeding" && <BreedingPage specimens={specimens} onCross={runCross} />}
         {page === "Research" && <ResearchPage cash={cash} research={research} projectStarted={projectStarted} onStart={startResearch} announce={announce} />}
         {page === "Greenhouse" && <GreenhousePage specimens={specimens} onSelect={(id) => { setSelected(id); setPage("Specimen Record"); }} onApplyEnvironment={(humidity, temperature) => setGreenhouseEnvironment({ ...greenhouseEnvironment, humidity, light: 70, nutrition: Math.max(20, 100 - Math.abs(temperature - 24) * 7), health: 100 })} announce={announce} />}
-        {page === "Facilities" && <FacilitiesPage cash={cash} onBuy={(cost) => { if (cash < cost) announce("Not enough funds for this upgrade."); else { setCash((value) => value - cost); announce("Facility upgrade purchased. New capacity is being prepared."); } }} />}
+        {page === "Facilities" && <FacilitiesPage cash={cash} analysisEquipmentLevel={analysisEquipmentLevel} onBuy={(name, cost) => { if (cash < cost) announce("Not enough funds for this upgrade."); else { setCash((value) => value - cost); if (name === "Analysis workstation") setAnalysisEquipmentLevel((level) => level + 1); announce(name === "Analysis workstation" ? "Analysis workstation upgraded. Mutation detection and research are more effective." : "Facility upgrade purchased. New capacity is being prepared."); } }} />}
         {page === "Staff" && <StaffPage />}
         {page === "Shop" && <ShopPage specimens={specimens} species={catalogSpecies} cash={cash} day={day} onBuy={purchaseSpecies} onSell={sellSpecimen} />}
         {page === "Finances" && <FinancesPage cash={cash} specimens={specimens} />}
@@ -549,7 +553,8 @@ function Catalogue({ specimens, species, catalogSource, query, setQuery, filter,
 function SpecimenPage({ specimen, plant, onSell, onToggleProtection, onBack, onPropagate, onObserve, onAnalyse, researchPoints, announce }: { specimen: Specimen; plant: ReturnType<typeof findSpecies>; onSell: () => void; onToggleProtection: () => void; onBack: () => void; onPropagate: (method: "cutting" | "division" | "corm" | "tissue-culture") => void; onObserve: () => void; onAnalyse: () => void; researchPoints: number; announce: (message: string) => void }) {
   const genus = plant.latin.split(" ")[0].toLowerCase();
   const isAlocasia = genus === "alocasia";
-  const supportsCuttings = ["monstera", "philodendron", "anthurium"].includes(genus);\n  const rarity = getSpeciesEconomy(plant.name)?.rarity ?? plant.rarity;
+  const supportsCuttings = ["monstera", "philodendron", "anthurium"].includes(genus);
+  const rarity = getSpeciesEconomy(plant.name)?.rarity ?? plant.rarity;
   return <><button className="back-link" onClick={onBack}><ArrowRight size={14} /> Back to catalogue</button><div className="specimen-detail-grid"><section className="panel specimen-portrait"><PlantArt type={plant.image} large /><div className="portrait-overlay"><span className="eyebrow">INDIVIDUAL SPECIMEN</span><h2>{specimen.nickname}</h2><p>{plant.name}</p><span className="specimen-id">{specimen.id}</span></div></section><section className="panel specimen-detail-main"><SectionHeader title="Specimen overview" subtitle="Identity, condition and provenance." /><div className="detail-stat-grid"><div><span>Health</span><strong className={specimen.health < 80 ? "health-low" : "health-good"}>{specimen.health}%</strong></div><div><span>Stage</span><strong>{specimen.stage}</strong></div><div><span>Estimated value</span><strong>{money(specimen.value)}</strong></div><div><span>Variegation</span><strong>{specimen.variegation}%</strong></div></div><div className="detail-section"><h3>Species notes</h3><p>{plant.summary}</p><div className="care-grid"><div><Sun size={15} /><span>Light</span><strong>{plant.light}</strong></div><div><Droplets size={15} /><span>Humidity</span><strong>{plant.humidity}</strong></div></div></div><div className="detail-section"><h3>Current traits</h3><div className="trait-pills larger-pills">{plant.traits.map((trait) => <span key={trait}>{trait}</span>)}</div><p className="muted-copy">Visible expression is observed; stability and hidden potential are estimated until research reveals more.</p></div><div className="detail-section"><h3>Genetic profile</h3><div className="detail-stat-grid"><div><span>Variegation potential</span><strong>{specimen.genetics ? ((specimen.genetics.research.analysisLevel >= 1 ? specimen.genetics.genetics.variegationPotential : Math.round(specimen.genetics.genetics.variegationPotential / 10) * 10) + "%") : "Unknown"}</strong></div><div><span>Stability estimate</span><strong>{specimen.genetics ? "~" + (Math.round(specimen.genetics.genetics.stability / 10) * 10) + "%" : "Unassessed"}</strong></div><div><span>Hidden potential</span><strong>{(specimen.genetics?.research.analysisLevel ?? 0) >= 2 ? specimen.genetics?.genetics.hiddenPotential + "%" : "Unrevealed"}</strong></div><div><span>Research level</span><strong>{specimen.genetics?.research.analysisLevel ?? 0}</strong></div></div><p className="muted-copy">Observations: {specimen.genetics?.research.observationCount ?? 0} · Research data available: {researchPoints}</p><div className="propagation-actions"><button className="button button-quiet" onClick={onObserve}><BookOpen size={15} /> Record observation (+2 research)</button><button className="button button-quiet" disabled={researchPoints < 25} onClick={onAnalyse}><Microscope size={15} /> Analyse genetics · 25 data</button></div>{specimen.genetics?.research.mutations.filter((mutation) => mutation.detected).map((mutation) => <p className="muted-copy" key={mutation.id}>Detected mutation: {mutation.name} · {mutation.rarity} · {mutation.inheritance} inheritance</p>)}</div><div className="detail-section"><h3>Propagation methods</h3><p className="muted-copy">Each method creates a separate juvenile specimen. Costs and outcomes are prototype values.</p><div className="propagation-actions">{supportsCuttings && <button className="button button-quiet" onClick={() => onPropagate("cutting")}><Sprout size={15} /> Stem cutting · {money(propagationCost("cutting", rarity))}</button>}<button className="button button-quiet" onClick={() => onPropagate("division")}><Sprout size={15} /> Division / offset · {money(propagationCost("division", rarity))}</button>{isAlocasia && <button className="button button-quiet" onClick={() => onPropagate("corm")}><Sprout size={15} /> Corm · {money(propagationCost("corm", rarity))}</button>}<button className="button button-quiet" onClick={() => onPropagate("tissue-culture")}><FlaskConical size={15} /> Tissue culture · {money(propagationCost("tissue-culture", rarity))}</button></div><p className="muted-copy">{isAlocasia ? "Alocasia can be propagated from corms, divisions / offsets or through tissue culture." : supportsCuttings ? "Stem cuttings, divisions / offsets and tissue culture are available for this plant group." : "Division / offsets and tissue culture are available for this species in the current prototype."}</p></div><div className="detail-actions"><button className="button button-quiet" onClick={onToggleProtection}><ShieldCheck size={15} /> {specimen.protected ? "Remove protection" : "Protect specimen"}</button><button className="button button-primary" disabled={specimen.protected} onClick={onSell}>{specimen.protected ? "Protected from sale" : `Sell for ${money(specimen.value)}`}</button></div></section><aside className="panel provenance-panel"><SectionHeader title="Record & provenance" /><div className="provenance-item"><span>Current location</span><strong>{specimen.location}</strong></div><div className="provenance-item"><span>Protection status</span><strong className={specimen.protected ? "health-good" : ""}>{specimen.protected ? "Protected" : "Sale eligible"}</strong></div><div className="provenance-item"><span>Lineage</span><strong>Founder collection</strong></div><div className="provenance-item"><span>Observation history</span><strong>3 field notes</strong></div><button className="button button-quiet full-width" onClick={() => announce("The detailed lineage viewer is planned for a later milestone.")}>View family tree <ArrowRight size={14} /></button></aside></div></>;
 }
 
@@ -576,9 +581,13 @@ function GreenhousePage({ specimens, onSelect, onApplyEnvironment, announce }: {
   return <><div className="metric-grid"><Metric label="Temperature" value={`${temperature}°C`} detail="Target range 22–28°C" icon={Thermometer} /><Metric label="Humidity" value={`${humidity}%`} detail="Tropical zone" icon={Droplets} /><Metric label="Light schedule" value="14 hours" detail="Daily light period" icon={Sun} /><Metric label="Air circulation" value="Good" detail="Fans operating" icon={Activity} /></div><div className="two-column-layout"><section className="panel"><SectionHeader title="Growing zone · Tropical Aroids" subtitle="A simple first greenhouse zone." action="Zone details" /><div className="zone-visual"><PlantArt type="hero" large /><div><span className="pill">ACTIVE ZONE</span><h2>Home Greenhouse</h2><p>Species-specific controls will expand as equipment and research are unlocked.</p></div></div><div className="control-row"><label htmlFor="temp">Temperature <strong>{temperature}°C</strong></label><input id="temp" type="range" min="18" max="32" value={temperature} onChange={(event) => setTemperature(Number(event.target.value))} /></div><div className="control-row"><label htmlFor="humidity">Humidity <strong>{humidity}%</strong></label><input id="humidity" type="range" min="40" max="95" value={humidity} onChange={(event) => setHumidity(Number(event.target.value))} /></div><button className={`button ${autoCare ? "button-primary" : "button-quiet"}`} onClick={() => setAutoCare((value) => !value)}><Zap size={15} /> Auto-care {autoCare ? "enabled" : "paused"}</button><button className="button button-quiet" onClick={() => { onApplyEnvironment(humidity, temperature); announce("Growing conditions applied. New growth and variegation stability will respond over time."); }}>Apply environment</button></section><section className="panel"><SectionHeader title="Plants in this zone" subtitle="Select a specimen to inspect its record." />{specimens.map((item) => <button className="zone-plant-row" key={item.id} onClick={() => onSelect(item.id)}><PlantArt type={findSpecies(item.speciesId).image} /><span><strong>{item.nickname}</strong><small>{findSpecies(item.speciesId).name}</small></span><span className={item.health < 80 ? "health-low" : "health-good"}>{item.health}%</span><ChevronRight size={15} /></button>)}</section></div></>;
 }
 
-function FacilitiesPage({ cash, onBuy }: { cash: number; onBuy: (cost: number) => void }) {
-  const upgrades = [{ name: "Propagation bench", description: "Increase space for cuttings and seedlings.", cost: 1200, icon: Sprout }, { name: "Environmental controller", description: "Unlock more consistent greenhouse conditions.", cost: 2400, icon: Gauge }, { name: "Analysis workstation", description: "Prepare for deeper specimen analysis.", cost: 5000, icon: Microscope }];
-  return <><div className="facility-hero"><div><div className="eyebrow">CURRENT FACILITY</div><h2>Home greenhouse</h2><p>Begin with a focused growing setup. Expansion is always your choice.</p><div className="facility-tags"><span><Check size={13} /> Local cultivation</span><span><Check size={13} /> Basic propagation</span></div></div><div className="facility-hero-art"><PlantArt type="hero" large /></div></div><section className="panel"><SectionHeader title="Available improvements" subtitle="Spend carefully; each upgrade should support your current goals." /><div className="upgrade-grid">{upgrades.map(({ name, description, cost, icon: Icon }) => <article className="upgrade-card" key={name}><div className="upgrade-icon"><Icon size={20} /></div><h3>{name}</h3><p>{description}</p><div className="upgrade-cost">{money(cost)}</div><button className="button button-primary full-width" disabled={cash < cost} onClick={() => onBuy(cost)}>{cash < cost ? "Not enough funds" : "Purchase upgrade"}</button></article>)}</div></section></>;
+function FacilitiesPage({ cash, analysisEquipmentLevel, onBuy }: { cash: number; analysisEquipmentLevel: number; onBuy: (name: string, cost: number) => void }) {
+  const upgrades = [
+    { name: "Propagation bench", description: "Increase space for cuttings and seedlings.", cost: 1200, icon: Sprout, level: 0 },
+    { name: "Environmental controller", description: "Unlock more consistent greenhouse conditions.", cost: 2400, icon: Gauge, level: 0 },
+    { name: "Analysis workstation", description: "Improve mutation detection and reveal genetic potential more effectively.", cost: 35, icon: Microscope, level: analysisEquipmentLevel },
+  ];
+  return <><div className="facility-hero"><div><div className="eyebrow">CURRENT FACILITY</div><h2>Home greenhouse</h2><p>Begin with a focused growing setup. Expansion is always your choice.</p><div className="facility-tags"><span><Check size={13} /> Local cultivation</span><span><Check size={13} /> Basic propagation</span></div></div><div className="facility-hero-art"><PlantArt type="hero" large /></div></div><section className="panel"><SectionHeader title="Available improvements" subtitle="Spend carefully; each upgrade should support your current goals." /><div className="upgrade-grid">{upgrades.map(({ name, description, cost, icon: Icon, level }) => <article className="upgrade-card" key={name}><div className="upgrade-icon"><Icon size={20} /></div><h3>{name}</h3><p>{description}</p>{name === "Analysis workstation" && <div className="provenance-item"><span>Current level</span><strong>{level}</strong></div>}<div className="upgrade-cost">{money(cost)}</div><button className="button button-primary full-width" disabled={cash < cost} onClick={() => onBuy(name, cost)}>{cash < cost ? "Not enough funds" : "Purchase upgrade"}</button></article>)}</div></section></>;
 }
 
 function StaffPage() {
