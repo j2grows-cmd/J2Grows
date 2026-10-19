@@ -1984,7 +1984,7 @@ body{
 .tutorial-backdrop{
   display:block;
   padding:0;
-  background:rgba(5,8,5,.58);
+  background:rgba(5,8,5,.45);
   backdrop-filter:none;
   pointer-events:none;
 }
