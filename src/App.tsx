@@ -727,7 +727,7 @@ function App() {
     const totalCost = detail.cost * count;
     if (cash < totalCost) { announce(`Not enough funds. ${count > 1 ? `${count} cuttings cost ${money(totalCost)} in total` : `${detail.label} propagation costs ${money(totalCost)}`}.`); return; }
     const usedIds = new Set(specimens.map((item) => item.id));
-    const children: Specimen[] = Array.from({ length: count }, () => {
+    const children: Specimen[] = Array.from({ length: count }, (_, index) => {
       const id = createUniqueSpecimenId(usedIds);
       usedIds.add(id);
       const child: Specimen = {
