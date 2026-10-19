@@ -92,7 +92,7 @@ export function inheritGenetics(parentA: GeneticProfile, parentB: GeneticProfile
   if (random() < 0.025) {
     const mutation = (random() < 0.5 ? "spontaneous-colour-shift" : "spontaneous-morphology") + "-" + Math.round(random() * 1e9).toString(36);
     child.mutationIds = [...new Set([...child.mutationIds, mutation])];
-    if (mutation === "spontaneous-colour-shift") child.variegationPotential = varied(Math.max(child.variegationPotential, 55), random, 20);
+    if (mutation.startsWith("spontaneous-colour-shift-")) child.variegationPotential = varied(Math.max(child.variegationPotential, 55), random, 20);
     else child.growthPotential = varied(child.growthPotential, random, 28);
   }
   return child;
@@ -120,7 +120,6 @@ export function growVariegation(profile: GeneticProfile, environment: PlantEnvir
 export function observePlant(record: SpecimenGenetics, expression = record.expression): SpecimenGenetics {
   const observations = [...record.observations, clamp(expression)].slice(-24);
   const observationCount = record.research.observationCount + 1;
-  const trend = observations.length > 1 ? observations[observations.length - 1] - observations[observations.length - 2] : 0;
   const points = record.research.points + 2 + (observations.length >= 3 ? 1 : 0);
   const discoveries = [...record.research.discoveredTraits];
   if (observations.length >= 3 && observations.every((value) => value >= 60) && !discoveries.includes("consistent-high-variegation")) {
