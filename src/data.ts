@@ -176,7 +176,7 @@ const prototypeSpecies: Species[] = [
 ];
 
 const offlineSpecies: Species[] = [
-  ...prototypeSpecies,
+  ...prototypeSpecies.filter((local) => Boolean(getSpeciesEconomy(local.name))),
   ...SPECIES_ECONOMY.filter((entry) => !prototypeSpecies.some((local) => {
     const genus = entry.name.split(" ")[0].toLowerCase();
     return local.latin.split(" ")[0].toLowerCase() === genus
