@@ -36,6 +36,8 @@ export type Specimen = {
   stageDays?: number;
   /** Last simulation day this specimen was observed; prevents repeated research farming. */
   lastObservedDay?: number;
+  /** Simulation-calendar year in which this Alocasia last yielded a corm. */
+  lastCormHarvestYear?: number;
   /** Original shop price; used to prevent instant buy-and-resell arbitrage while allowing value to rise with growth. */
   purchasePrice?: number;
   /** Development state for a newly propagated specimen; omitted for established plants. */
