@@ -1922,3 +1922,45 @@ body{
   .topbar .top-brand-logo{width:32px;height:32px;flex-basis:32px}
   .dash-feature-copy{width:75%;padding:20px!important}
 }
+
+
+/* Tighten the top brand lockup so the mark and wordmark read as one unit */
+.topbar .top-institution{
+  flex:0 0 155px;
+  width:155px;
+  min-width:155px;
+  justify-content:flex-start;
+  gap:7px;
+  padding:0 10px;
+  border-right:1px solid #283020;
+  white-space:nowrap;
+}
+.topbar .top-brand-logo{
+  width:38px;
+  height:38px;
+  flex:0 0 38px;
+  margin:0;
+  object-fit:contain;
+}
+.topbar .top-institution>div{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-width:0;
+  line-height:1.2;
+}
+.topbar .top-institution strong{
+  margin:0;
+  line-height:1.15;
+}
+.topbar .top-institution span{
+  display:block;
+  margin-top:3px;
+  line-height:1.15;
+}
+@media(max-width:850px){
+  .topbar .top-institution{flex:0 0 112px;width:112px;min-width:112px;gap:5px;padding:0 3px}
+  .topbar .top-brand-logo{width:30px;height:30px;flex-basis:30px}
+  .topbar .top-institution strong{font-size:14px}
+  .topbar .top-institution span{font-size:12px}
+}
