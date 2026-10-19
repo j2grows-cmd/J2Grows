@@ -44,7 +44,8 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **Gameplay effects:** Routine staff care buffers poor environmental conditions to a minimum care-condition score of 55. Each completed training level (maximum 3) raises that floor by 5, capped at 75. Training costs £25 and takes three simulated days per level. The assistant's routine care costs £8 each simulated week while enabled; pausing it removes the wage and care buffer.
 - **Offline progress:** Staff training advances with eligible offline simulated days, and the resulting training level is preserved in the migrated save.
 - **Tests:** Added unit coverage for legacy/malformed staff-state normalization, care buffering, pausing care, training cost/eligibility/duration/completion, level cap, and weekly wages.
-- **Remaining check:** Confirm CI and browser-test greenhouse edit → navigate away/reload → settings retained, plus training completion and weekly costs.
+- **CI:** Passed on code commit `bc358b86` (`npm test`, `npm run typecheck`, `npm run build`).
+- **Remaining check:** Browser-test greenhouse edit → navigate away/reload → settings retained, plus training completion and weekly costs.
 
 ### A07. “Advance day” has no coherent time/economy model
 - **Evidence:** Every click adds 25 research and improves some plant health; it does not apply growth stages, costs, research completion, plant needs or greenhouse conditions. Offline progress separately grants the same research and health increments.
