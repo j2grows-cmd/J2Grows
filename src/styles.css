@@ -1608,3 +1608,56 @@ body{
  .top-level{flex-basis:190px;width:190px;min-width:190px}
  .topbar>.profile-chip{min-width:145px}
 }
+
+
+/* Full-width premium workspace: use all available space beside the sidebar */
+.main-area{
+  width:calc(100% - 232px);
+  margin-left:232px;
+  min-width:0;
+}
+.page-content{
+  width:100%;
+  max-width:none;
+  margin:0;
+  padding:24px clamp(22px,2vw,38px) 28px;
+}
+.topbar{
+  width:100%;
+  padding-left:clamp(18px,2vw,30px);
+  padding-right:clamp(18px,2vw,30px);
+}
+.dash-welcome,.dash-feature-hero,.dash-resource-grid,.dash-dashboard-main,.dash-lower-grid{
+  width:100%;
+  max-width:none;
+}
+.dash-feature-hero{
+  border-color:rgba(201,173,104,.38);
+  box-shadow:0 12px 34px rgba(0,0,0,.16),inset 0 1px rgba(255,255,255,.025);
+}
+.dash-feature-copy{
+  background:linear-gradient(125deg,rgba(16,24,14,.99),rgba(9,15,9,.96));
+}
+.dash-feature-photo{
+  background-size:cover;
+  background-position:center 45%;
+}
+.dash-resource-card,.dash-widget,.dash-featured-panel,.dash-side-panel{
+  box-shadow:0 5px 20px rgba(0,0,0,.11),inset 0 1px rgba(255,255,255,.018);
+}
+.dash-widget,.dash-featured-panel,.dash-side-panel{
+  border-color:rgba(201,173,104,.29);
+  background:linear-gradient(145deg,rgba(17,24,15,.98),rgba(10,15,10,.99));
+}
+@media(min-width:1600px){
+  .page-content{padding-left:clamp(28px,2vw,42px);padding-right:clamp(28px,2vw,42px)}
+  .dash-feature-hero{min-height:230px}
+}
+@media(max-width:1250px){
+  .main-area{width:calc(100% - 205px);margin-left:205px}
+  .page-content{padding-left:18px;padding-right:18px}
+}
+@media(max-width:850px){
+  .main-area{width:100%;margin-left:0}
+  .page-content{padding:20px 14px}
+}
