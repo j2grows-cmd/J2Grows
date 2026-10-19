@@ -309,7 +309,7 @@ function App() {
       let nextRecord: SpecimenGenetics = observePlant({ ...record, environment, expression: growth.expression }, growth.expression);
       let nextVariegation = growth.expression;
       let discovered = specimen.discovered;
-      if (shouldDiscoverMutation(record.genetics, environment, Math.max(record.research.analysisLevel + analysisEquipmentLevel, Math.floor(research / 100)))) {
+      if (shouldDiscoverMutation(record.genetics, environment, Math.max(record.research.analysisLevel + analysisEquipmentLevel + (projectStarted ? 1 : 0), Math.floor(research / 100)))) {
         const mutation = createMutation();
         mutation.detected = research > 0 || record.research.analysisLevel > 0;
         nextRecord = { ...nextRecord, genetics: { ...nextRecord.genetics, mutationIds: [...new Set([...nextRecord.genetics.mutationIds, mutation.id])] }, research: { ...nextRecord.research, mutations: [...nextRecord.research.mutations, mutation] } };
@@ -436,7 +436,10 @@ function App() {
     const inheritedMutations = [...parentAGenetics.research.mutations, ...parentBGenetics.research.mutations]
       .filter((mutation, index, all) => all.findIndex((candidate) => candidate.id === mutation.id) === index)
       .filter((mutation) => Math.random() < mutation.stability / 100);
-    inherited.mutationIds = inheritedMutations.map((mutation) => mutation.id);
+    const parentalMutationIds = new Set([...parentAGenetics.genetics.mutationIds, ...parentBGenetics.genetics.mutationIds]);
+    const spontaneousMutationIds = inherited.mutationIds.filter((id) => !parentalMutationIds.has(id));
+    inherited.mutationIds = [...inheritedMutations.map((mutation) => mutation.id), ...spontaneousMutationIds];
+    const spontaneousMutationRecords = spontaneousMutationIds.map((id) => ({ id, name: id.includes("colour") ? "Spontaneous colour shift" : "Spontaneous morphology variation", category: id.includes("colour") ? "colour" as const : "morphology" as const, rarity: "Rare" as const, inheritance: "mixed" as const, stability: 50, detected: false, beneficial: null }));
     const inheritedVariation = Math.max(0, Math.min(100, Math.round((parentA.variegation + parentB.variegation + inherited.variegationPotential) / 3)));
     const source = inherited.variegationPotential >= parentAGenetics.genetics.variegationPotential ? parentA : parentB;
     const childNumber = String(specimens.length + 1).padStart(4, "0");
@@ -451,7 +454,7 @@ function App() {
       protected: false,
       variegation: inheritedVariation,
       discovered: false,
-      genetics: { ...createSpecimenGenetics(inheritedVariation), genetics: inherited, research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: inheritedMutations.map((mutation) => ({ ...mutation, detected: false })) } },
+      genetics: { ...createSpecimenGenetics(inheritedVariation), genetics: inherited, research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: [...inheritedMutations.map((mutation) => ({ ...mutation, detected: false })), ...spontaneousMutationRecords] } },
     };
     child.value = specimenValue(child);
     setCash((current) => current - 4);
