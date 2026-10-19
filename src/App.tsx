@@ -152,7 +152,7 @@ function App() {
   function specimenValue(specimen: Specimen, plantName = findSpecies(specimen.speciesId).name): number {
     const economy = getSpeciesEconomy(specimen.speciesId) ?? getSpeciesEconomy(plantName);
     const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation);
-    return calculateSpecimenValue({
+    const calculated = calculateSpecimenValue({
       basePrice: economy?.basePrice ?? findSpecies(specimen.speciesId).basePrice ?? 15,
       health: specimen.health,
       stage: specimen.stage,
@@ -161,6 +161,11 @@ function App() {
       geneticsBonus: Math.min(2, 1 + Math.max(0, record.genetics.growthPotential - 50) / 100 + ((record.research.analysisLevel >= 2) ? record.genetics.hiddenPotential / 200 : 0)),
       discoveryBonus: specimen.discovered ? 1.1 : 1,
     });
+    if (specimen.purchasePrice !== undefined) {
+      const stageMultiplier = specimen.stage === "Mature" ? 1.6 : specimen.stage === "Growing" ? 1.25 : 1;
+      return Math.min(calculated, Math.round(specimen.purchasePrice * 0.8 * stageMultiplier));
+    }
+    return calculated;
   }
 
   function acquireSpecies(plant: Species, starter = false) {
@@ -170,7 +175,7 @@ function App() {
     const genetics = createSpecimenGenetics(0);
     const specimen: Specimen = {
       id, speciesId: plant.id, nickname: plant.name, location: "Home greenhouse",
-      health: 100, stage: "Juvenile", value: 0, protected: false,
+      health: 100, stage: "Juvenile", value: 0, purchasePrice: cost, protected: false,
       variegation: 0, discovered: false, genetics,
     };
     specimen.value = specimenValue(specimen, plant.name);
@@ -198,6 +203,11 @@ function App() {
     }
     const genus = findSpecies(parent.speciesId).latin.split(" ")[0].toLowerCase();
     const isAlocasia = genus === "alocasia";
+    if (isAlocasia && parent.stage !== "Mature") {
+      announce("Alocasia corms can only be harvested from a mature plant. Grow your parent plant to maturity first.");
+      setSelected(parent.id); setPage("Specimen Record");
+      return;
+    }
     const cost = isAlocasia ? 2 : 4;
     if (cash < cost) { announce(`You need ${money(cost)} for propagation supplies.`); return; }
     const offspring: Specimen = {
@@ -414,11 +424,13 @@ function App() {
     const genus = plant.latin.split(" ")[0].toLowerCase();
     const allowed = method === "division" || method === "tissue-culture"
       || (method === "cutting" && ["monstera", "philodendron", "anthurium"].includes(genus))
-      || (method === "corm" && genus === "alocasia");
+      || (method === "corm" && genus === "alocasia" && parent.stage === "Mature");
     if (!allowed) {
       announce(method === "cutting"
         ? "Stem cuttings are available for Monstera, Philodendron and Anthurium in this game."
-        : "Corm propagation is reserved for Alocasia.");
+        : method === "corm" && genus === "alocasia"
+          ? "You can only harvest corms from a mature Alocasia. Grow this plant to maturity first."
+          : "Corm propagation is reserved for Alocasia.");
       return;
     }
     const rarity = (getSpeciesEconomy(plant.id)?.rarity ?? getSpeciesEconomy(plant.name)?.rarity ?? plant.rarity) as Species["rarity"];
