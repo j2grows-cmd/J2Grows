@@ -41,6 +41,6 @@ test("weekly operating costs include owned facilities and automation", () => {
 test("facility levels migrate safely from old saves and clamp malformed or excessive values", () => {
   assert.deepEqual(normalizeFacilityLevels(undefined), empty);
   assert.deepEqual(normalizeFacilityLevels({ propagationBench: 2 }), { propagationBench: 2, environmentalController: 0 });
-  assert.deepEqual(normalizeFacilityLevels({ propagationBench: 99, environmentalController: -3 }), empty === null ? empty : { propagationBench: 3, environmentalController: 0 });
+  assert.deepEqual(normalizeFacilityLevels({ propagationBench: 99, environmentalController: -3 }), { propagationBench: 3, environmentalController: 0 });
   assert.deepEqual(normalizeFacilityLevels({ propagationBench: Number.NaN, environmentalController: 1.8 }), { propagationBench: 0, environmentalController: 1 });
 });
