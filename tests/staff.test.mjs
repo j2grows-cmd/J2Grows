@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { DEFAULT_ENVIRONMENT } from "../src/game/genetics.ts";
-import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, STAFF_TRAINING_COST, startStaffTraining } from "../src/game/staff.ts";
+import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, STAFF_TRAINING_COST, startStaffTraining, weeklyStaffOperatingCost } from "../src/game/staff.ts";
 
 test("staff controls persist safely and malformed values are normalized", () => {
   assert.deepEqual(normalizeStaffState(undefined), DEFAULT_STAFF_STATE);
@@ -30,4 +30,9 @@ test("training requires funds, takes three simulated days, and improves care up 
   assert.equal(state.trainingLevel, 1);
   state = { ...state, trainingLevel: 3 };
   assert.equal(canStartStaffTraining(STAFF_TRAINING_COST, state), false);
+});
+
+test("routine care has a clear weekly running cost that stops when paused", () => {
+  assert.equal(weeklyStaffOperatingCost(DEFAULT_STAFF_STATE), 8);
+  assert.equal(weeklyStaffOperatingCost({ ...DEFAULT_STAFF_STATE, routineCareEnabled: false }), 0);
 });
