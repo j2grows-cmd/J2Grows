@@ -724,3 +724,9 @@ body{
   .dash-plant-image{height:72px}
   .dash-widget .section-header{margin-bottom:4px}
 }
+
+
+/* Keep the upper leaves visible in species-library thumbnails */
+.species-library-card>.plant-art img{
+  object-position:center 30%;
+}
