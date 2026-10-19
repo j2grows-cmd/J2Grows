@@ -38,10 +38,13 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **Tests:** Added coverage for progressive prices, invalid/underfunded/max-level purchases, environmental bounds, propagation duration, running costs, and old-save level migration.
 - **Remaining check:** Confirm CI and browser-test purchase → save/reload → effect → seventh-day operating cost.
 
-### A06. Staff controls are transient; greenhouse draft controls require Apply
-- **Evidence:** Greenhouse temperature/humidity/auto-care drafts live in `GreenhousePage` and are committed to app state only by Apply; committed greenhouse settings are saved. Navigating away before applying loses the draft. Separately, staff auto-care and training state live only in `StaffPage`, reset on navigation, and do not affect simulation.
-- **Impact:** Staff toggles and training look like management features but have no durable state or gameplay effect; unapplied greenhouse edits can be lost.
-- **Recommended fix:** Decide whether to implement a persistent staff system with defined simulation effects or mark staff controls as future/disabled. Optionally make greenhouse draft/apply behaviour clearer or persist changes immediately.
+### A06. Staff state and greenhouse settings — implemented on the development branch
+- **Previous evidence:** Staff care/training controls were transient and did not affect gameplay; greenhouse slider edits could be lost before pressing Apply.
+- **Current state:** Added save-version 6 with migration defaults for old saves, local autosave and manual save-slot support for staff care and training state. Greenhouse temperature/humidity/auto-care controls now update the saved app state immediately; the separate Apply button has been removed and the UI explains that changes take effect immediately.
+- **Gameplay effects:** Routine staff care buffers poor environmental conditions to a minimum care-condition score of 55. Each completed training level (maximum 3) raises that floor by 5, capped at 75. Training costs £25 and takes three simulated days per level. The assistant's routine care costs £8 each simulated week while enabled; pausing it removes the wage and care buffer.
+- **Offline progress:** Staff training advances with eligible offline simulated days, and the resulting training level is preserved in the migrated save.
+- **Tests:** Added unit coverage for legacy/malformed staff-state normalization, care buffering, pausing care, training cost/eligibility/duration/completion, level cap, and weekly wages.
+- **Remaining check:** Confirm CI and browser-test greenhouse edit → navigate away/reload → settings retained, plus training completion and weekly costs.
 
 ### A07. “Advance day” has no coherent time/economy model
 - **Evidence:** Every click adds 25 research and improves some plant health; it does not apply growth stages, costs, research completion, plant needs or greenhouse conditions. Offline progress separately grants the same research and health increments.
@@ -104,7 +107,7 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 
 1. **A01** — first plant acquisition; otherwise the new-game state is a softlock.
 2. **A02, A03, A04** — correct breeding, research and identity rules.
-3. **A06, A07, A08** — greenhouse/staff state, coherent simulation and save validation.
+3. **A07, A08** — coherent simulation and save validation.
 4. **A09, A10, A11** — catalogue robustness and truthful connection status.
 5. **A12, A13, A15, A16, A17** — tutorial/UI/documentation and regression coverage.
 
