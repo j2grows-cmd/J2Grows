@@ -47,11 +47,12 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **CI:** Passed on code commit `bc358b86` (`npm test`, `npm run typecheck`, `npm run build`).
 - **Remaining check:** Browser-test greenhouse edit → navigate away/reload → settings retained, plus training completion and weekly costs.
 
-### A07. Online and offline day progression are not equivalent — unresolved
-- **Current online behaviour:** `advanceDay` processes health, growth stages, propagation phases, mutation events, breeding completion/failure, Mutation Analysis completion, staff training, and weekly operating costs.
-- **Current offline behaviour:** `loadGameSave` separately advances health and ordinary growth stages and progresses staff training. It does not simulate propagation phases, breeding completion/failure, mutations, Mutation Analysis completion or weekly operating costs for the elapsed offline days.
-- **Impact:** Reloading after elapsed time can produce different outcomes from advancing the same number of days manually. Projects may remain overdue, propagation may stall during offline time, and costs/events can be skipped.
-- **Recommended fix:** Either centralise daily simulation so online and capped offline progression share the same rules, or explicitly restrict offline progression to a documented subset and reconcile/report all skipped systems.
+### A07. Online and offline day progression — implemented on the development branch
+- **Shared simulation:** Offline catch-up now queues elapsed simulated days through the same `advanceDay` function used by the live game, one day per render/state update. This applies plant health and growth, propagation phases, mutation events, breeding completion/failure, Mutation Analysis completion, staff training, and weekly operating costs using the same rules.
+- **Timing:** One in-game day is earned for every complete real-life hour away. Offline catch-up is capped at 14 simulated days (336 hours); partial hours do not earn a day.
+- **Settings:** The enabled/disabled preference is stored in save version 7 and appears in Game Settings. Disabled offline progression applies no catch-up days. Existing save versions 1–6 migrate with offline progression enabled by default.
+- **Tests:** Added `tests/offline-progress.test.mjs` for hourly thresholds, the 14-day cap, disabled mode, and invalid/backwards timestamps.
+- **Remaining check:** CI and browser-level validation of a return from a long absence, settings persistence, and queued daily progression.
 
 ### A08. Save validation is too shallow
 - **Evidence:** `loadGameSave` checks top-level types and `Array.isArray(specimens)`, then trusts each specimen's fields and numeric ranges. Malformed but parseable local data can introduce missing health, invalid species IDs or bad values into the UI.
@@ -90,10 +91,9 @@ This is a findings log, not a claim that all issues are fixed. Priority means: *
 - **Impact:** The prototype's available content and its stated first-playable design are not aligned.
 - **Recommended fix:** Decide whether the first game should start empty and let the player acquire plants, or start with a guided starter specimen. Update the design and onboarding to match.
 
-### A15. Offline progression policy is inconsistent with the design baseline
-- **Evidence:** `loadGameSave` caps offline progress at 14 days. The design audit calls for generous transparent progress and says any cap must be explicitly explained; the return message reports days applied but does not mention the cap.
-- **Impact:** Long absences silently stop progressing after the cap, which may surprise players.
-- **Recommended fix:** Keep the cap only if intentional, disclose it in settings/help and the return summary, and define which systems progress offline.
+### A15. Offline progression cap and disclosure — partially resolved
+- **Current state:** The 14-day cap is intentional and disclosed in Game Settings alongside the one-day-per-hour rate and the simulation systems that advance. The return notice reports the number of simulated days applied.
+- **Remaining check:** Verify the return notice and cap behaviour in a browser after a long absence; the settings disclosure is implemented.
 
 ### A16. Design documents disagree about implementation status
 - **Evidence:** `docs/GAME_DESIGN_SPEC.md` and `docs/DESIGN_AUDIT_AND_DECISIONS.md` still say implementation has not started / no UI code is authorised, while `README.md` and `docs/ROADMAP.md` describe the prototype as implemented.
