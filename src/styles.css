@@ -1661,3 +1661,67 @@ body{
   .main-area{width:100%;margin-left:0}
   .page-content{padding:20px 14px}
 }
+
+
+/* Dashboard visual pass: make the premium layout visibly more spacious */
+.page-content{padding:24px clamp(24px,2.25vw,44px) 34px}
+.dash-feature-hero{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  min-height:250px;
+  margin-bottom:14px;
+  border-radius:16px;
+  border-color:rgba(201,173,104,.42);
+  background:linear-gradient(115deg,#151f12,#0c120b 53%,#172213);
+  box-shadow:0 14px 38px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.035);
+}
+.dash-feature-copy{padding:30px clamp(26px,2.4vw,44px)}
+.dash-feature-copy .eyebrow{font-size:15px;letter-spacing:1.8px;color:#d1b46e}
+.dash-feature-copy h2{font-size:clamp(42px,3.35vw,60px);line-height:1.04;letter-spacing:-1.7px;margin:15px 0 10px}
+.dash-feature-copy p{font-size:17px;line-height:1.6;max-width:54ch;margin-bottom:18px;color:#c0c7b3}
+.dash-hero-controls{gap:10px;margin-top:2px}
+.dash-season{margin-right:5px}
+.dash-feature-photo{min-height:250px;background-size:cover;background-position:center 48%}
+.dash-photo-caption{right:18px;bottom:18px;padding:12px 15px;border:1px solid rgba(201,173,104,.4);border-radius:9px;background:rgba(7,13,7,.82);backdrop-filter:blur(8px);box-shadow:0 8px 24px #0005}
+.dash-resource-grid{gap:12px;margin-bottom:14px}
+.dash-resource-card{
+  min-height:92px;
+  padding:17px 18px;
+  gap:13px;
+  border-radius:12px;
+  border-color:rgba(201,173,104,.31);
+  background:linear-gradient(145deg,#182116,#0e140d);
+  box-shadow:inset 0 1px rgba(255,255,255,.035),0 8px 22px rgba(0,0,0,.14);
+}
+.dash-resource-icon{width:43px;height:43px;border-radius:11px}
+.dash-resource-card small{font-size:15px;letter-spacing:.15px}
+.dash-resource-card strong{font-size:25px;line-height:1.15}
+.dash-resource-card span:last-child{font-size:15px}
+.dash-three-columns{gap:14px;margin-bottom:14px;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr) minmax(0,.92fr)}
+.dash-widget,.dash-featured-panel,.dash-side-panel{
+  padding:18px;
+  border-radius:13px;
+  border-color:rgba(201,173,104,.3);
+  background:linear-gradient(145deg,rgba(18,26,16,.98),rgba(9,14,9,.99));
+  box-shadow:inset 0 1px rgba(255,255,255,.025),0 8px 24px rgba(0,0,0,.12);
+}
+.dash-condition-grid{gap:10px}
+.dash-condition{min-height:88px;padding:13px;border-radius:10px;background:linear-gradient(145deg,#182116,#111810);border-color:#35432a}
+.dash-activity-row{padding:13px 8px}
+.dash-finance-total{padding:16px;border-radius:10px;background:linear-gradient(140deg,#1c2916,#121a10);border-color:#435332}
+.dash-lower-grid{gap:14px}
+.dash-featured-panel .section-header,.dash-side-panel .section-header{margin-bottom:16px}
+@media(max-width:1250px){
+ .page-content{padding:20px 18px 26px}
+ .dash-feature-copy{padding:22px}
+ .dash-feature-copy h2{font-size:clamp(36px,3vw,46px)}
+ .dash-resource-card{padding:13px;gap:9px}
+}
+@media(max-width:850px){
+ .page-content{padding:18px 14px 24px}
+ .dash-feature-hero{grid-template-columns:1fr;min-height:0}
+ .dash-feature-copy{padding:24px}
+ .dash-feature-copy h2{font-size:38px}
+ .dash-feature-photo{min-height:180px}
+ .dash-resource-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .dash-three-columns{grid-template-columns:1fr}
+}
