@@ -137,7 +137,7 @@ const prototypeSpecies: Species[] = [
     latin: "Anthurium luxurians",
     family: "Araceae",
     difficulty: "Advanced",
-    rarity: "Very rare",
+    rarity: "Very Rare",
     image: "anthurium",
     summary: "Deeply quilted, sculptural leaves with a glossy, almost reptilian texture.",
     light: "Medium, indirect",
