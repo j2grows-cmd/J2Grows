@@ -747,7 +747,8 @@ function App() {
       completesOnDay: day + breedingDurationDays(5, researchUnlocks.includes("selective-breeding") ? 15 : 0),
       cost, status: "active",
       failureChance: breedingFailureChance(researchUnlocks.includes("selective-breeding") ? 3 : 0, condition),
-      lineId: `LINE-${Date.now().toString(36).toUpperCase()}`,\n      targetTrait: researchUnlocks.includes("inheritance-mapping") ? targetTrait : undefined,
+      lineId: `LINE-${Date.now().toString(36).toUpperCase()}`,
+      targetTrait: researchUnlocks.includes("inheritance-mapping") ? targetTrait : undefined,
     };
     setCash((current) => current - cost);
     setBreedingProjects((current) => [...current, project]);
@@ -868,7 +869,8 @@ function SpecimenPage({ specimen, plant, onSell, onToggleProtection, onBack, onP
 function BreedingPage({ specimens, researchUnlocks, projects, day, traitTargetingUnlocked, onCross }: { specimens: Specimen[]; researchUnlocks: string[]; projects: BreedingProject[]; day: number; traitTargetingUnlocked: boolean; onCross: (parentA: string, parentB: string, targetTrait?: "variegationPotential" | "stability" | "growthPotential" | "hiddenPotential") => void }) {
   const eligible = specimens.filter((item) => item.stage === "Breeding-ready" && item.health > 0 && !item.dead && !item.reservedByProjectId);
   const [parentA, setParentA] = useState(eligible[0]?.id ?? "");
-  const [parentB, setParentB] = useState(eligible.find((item) => item.id !== parentA && findSpecies(item.speciesId).latin.split(" ")[0] === (eligible[0] ? findSpecies(eligible[0].speciesId).latin.split(" ")[0] : ""))?.id ?? "");\n  const [targetTrait, setTargetTrait] = useState<"variegationPotential" | "stability" | "growthPotential" | "hiddenPotential">("variegationPotential");
+  const [parentB, setParentB] = useState(eligible.find((item) => item.id !== parentA && findSpecies(item.speciesId).latin.split(" ")[0] === (eligible[0] ? findSpecies(eligible[0].speciesId).latin.split(" ")[0] : ""))?.id ?? "");
+  const [targetTrait, setTargetTrait] = useState<"variegationPotential" | "stability" | "growthPotential" | "hiddenPotential">("variegationPotential");
   const genus = (id: string) => { const item = specimens.find((specimen) => specimen.id === id); return item ? findSpecies(item.speciesId).latin.split(" ")[0] : ""; };
   const selectedA = specimens.find((item) => item.id === parentA);
   const selectedB = specimens.find((item) => item.id === parentB);
