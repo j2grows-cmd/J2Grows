@@ -67,6 +67,7 @@ Anthurium Veitchii|Uncommon|12|Medium
 Anthurium Warocqueanum|Uncommon|13|High
 Anthurium Wendlingeri|Rare|35|Medium
 Monstera Adansonii|Common|8|High
+Monstera Deliciosa|Common|12|Medium
 Monstera Dubia|Uncommon|18|Medium
 Monstera Obliqua|Uncommon|15|High
 Monstera Pinnatipartita|Uncommon|18|Low
