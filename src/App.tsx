@@ -252,7 +252,7 @@ function App() {
         ? page === "Shop" ? document.querySelector(".shop-listing .button-primary:not(:disabled)") : navTarget("Shop")
         : tutorialStep === 2
           ? page === "Specimen Record"
-            ? Array.from(document.querySelectorAll(".detail-section")).find((element) => element.querySelector("h3")?.textContent?.includes("Propagation methods")) ?? null
+            ? Array.from(document.querySelectorAll(".detail-section")).find((element) => element.querySelector("h3")?.textContent?.includes("Propagation methods"))?.querySelector(".propagation-actions button") ?? null
             : page === "Plant Catalogue" ? cardTarget("Tutorial Demonstration") : navTarget("Plant Catalogue")
           : tutorialStep === 3
             ? page === "Greenhouse" ? document.querySelector(".season-card button") : navTarget("Greenhouse")
@@ -265,14 +265,30 @@ function App() {
     if (tutorialStep > 0) target.scrollIntoView({ block: "center", behavior: "smooth" });
     const guide = document.querySelector(".tutorial-dialog") as HTMLElement | null;
     if (guide) {
+      guide.style.position = "fixed";
+      guide.style.left = "0";
+      guide.style.right = "auto";
+      guide.style.top = "0";
+      guide.style.bottom = "auto";
       const rect = target.getBoundingClientRect();
-      const targetOnRight = rect.left + rect.width / 2 > window.innerWidth / 2;
-      const targetInLowerHalf = rect.top + rect.height / 2 > window.innerHeight / 2;
-      const left = window.innerWidth < 680 ? "12px" : "max(220px, 3vw)";
-      guide.style.left = targetOnRight ? left : "auto";
-      guide.style.right = targetOnRight ? "auto" : "clamp(16px, 3vw, 42px)";
-      guide.style.top = targetInLowerHalf ? "clamp(16px, 3vh, 34px)" : "auto";
-      guide.style.bottom = targetInLowerHalf ? "auto" : "clamp(16px, 3vh, 34px)";
+      const guideWidth = guide.offsetWidth;
+      const guideHeight = guide.offsetHeight;
+      const gap = 14;
+      const margin = 12;
+      const rightSpace = window.innerWidth - rect.right - gap;
+      const leftSpace = rect.left - gap;
+      let left = rightSpace >= guideWidth || rightSpace >= leftSpace
+        ? rect.right + gap
+        : rect.left - guideWidth - gap;
+      let top = rect.top + rect.height / 2 - guideHeight / 2;
+      if (left < margin || left + guideWidth > window.innerWidth - margin) {
+        left = Math.max(margin, Math.min(window.innerWidth - guideWidth - margin, rect.left + rect.width / 2 - guideWidth / 2));
+        const fitsBelow = rect.bottom + gap + guideHeight <= window.innerHeight - margin;
+        top = fitsBelow ? rect.bottom + gap : rect.top - guideHeight - gap;
+      }
+      top = Math.max(margin, Math.min(window.innerHeight - guideHeight - margin, top));
+      guide.style.left = `${left}px`;
+      guide.style.top = `${top}px`;
     }
     return () => target.classList.remove("tutorial-spotlight-target");
   }, [tutorialOpen, tutorialStep, page]);
