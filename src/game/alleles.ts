@@ -61,3 +61,13 @@ export function genomeFromPhenotype(profile: { variegationPotential: number; sta
     hiddenPotential: pair(profile.hiddenPotential),
   };
 }
+
+/** Apply a small heritable change to one allele while preserving diploid structure. */
+export function mutateGenomeLocus(genome: GeneticGenome, name: GeneticLocusName, random: () => number): GeneticGenome {
+  const locus = genome[name];
+  const side = random() < 0.5 ? "maternal" : "paternal";
+  const current = numericAllele(locus[side]);
+  const direction = random() < 0.5 ? -1 : 1;
+  const next = allele(current + direction);
+  return { ...genome, [name]: { ...locus, [side]: next } };
+}
