@@ -1356,6 +1356,10 @@ function FinancesPage({ cash, day, specimens, weeklyOperatingCost, onSell }: { c
         <p className="muted-copy">This is a cost-only estimate: it excludes future purchases, sales, research spending, upgrades and uncertain income. Inventory values are estimates, not guaranteed proceeds.</p>
         {monthProjection.deficit > 0 && <p className="finance-warning"><AlertTriangle size={15} /> The 30-day outlook shows a £{Math.ceil(monthProjection.deficit)} shortfall. Consider reducing optional running costs or selling eligible stock.</p>}
         {monthProjection.deficit > 0 && <div className="finance-projection"><div className="finance-projection-row"><span>Estimated sale value to cover the shortfall (10% buffer)</span><strong>{money(recovery.targetSaleValue)}</strong></div><div className="finance-projection-row"><span>Additional stock value still needed</span><strong>{money(recovery.inventoryShortfall)}</strong></div></div>}
+        {monthProjection.deficit > 0 && <div className="finance-recovery">
+          <SectionHeader title="Recovery options" subtitle="Choose individual eligible plants to sell. Protected or reserved specimens cannot be sold." />
+          {specimens.filter((specimen) => !specimen.protected && !specimen.reservedByProjectId).length ? specimens.filter((specimen) => !specimen.protected && !specimen.reservedByProjectId).map((specimen) => <div className="finance-projection-row" key={specimen.id}><span>{specimen.nickname} · estimated {money(specimen.value)}</span><button className="button button-quiet" onClick={() => onSell(specimen)}>Sell specimen</button></div>) : <p className="muted-copy">No unprotected, unreserved specimens are available to sell.</p>}
+        </div>}
       </section>
       <aside className="panel">
         <SectionHeader title="Financial safeguards" />
