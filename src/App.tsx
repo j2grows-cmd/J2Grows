@@ -42,7 +42,9 @@ const nav: { label: Page; icon: typeof Home }[] = [
 ];
 
 function money(value: number) {
-  return new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 }).format(value);
+  let compact = false;
+  try { compact = (JSON.parse(localStorage.getItem("j2grows.preferences.v1") || "{}") as Partial<UserPreferences>).compactNumbers === true; } catch { /* Use full values when preferences cannot be read. */ }
+  return new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: compact ? 1 : 0, notation: compact ? "compact" : "standard", compactDisplay: "short" }).format(value);
 }
 
 function PlantArt({ type, large = false, fallbackType = "hero", onImageStatus }: { type: string; large?: boolean; fallbackType?: string; onImageStatus?: (status: "loaded" | "fallback") => void }) {
@@ -204,7 +206,7 @@ function App() {
   const [preferences, setPreferences] = useState<UserPreferences>(() => loadPreferences());
   const [audioTestMessage, setAudioTestMessage] = useState("");
   useEffect(() => { try { localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences)); } catch { /* Settings remain active for this session if storage is unavailable. */ } }, [preferences]);
-  useEffect(() => { document.documentElement.style.setProperty("--j2g-ui-scale", String(preferences.uiScale / 100)); document.documentElement.classList.toggle("j2g-reduced-motion", preferences.reducedMotion); document.documentElement.classList.toggle("j2g-high-contrast", preferences.highContrast); document.documentElement.dataset.visualQuality = preferences.visualQuality; return () => { document.documentElement.style.removeProperty("--j2g-ui-scale"); document.documentElement.classList.remove("j2g-reduced-motion", "j2g-high-contrast"); delete document.documentElement.dataset.visualQuality; }; }, [preferences.uiScale, preferences.reducedMotion, preferences.highContrast, preferences.visualQuality]);
+  useEffect(() => { document.documentElement.style.setProperty("--j2g-ui-scale", String(preferences.uiScale / 100)); document.documentElement.style.zoom = String(preferences.uiScale / 100); document.documentElement.classList.toggle("j2g-reduced-motion", preferences.reducedMotion); document.documentElement.classList.toggle("j2g-high-contrast", preferences.highContrast); document.documentElement.dataset.visualQuality = preferences.visualQuality; return () => { document.documentElement.style.removeProperty("--j2g-ui-scale"); document.documentElement.style.removeProperty("zoom"); document.documentElement.classList.remove("j2g-reduced-motion", "j2g-high-contrast"); delete document.documentElement.dataset.visualQuality; }; }, [preferences.uiScale, preferences.reducedMotion, preferences.highContrast, preferences.visualQuality]);
   const [specimens, setSpecimens] = useState<Specimen[]>(loadedSave.specimens.map((specimen) => ({ ...specimen, genetics: specimen.genetics ?? createSpecimenGenetics(specimen.variegation) })));
   const [breedingProjects, setBreedingProjects] = useState<BreedingProject[]>(loadedSave.breedingProjects ?? []);
   const [researchUnlocks, setResearchUnlocks] = useState<string[]>(loadedSave.researchUnlocks ?? []);
@@ -562,7 +564,7 @@ function App() {
 
   function announce(message: string) {
     setNotice(message);
-    setNotificationsOpen(true);
+    if (preferences.notifications) setNotificationsOpen(true);
   }
 
   function resetGame() {
@@ -1060,7 +1062,7 @@ function App() {
         <p>Build your collection. Unlock hidden traits. Cultivate the next generation of botanical discoveries.</p>
         <div className="main-menu-actions">
           <button className="main-menu-primary" onClick={() => enterGame("Dashboard")}><Sprout size={18} /> {hasSave ? "CONTINUE" : "BEGIN YOUR JOURNEY"} <ArrowRight size={17} /></button>
-          <button className="main-menu-secondary" onClick={() => { if (!preferences.confirmNewGame || window.confirm("Start a new game? This will replace your current local save.")) { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem(SAVE_BACKUP_KEY); } catch {} window.location.reload(); } }}><Plus size={17} /> NEW GAME</button>
+          <button className="main-menu-secondary" onClick={() => { if (!preferences.confirmNewGame || window.confirm("Start a new game? This will replace your current local save.")) { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem(SAVE_BACKUP_KEY); if (preferences.showTutorial) localStorage.removeItem("j2grows.tutorial.completed.v1"); else localStorage.setItem("j2grows.tutorial.completed.v1", "true"); } catch {} window.location.reload(); } }}><Plus size={17} /> NEW GAME</button>
           <div className="main-menu-quicklinks">
             <button onClick={() => enterGame("Greenhouse")}><Leaf size={16} /> Greenhouse</button>
             <button onClick={() => enterGame("Research")}><Microscope size={16} /> Research</button>
