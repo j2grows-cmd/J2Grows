@@ -75,3 +75,11 @@ test("breeding relationship recovery rejects invalid project values but retains 
   assert.equal(result.projects[0].status, "completed");
   assert.equal(result.dropped, 2);
 });
+
+test("lineage recovery removes missing, self-referential and duplicate parent links", () => {
+  const parent = specimen({ id: "parent" });
+  const child = specimen({ id: "child", lineParentIds: ["parent", "missing", "child", "parent"] });
+  const result = normalizeBreedingProjectRelations([parent, child], []);
+  assert.deepEqual(result.specimens.find((item) => item.id === "child")?.lineParentIds, ["parent"]);
+  assert.equal(result.repaired, 1);
+});

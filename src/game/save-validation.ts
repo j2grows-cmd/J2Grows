@@ -214,6 +214,13 @@ export function normalizeBreedingProjectRelations(
       specimen.reservedByProjectId = undefined;
       repaired++;
     }
+    if (Array.isArray(specimen.lineParentIds)) {
+      const validParents = [...new Set(specimen.lineParentIds.filter((id) => id !== specimen.id && specimenById.has(id)))];
+      if (validParents.length !== specimen.lineParentIds.length || validParents.some((id, index) => id !== specimen.lineParentIds![index])) {
+        specimen.lineParentIds = validParents;
+        repaired++;
+      }
+    }
   }
   return { specimens, projects, dropped, repaired };
 }
