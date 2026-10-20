@@ -2129,3 +2129,62 @@ body{
 .main-menu-settings-action:hover,.main-menu-settings-back:hover{background:#354927}
 .main-menu-settings-back{margin-top:22px;background:linear-gradient(135deg,#b6d37d,#829f4f);color:#10150c;border-color:#b3ce7a}
 @media(max-width:560px){.main-menu-settings-row{align-items:stretch;flex-direction:column;gap:12px}.main-menu-settings-action{width:100%}.main-menu-settings{padding:22px}}
+
+
+/* Five-category pre-game settings centre */
+.main-menu-settings-expanded{width:min(960px,100%);max-height:min(88vh,900px);overflow:auto}
+.settings-workspace{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;padding-top:22px}
+.settings-tabs{display:flex;flex-direction:column;gap:6px}
+.settings-tabs button{display:flex;align-items:center;gap:11px;width:100%;padding:12px 11px;border:1px solid transparent;border-radius:9px;background:transparent;color:#c7cfbb;text-align:left;font:inherit;font-size:13px;cursor:pointer}
+.settings-tabs button span{flex:1}
+.settings-tabs button svg:first-child{color:#a8c878}
+.settings-tabs button svg:last-child{opacity:.45}
+.settings-tabs button:hover{background:rgba(151,184,100,.09);border-color:#34442a}
+.settings-tabs button.active{background:linear-gradient(100deg,rgba(151,184,100,.2),rgba(151,184,100,.06));border-color:rgba(176,207,124,.42);color:#f0f3e7}
+.settings-tabs button.active svg:last-child{opacity:1;color:#c0d98d}
+.settings-tab-content{min-width:0;min-height:330px;padding:0 0 8px}
+.settings-category-title{padding:0 0 14px;border-bottom:1px solid rgba(201,173,104,.16);margin-bottom:4px}
+.settings-category-title h3{margin:0 0 6px;color:#f1f0e5;font:500 24px/1.2 "Playfair Display",Georgia,serif}
+.settings-category-title p{margin:0;color:#aeb8a2;font-size:13px;line-height:1.5}
+.preference-row{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:17px 0;border-bottom:1px solid rgba(201,173,104,.13)}
+.preference-row>div:first-child{min-width:0;display:flex;flex-direction:column;gap:5px}
+.preference-row strong,.preference-slider strong{font-size:13px;color:#e9ecdf;font-weight:650}
+.preference-row small,.preference-slider small{display:block;color:#aab4a0;font-size:12px;line-height:1.45}
+.preference-row select{min-width:125px;padding:9px 11px;border:1px solid #4a5b3b;border-radius:8px;background:#11190f;color:#e7ecd9;font:inherit;font-size:12px}
+.preference-toggle{position:relative;flex:0 0 42px;width:42px;height:24px;padding:3px;border:1px solid #4b5740;border-radius:99px;background:#20281c;cursor:pointer;transition:background .18s,border-color .18s}
+.preference-toggle span{display:block;width:16px;height:16px;border-radius:50%;background:#b9c0ae;transition:transform .18s}
+.preference-toggle.on{background:#718b48;border-color:#b3ce7a}
+.preference-toggle.on span{transform:translateX(17px);background:#fff}
+.preference-slider{display:grid;grid-template-columns:minmax(115px,1fr) minmax(100px,1.15fr) 44px;align-items:center;gap:14px;padding:17px 0;border-bottom:1px solid rgba(201,173,104,.13)}
+.preference-slider>span{display:flex;flex-direction:column;gap:5px}
+.preference-slider input[type=range]{width:100%;accent-color:#a9c876;cursor:pointer}
+.preference-slider output{color:#d7e6bb;font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+.settings-audio-test{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:18px}
+.settings-audio-test>span{flex:1;min-width:180px;color:#aeb8a2;font-size:12px;line-height:1.5}
+.settings-note{margin:15px 0 0;color:#919d88;font-size:11px;line-height:1.6}
+.settings-live-status{padding:7px 10px;border:1px solid rgba(173,202,125,.28);border-radius:7px;background:rgba(151,184,100,.08);color:#c6d9a7;font-size:11px;white-space:nowrap}
+.main-menu-settings-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:20px;padding-top:17px;border-top:1px solid rgba(201,173,104,.2)}
+.main-menu-settings-footer>span{display:flex;align-items:center;gap:7px;color:#a8bf83;font-size:11px}
+.main-menu-settings-footer .main-menu-settings-back{margin-top:0}
+.j2g-reduced-motion *, .j2g-reduced-motion *:before, .j2g-reduced-motion *:after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+.j2g-high-contrast{--text:#fff;--muted:#e0e7d8}
+.j2g-high-contrast .app-shell{color:#fff}
+.j2g-high-contrast .main-menu-settings{border-color:#d5edaa}
+.j2g-high-contrast .settings-tabs button{color:#f2f5ec}
+.j2g-high-contrast .settings-note,.j2g-high-contrast .preference-row small,.j2g-high-contrast .preference-slider small{color:#d4ddcb}
+html[data-visual-quality="balanced"] .main-menu-screen:before{opacity:.7}
+html[data-visual-quality="balanced"] .main-menu-vignette{box-shadow:inset 0 0 100px 20px rgba(3,7,4,.48)}
+html[data-visual-quality="low"] *,html[data-visual-quality="low"] *:before,html[data-visual-quality="low"] *:after{backdrop-filter:none!important;box-shadow:none!important;animation:none!important;transition:none!important}
+html[data-visual-quality="low"] .main-menu-screen:before{opacity:.35}
+@media(max-width:720px){
+ .main-menu-settings-expanded{max-height:92vh;padding:20px}
+ .settings-workspace{grid-template-columns:1fr;gap:14px}
+ .settings-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+ .settings-tabs button{padding:10px 8px;font-size:11px;gap:7px}
+ .settings-tabs button svg:last-child{display:none}
+ .settings-tab-content{min-height:0}
+ .preference-slider{grid-template-columns:1fr 40px;gap:8px}
+ .preference-slider input[type=range]{grid-column:1;grid-row:2}
+ .preference-slider output{grid-column:2;grid-row:1}
+ .main-menu-settings-footer{align-items:flex-start;flex-direction:column}
+}
