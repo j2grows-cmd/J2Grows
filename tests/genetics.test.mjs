@@ -4,7 +4,7 @@ import { SPECIES_ECONOMY, getSpeciesEconomy, STARTING_CASH } from "../src/game/c
 import { species } from "../src/data.ts";
 import { calculateHealthFactor, calculateMaturityFactor, calculateSpecimenValue, environmentalSuitability, getShopAvailability, growVariegation, inheritGenetics, observePlant, analyseGenetics } from "../src/game/genetics.ts";
 
-test("catalogue has unique species and positive prices and positive prices", () => {
+test("catalogue has unique species and positive prices", () => {
   assert.ok(SPECIES_ECONOMY.length > 0);
   assert.ok(species.length > 0, "offline catalogue should contain species");
   assert.equal(new Set(species.map((plant) => plant.id)).size, species.length, "offline species IDs must be unique");
