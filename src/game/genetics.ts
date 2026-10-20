@@ -28,7 +28,7 @@ export type PlantEnvironment = {
 
 export type MutationCategory = "colour" | "morphology" | "growth" | "novelty";
 export type MutationInheritance = "stable" | "unstable" | "mixed";
-export type MutationOrigin = "growth" | "propagation" | "breeding" | "analysis" | "legacy";
+export type MutationOrigin = "latent" | "growth" | "propagation" | "breeding" | "analysis" | "legacy";
 export type TissueDistribution = "sectoral" | "meristematic" | "whole-plant" | "unknown";
 
 export type PlantMutation = {
@@ -83,12 +83,17 @@ export function createSpecimenGenetics(expression = 0, random: () => number = Ma
   genetics.stability = phenotype.stability;
   genetics.growthPotential = phenotype.growthPotential;
   genetics.hiddenPotential = phenotype.hiddenPotential;
+  // Carriers receive a latent mutation record at creation; analysis reveals it later.
+  const latentMutation = genetics.mutationGenePresent
+    ? createMutation(random, { origin: "latent", tissueDistribution: "unknown" })
+    : undefined;
+  if (latentMutation) genetics.mutationIds = [...new Set([...genetics.mutationIds, latentMutation.id])];
   return {
     genetics,
     expression: clamp(expression),
     environment: { ...DEFAULT_ENVIRONMENT },
     observations: expression > 0 ? [clamp(expression)] : [],
-    research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: [] },
+    research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: latentMutation ? [latentMutation] : [] },
   };
 }
 
