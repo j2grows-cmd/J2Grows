@@ -95,7 +95,7 @@ export function normalizeSpecimens(value: unknown): SpecimenRecovery {
 
 export function checkSaveEnvelope(value: unknown): SaveEnvelopeCheck {
   if (!isRecord(value)) return { valid: false, reason: "Save data is not an object." };
-  if (![1, 2, 3, 4, 5, 6, 7, 8].includes(Number(value.version))) return { valid: false, reason: "Save version is missing or unsupported." };
+  if (![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(Number(value.version))) return { valid: false, reason: "Save version is missing or unsupported." };
   if (!Array.isArray(value.specimens)) return { valid: false, reason: "Specimen collection is missing or malformed." };
   for (const key of ["cash", "research", "day", "savedAt"]) if (typeof value[key] !== "number" || !Number.isFinite(value[key])) return { valid: false, reason: `Save field '${key}' is missing or invalid.` };
   return { valid: true };
@@ -112,7 +112,7 @@ export function normalizeManualSaveSlots(value: unknown): Record<string, unknown
       const projects = Array.isArray(candidate.breedingProjects) ? candidate.breedingProjects.filter((item: unknown) => isRecord(item) && typeof item.id === "string" && typeof item.parentAId === "string" && typeof item.parentBId === "string" && typeof item.startedDay === "number" && Number.isFinite(item.startedDay) && typeof item.completesOnDay === "number" && Number.isFinite(item.completesOnDay) && typeof item.cost === "number" && Number.isFinite(item.cost) && ["active", "completed", "cancelled"].includes(String(item.status)) && typeof item.lineId === "string" && typeof item.failureChance === "number" && Number.isFinite(item.failureChance)) : [];
       const env = isRecord(candidate.greenhouseEnvironment) ? candidate.greenhouseEnvironment : {};
       const envValue = (field: string, fallback: number) => finite(env[field], fallback, 0, 100);
-      slots[key] = { ...candidate, version: 8, specimens: recovered.specimens, breedingProjects: projects,
+      slots[key] = { ...candidate, version: 9, simulationSeed: typeof candidate.simulationSeed === "string" && candidate.simulationSeed.length > 0 ? candidate.simulationSeed : `migrated-${String(candidate.savedAt)}-${String(candidate.day)}`, offlineProgressEnabled: false, specimens: recovered.specimens, breedingProjects: projects,
         cash: finite(candidate.cash, 0, 0, 1_000_000_000),
         research: finite(candidate.research, 0, 0, 1_000_000_000),
         day: finite(candidate.day, 1, 1, 1_000_000_000, true),

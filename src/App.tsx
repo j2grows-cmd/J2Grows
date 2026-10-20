@@ -9,9 +9,9 @@ import {
 } from "lucide-react";
 import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeSpecies, type Species, type Specimen } from "./data";
 import { createUniqueSpecimenId } from "./game/specimen-id.ts";
+import { createEventRandom } from "./game/random.ts";
 import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, normalizeFacilityLevels, propagationDaysRequired, weeklyFacilityOperatingCost, type FacilityLevels, type FacilityName } from "./game/facilities.ts";
 import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, startStaffTraining, STAFF_TRAINING_COST, weeklyStaffOperatingCost, type StaffState } from "./game/staff.ts";
-import { getOfflineProgressDays } from "./game/offline-progress.ts";
 import { getFallbackArtworkType } from "./game/plant-artwork.ts";
 import { canCreateOffset } from "./game/propagation-eligibility.ts";
 import { checkSaveEnvelope, isRecord, normalizeManualSaveSlots, normalizeSpecimens } from "./game/save-validation.ts";
@@ -67,7 +67,8 @@ function Metric({ label, value, detail, icon: Icon, tone = "green" }: { label: s
 }
 
 type GameSave = {
-  version: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  version: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+  simulationSeed: string;
   specimens: Specimen[];
   breedingProjects: BreedingProject[];
   cash: number;
@@ -121,7 +122,7 @@ function backupRawSave(raw: string, reason: string) {
 }
 
 function freshGameSave(recoveryNotice = ""): GameSave & { offlineDays: number; recoveryNotice: string } {
-  return { version: 8, specimens: [], breedingProjects: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, greenhouseEnvironment: { ...DEFAULT_ENVIRONMENT }, facilityLevels: { propagationBench: 0, environmentalController: 0 }, staffState: { ...DEFAULT_STAFF_STATE }, offlineProgressEnabled: true, offlineDays: 0, recoveryNotice };
+  return { version: 9, simulationSeed: `j2grows-${Date.now().toString(36)}`, specimens: [], breedingProjects: [], cash: STARTING_CASH, research: 0, day: 1, projectStarted: false, savedAt: Date.now(), analysisEquipmentLevel: 0, greenhouseEnvironment: { ...DEFAULT_ENVIRONMENT }, facilityLevels: { propagationBench: 0, environmentalController: 0 }, staffState: { ...DEFAULT_STAFF_STATE }, offlineProgressEnabled: false, offlineDays: 0, recoveryNotice };
 }
 
 function loadGameSave(): GameSave & { offlineDays: number; recoveryNotice: string } {
@@ -143,8 +144,9 @@ function loadGameSave(): GameSave & { offlineDays: number; recoveryNotice: strin
     const recovered = normalizeSpecimens(parsed.specimens);
     const validProjects = Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects.filter((item) => isRecord(item) && typeof item.id === "string" && typeof item.parentAId === "string" && typeof item.parentBId === "string" && typeof item.startedDay === "number" && typeof item.completesOnDay === "number" && typeof item.cost === "number" && ["active", "completed", "cancelled"].includes(String(item.status)) && typeof item.lineId === "string" && typeof item.failureChance === "number") : [];
     const droppedProjects = Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects.length - validProjects.length : 0;
-    const offlineProgressEnabled = parsed.offlineProgressEnabled !== false;
-    const offlineDays = getOfflineProgressDays(parsed.savedAt as number, Date.now(), offlineProgressEnabled);
+    const offlineProgressEnabled = false;
+    const offlineDays = 0;
+    const simulationSeed = typeof parsed.simulationSeed === "string" && parsed.simulationSeed.length > 0 ? parsed.simulationSeed : `migrated-${String(parsed.savedAt)}-${String(parsed.day)}`;
     const savedFacilityLevels = normalizeFacilityLevels(parsed.facilityLevels as unknown as Partial<FacilityLevels> | null | undefined);
     const savedStaffState = normalizeStaffState(parsed.staffState as unknown as Partial<StaffState> | null | undefined);
     const noticeParts: string[] = [];
@@ -166,7 +168,8 @@ function loadGameSave(): GameSave & { offlineDays: number; recoveryNotice: strin
     const projectStarted = Boolean(parsed.projectStarted && analysisTargetSpecimenId && analysisStartedDay !== undefined);
     const recoveryNotice = noticeParts.length ? `Save recovery completed: ${noticeParts.join("; ")}. A backup of the original save was retained in this browser.` : "";
     return {
-      version: 8,
+      version: 9,
+      simulationSeed,
       specimens: recovered.specimens,
       breedingProjects: validProjects as unknown as BreedingProject[],
       researchUnlocks: Array.isArray(parsed.researchUnlocks) ? parsed.researchUnlocks.filter((item): item is string => typeof item === "string") : [],
@@ -217,8 +220,7 @@ function App() {
   const [greenhouseEnvironment, setGreenhouseEnvironment] = useState<PlantEnvironment>(loadedSave.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
   const [facilityLevels, setFacilityLevels] = useState<FacilityLevels>(loadedSave.facilityLevels ?? { propagationBench: 0, environmentalController: 0 });
   const [staffState, setStaffState] = useState<StaffState>(normalizeStaffState(loadedSave.staffState));
-  const [offlineProgressEnabled, setOfflineProgressEnabled] = useState(loadedSave.offlineProgressEnabled !== false);
-  const [offlineDaysRemaining, setOfflineDaysRemaining] = useState(loadedSave.offlineDays);
+  const [simulationSeed, setSimulationSeed] = useState(loadedSave.simulationSeed);
   const [saveSlots, setSaveSlots] = useState<Record<string, GameSave | null>>(() => {
     const slotsKey = "j2grows.manual-save-slots.v1";
     try {
@@ -510,29 +512,20 @@ function App() {
 
   useEffect(() => {
     try {
-      const save: GameSave = { version: 8, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, offlineProgressEnabled, savedAt: Date.now() };
+      const save: GameSave = { version: 9, simulationSeed, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, offlineProgressEnabled: false, savedAt: Date.now() };
       localStorage.setItem(SAVE_KEY, JSON.stringify(save));
     } catch {
       setNotice("Local save unavailable. Your progress may not persist in this browser.");
     }
-  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, offlineProgressEnabled]);
+  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState]);
 
   useEffect(() => {
     try { localStorage.setItem("j2grows.manual-save-slots.v1", JSON.stringify(saveSlots)); }
     catch { setNotice("Manual save slots could not be written to browser storage."); }
   }, [saveSlots]);
 
-  function toggleOfflineProgress() {
-    setOfflineProgressEnabled((enabled) => {
-      const nextEnabled = !enabled;
-      if (!nextEnabled) setOfflineDaysRemaining(0);
-      announce(nextEnabled ? "Offline progress enabled: one in-game day per real-life hour, capped at 14 days." : "Offline progress disabled. No days will pass while you are away.");
-      return nextEnabled;
-    });
-  }
-
   function saveToSlot(slot: string) {
-    const save: GameSave = { version: 8, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, offlineProgressEnabled, savedAt: Date.now() };
+    const save: GameSave = { version: 9, simulationSeed, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, offlineProgressEnabled: false, savedAt: Date.now() };
     setSaveSlots((current) => ({ ...current, [slot]: save }));
     announce(`Saved the current game to slot ${slot}.`);
   }
@@ -548,8 +541,7 @@ function App() {
     setGreenhouseEnvironment(save.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
     setFacilityLevels(normalizeFacilityLevels(save.facilityLevels));
     setStaffState(normalizeStaffState(save.staffState));
-    setOfflineProgressEnabled(save.offlineProgressEnabled !== false);
-    setOfflineDaysRemaining(0);
+    setSimulationSeed(typeof save.simulationSeed === "string" ? save.simulationSeed : `migrated-${String(save.savedAt)}-${String(save.day)}`);
     setSelected(save.specimens[0]?.id ?? "");
     announce(`Loaded save slot ${slot}.`);
   }
@@ -586,8 +578,7 @@ function App() {
     setAnalysisEquipmentLevel(0);
     setFacilityLevels({ propagationBench: 0, environmentalController: 0 });
     setStaffState({ ...DEFAULT_STAFF_STATE });
-    setOfflineProgressEnabled(true);
-    setOfflineDaysRemaining(0);
+    setSimulationSeed(`j2grows-${Date.now().toString(36)}`);
     setSelected("");
     setInstituteName("");
     setInstituteNameDraft("");
@@ -607,6 +598,7 @@ function App() {
     const nextStaffState = advanceStaffDay(staffState);
     let mutationMessage = "";
     const nextSpecimens = specimens.map((specimen) => {
+      const random = createEventRandom(simulationSeed, `day:${nextDay}:specimen:${specimen.id}`);
       if (specimen.dead || specimen.health <= 0) return { ...specimen, health: 0, dead: true, value: 0 };
       const simulationEnvironment = applyEnvironmentalController(greenhouseEnvironment, facilityLevels.environmentalController);
       const staffCondition = effectiveStaffCareCondition(simulationEnvironment, nextStaffState);
@@ -614,15 +606,15 @@ function App() {
       const health = Math.max(0, Math.min(100, environmentalMean < 35 ? specimen.health - 5 : environmentalMean < 50 ? specimen.health - 2 : environmentalMean >= 75 && specimen.health < 100 ? specimen.health + 2 : specimen.health));
       const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation);
       const environment = { ...simulationEnvironment, health };
-      const growth = growVariegation(record.genetics, environment, specimen.variegation);
+      const growth = growVariegation(record.genetics, environment, specimen.variegation, random);
       let nextRecord: SpecimenGenetics = { ...record, environment, expression: growth.expression };
       let nextVariegation = growth.expression;
       let discovered = specimen.discovered;
-      if (mutationOccurs("growth", environment, Math.floor(research / 50), analysisEquipmentLevel * 0.001)) {
-        const mutation = createMutation();
+      if (mutationOccurs("growth", environment, Math.floor(research / 50), analysisEquipmentLevel * 0.001, random)) {
+        const mutation = createMutation(random);
         mutation.detected = false;
         nextRecord = { ...nextRecord, genetics: { ...nextRecord.genetics, mutationIds: [...new Set([...nextRecord.genetics.mutationIds, mutation.id])] }, research: { ...nextRecord.research, mutations: [...nextRecord.research.mutations, mutation] } };
-        if (mutation.category === "colour") { nextVariegation = Math.min(100, Math.max(nextVariegation, 35 + Math.round(Math.random() * 35))); nextRecord = { ...nextRecord, genetics: { ...nextRecord.genetics, variegationPotential: Math.max(nextRecord.genetics.variegationPotential, nextVariegation) } }; }
+        if (mutation.category === "colour") { nextVariegation = Math.min(100, Math.max(nextVariegation, 35 + Math.round(random() * 35))); nextRecord = { ...nextRecord, genetics: { ...nextRecord.genetics, variegationPotential: Math.max(nextRecord.genetics.variegationPotential, nextVariegation) } }; }
         mutationMessage += ` A potential ${mutation.category} mutation occurred in ${specimen.nickname}; record observations to confirm it.`;
       }
       let propagation = specimen.propagation;
@@ -698,6 +690,7 @@ function App() {
     const finishedIds = new Set<string>();
     const completedChildren: Specimen[] = [];
     const completedProjects = activeProjects.map((project) => {
+      const random = createEventRandom(simulationSeed, `day:${nextDay}:breeding:${project.id}`);
       if (project.completesOnDay > nextDay) return project;
       const parentA = nextSpecimens.find((item) => item.id === project.parentAId);
       const parentB = nextSpecimens.find((item) => item.id === project.parentBId);
@@ -706,13 +699,13 @@ function App() {
         mutationMessage += ` Breeding project ${project.id} was cancelled because a parent died; its cost was lost.`;
         return { ...project, status: "cancelled" as const };
       }
-      if (Math.random() < project.failureChance) {
+      if (random() < project.failureChance) {
         mutationMessage += ` Breeding project ${project.id} failed; its cost was lost, but both parents survived.`;
         return { ...project, status: "cancelled" as const };
       }
       const recordA = parentA.genetics ?? createSpecimenGenetics(parentA.variegation);
       const recordB = parentB.genetics ?? createSpecimenGenetics(parentB.variegation);
-      const inherited = applyTraitTargeting(inheritTraits(recordA.genetics, recordB.genetics), recordA.genetics, recordB.genetics, project.targetTrait);
+      const inherited = applyTraitTargeting(inheritTraits(recordA.genetics, recordB.genetics, random), recordA.genetics, recordB.genetics, project.targetTrait, random);
       const generation = Math.max(parentA.generation ?? 0, parentB.generation ?? 0) + 1;
       const inheritedMutationIds = inherited.mutationIds;
       const stabilityGenerations = Object.fromEntries(inheritedMutationIds.map((mutationId) => [mutationId, Math.max(parentA.stabilityGenerations?.[mutationId] ?? 0, parentB.stabilityGenerations?.[mutationId] ?? 0) + 1]));
@@ -729,8 +722,8 @@ function App() {
         value: 0, protected: false, variegation: childVariation, discovered: false,
         genetics: { ...createSpecimenGenetics(childVariation), genetics: inherited, research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: stableMutationIds.length ? ["multi-generation-stability"] : [], mutations: inheritedMutationRecords } },
       };
-      if (mutationOccurs("breeding", child.genetics!.environment, researchUnlocks.includes("mutation-screening") ? 2 : 0, researchUnlocks.includes("mutation-screening") ? 0.01 : 0)) {
-        const mutation = createMutation();
+      if (mutationOccurs("breeding", child.genetics!.environment, researchUnlocks.includes("mutation-screening") ? 2 : 0, researchUnlocks.includes("mutation-screening") ? 0.01 : 0, random)) {
+        const mutation = createMutation(random);
         mutation.detected = false;
         child.genetics = { ...child.genetics!, genetics: { ...child.genetics!.genetics, mutationIds: [...new Set([...child.genetics!.genetics.mutationIds, mutation.id])] }, research: { ...child.genetics!.research, mutations: [...child.genetics!.research.mutations, mutation] } };
         mutationMessage += ` A potential mutation appeared in ${child.nickname}; recorded evidence is needed to confirm it.`;
@@ -739,7 +732,7 @@ function App() {
       completedChildren.push(child);
       if (researchUnlocks.includes("batch-breeding")) {
         for (let batchIndex = 2; batchIndex <= 3; batchIndex += 1) {
-          const batchProfile = applyTraitTargeting(inheritTraits(recordA.genetics, recordB.genetics), recordA.genetics, recordB.genetics, project.targetTrait);
+          const batchProfile = applyTraitTargeting(inheritTraits(recordA.genetics, recordB.genetics, random), recordA.genetics, recordB.genetics, project.targetTrait, random);
           const batchChild: Specimen = {
             ...child,
             id: createUniqueSpecimenId([...nextSpecimens, ...completedChildren].map((item) => item.id)),
@@ -802,20 +795,6 @@ function App() {
     announce(`Day ${nextDay}: plant growth and conditions were processed. Research comes from recorded events, not time alone.${mutationMessage}`);
     return finalSpecimens;
   }
-
-  // Offline catch-up calls the exact same daily simulation as normal play.
-  // Process one queued day per render so each iteration sees the previous day's state.
-  useEffect(() => {
-    if (!offlineProgressEnabled || offlineDaysRemaining <= 0) return;
-    advanceDay();
-    setOfflineDaysRemaining((remaining) => Math.max(0, remaining - 1));
-  }, [offlineProgressEnabled, offlineDaysRemaining, day, specimens, greenhouseEnvironment, breedingProjects, research, analysisEquipmentLevel, researchUnlocks, projectStarted, facilityLevels, staffState]);
-
-  useEffect(() => {
-    if (offlineProgressEnabled && offlineDaysRemaining === 0 && loadedSave.offlineDays > 0) {
-      announce(`Welcome back. ${loadedSave.offlineDays} simulated day(s) of offline progress applied (maximum 14 days).`);
-    }
-  }, [offlineProgressEnabled, offlineDaysRemaining, loadedSave.offlineDays]);
 
   function observeSelectedSpecimen() {
     if (!activeSpecimen) return;
@@ -1105,8 +1084,8 @@ function App() {
               </>}
               {settingsTab==="Data & System" && <><div className="settings-category-title"><h3>Data & System</h3><p>Manage local preferences and keep a copy of your current save.</p></div>
                 <div className="preference-row"><div><strong>Local save</strong><small>Game progress is stored in this browser, not synced between devices.</small></div><span className="settings-live-status">Autosave enabled</span></div>
-                <div className="preference-row"><div><strong>Export save backup</strong><small>Download your current game, manual save slots and preferences to a portable JSON file.</small></div><button className="main-menu-settings-action" onClick={()=>{try{const save:GameSave={version:8,specimens,breedingProjects,cash,research,day,projectStarted,analysisTargetSpecimenId,analysisStartedDay,analysisEquipmentLevel,greenhouseEnvironment,researchUnlocks,facilityLevels,staffState,offlineProgressEnabled,savedAt:Date.now()};const payload={format:"j2grows-save-backup",formatVersion:1,exportedAt:new Date().toISOString(),autosave:save,manualSlots:saveSlots,preferences,instituteName,tutorialCompleted:localStorage.getItem("j2grows.tutorial.completed.v1")==="true"};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="j2grows-save-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setAudioTestMessage("Save backup exported. Keep the JSON file somewhere safe.");}catch{setAudioTestMessage("Could not export save data from this browser.");}}}><Database size={15}/> Export backup</button></div>
-                <div className="preference-row"><div><strong>Import save backup</strong><small>Restore a J2Grows JSON backup. This replaces the current game and browser save slots.</small></div><label className="main-menu-settings-action import-save-label"><input type="file" accept=".json,application/json" onChange={async e=>{const input=e.currentTarget;const file=input.files?.[0];if(!file)return;try{const parsed:unknown=JSON.parse(await file.text());const envelope=isRecord(parsed)&&parsed.format==="j2grows-save-backup"?parsed.autosave:parsed;const check=checkSaveEnvelope(envelope);if(!check.valid||!isRecord(envelope))throw new Error(check.reason||"Unsupported save file.");const recovered=normalizeSpecimens(envelope.specimens);if(!Array.isArray(envelope.specimens)||recovered.dropped>0||recovered.specimens.length!==envelope.specimens.length)throw new Error("The backup contains invalid or duplicate specimens. Your current save has not been changed.");const projects=Array.isArray(envelope.breedingProjects)?envelope.breedingProjects.filter((item:unknown)=>isRecord(item)&&typeof item.id==="string"&&typeof item.parentAId==="string"&&typeof item.parentBId==="string"&&typeof item.startedDay==="number"&&typeof item.completesOnDay==="number"&&typeof item.cost==="number"&&["active","completed","cancelled"].includes(String(item.status))&&typeof item.lineId==="string"&&typeof item.failureChance==="number"):[];if(!window.confirm("Import this backup and replace the current game save? Export a backup of your current game first if you want to keep it."))return;const save:GameSave={version:8,specimens:recovered.specimens.map(item=>({...item,genetics:item.genetics??createSpecimenGenetics(item.variegation)})),breedingProjects:projects as BreedingProject[],cash:Math.max(0,Math.min(1_000_000_000,Number(envelope.cash))),research:Math.max(0,Math.min(1_000_000_000,Number(envelope.research))),day:Math.max(1,Math.floor(Number(envelope.day))),projectStarted:Boolean(envelope.projectStarted),analysisTargetSpecimenId:typeof envelope.analysisTargetSpecimenId==="string"?envelope.analysisTargetSpecimenId:undefined,analysisStartedDay:typeof envelope.analysisStartedDay==="number"?envelope.analysisStartedDay:undefined,analysisEquipmentLevel:Math.max(0,Math.min(3,Math.floor(Number(envelope.analysisEquipmentLevel)||0))),greenhouseEnvironment:isRecord(envelope.greenhouseEnvironment)?envelope.greenhouseEnvironment as unknown as PlantEnvironment:{...DEFAULT_ENVIRONMENT},researchUnlocks:Array.isArray(envelope.researchUnlocks)?envelope.researchUnlocks.filter((x:unknown):x is string=>typeof x==="string"):[],facilityLevels:normalizeFacilityLevels(isRecord(envelope.facilityLevels)?envelope.facilityLevels as unknown as Partial<FacilityLevels>:undefined),staffState:normalizeStaffState(isRecord(envelope.staffState)?envelope.staffState as unknown as Partial<StaffState>:undefined),offlineProgressEnabled:envelope.offlineProgressEnabled!==false,savedAt:Date.now()};if(!Number.isFinite(save.cash)||!Number.isFinite(save.research)||!Number.isFinite(save.day))throw new Error("The backup's economy or day fields are invalid.");const storageKeys=[SAVE_KEY,"j2grows.manual-save-slots.v1",PREFERENCES_KEY,"j2grows.institute.name.v1","j2grows.tutorial.completed.v1"];const previous=new Map(storageKeys.map(key=>[key,localStorage.getItem(key)]));try{const updates=new Map<string,string>([[SAVE_KEY,JSON.stringify(save)]]);if(isRecord(parsed)&&parsed.format==="j2grows-save-backup"){if(parsed.formatVersion!==1)throw new Error("This backup version is not supported.");if(isRecord(parsed.manualSlots))updates.set("j2grows.manual-save-slots.v1",JSON.stringify(normalizeManualSaveSlots(parsed.manualSlots)));if(isRecord(parsed.preferences)){const imported=parsed.preferences;const clean:UserPreferences={masterVolume:clampPreference(imported.masterVolume,DEFAULT_PREFERENCES.masterVolume,0,100),musicVolume:clampPreference(imported.musicVolume,DEFAULT_PREFERENCES.musicVolume,0,100),effectsVolume:clampPreference(imported.effectsVolume,DEFAULT_PREFERENCES.effectsVolume,0,100),muted:typeof imported.muted==="boolean"?imported.muted:DEFAULT_PREFERENCES.muted,visualQuality:["high","balanced","low"].includes(String(imported.visualQuality))?imported.visualQuality as UserPreferences["visualQuality"]:DEFAULT_PREFERENCES.visualQuality,uiScale:clampPreference(imported.uiScale,DEFAULT_PREFERENCES.uiScale,80,120),reducedMotion:typeof imported.reducedMotion==="boolean"?imported.reducedMotion:DEFAULT_PREFERENCES.reducedMotion,highContrast:typeof imported.highContrast==="boolean"?imported.highContrast:DEFAULT_PREFERENCES.highContrast,showTutorial:typeof imported.showTutorial==="boolean"?imported.showTutorial:DEFAULT_PREFERENCES.showTutorial,confirmNewGame:typeof imported.confirmNewGame==="boolean"?imported.confirmNewGame:DEFAULT_PREFERENCES.confirmNewGame,compactNumbers:typeof imported.compactNumbers==="boolean"?imported.compactNumbers:DEFAULT_PREFERENCES.compactNumbers,notifications:typeof imported.notifications==="boolean"?imported.notifications:DEFAULT_PREFERENCES.notifications};updates.set(PREFERENCES_KEY,JSON.stringify(clean));}if(typeof parsed.instituteName==="string")updates.set("j2grows.institute.name.v1",parsed.instituteName.slice(0,80));if(parsed.tutorialCompleted===true||parsed.tutorialCompleted===false)updates.set("j2grows.tutorial.completed.v1",parsed.tutorialCompleted?"true":"false");}const current=previous.get(SAVE_KEY);if(current)backupRawSave(current,"Before importing a save backup.");for(const [key,value] of updates)localStorage.setItem(key,value);setAudioTestMessage("Backup imported successfully. Reloading the game with the restored save…");window.location.reload();}catch(storageError){for(const [key,value] of previous){try{if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value);}catch{/* Best-effort rollback if storage itself is unavailable. */}}if(storageError instanceof Error&&storageError.message==="This backup version is not supported.")throw storageError;throw new Error("Browser storage could not complete the import. Previous values were restored where possible.");}}catch(err){setAudioTestMessage(err instanceof Error?err.message:"Could not import this save file.");}finally{input.value="";}}}/><Database size={15}/> Choose backup file</label></div>
+                <div className="preference-row"><div><strong>Export save backup</strong><small>Download your current game, manual save slots and preferences to a portable JSON file.</small></div><button className="main-menu-settings-action" onClick={()=>{try{const save:GameSave={version:9,simulationSeed,specimens,breedingProjects,cash,research,day,projectStarted,analysisTargetSpecimenId,analysisStartedDay,analysisEquipmentLevel,greenhouseEnvironment,researchUnlocks,facilityLevels,staffState,offlineProgressEnabled:false,savedAt:Date.now()};const payload={format:"j2grows-save-backup",formatVersion:1,exportedAt:new Date().toISOString(),autosave:save,manualSlots:saveSlots,preferences,instituteName,tutorialCompleted:localStorage.getItem("j2grows.tutorial.completed.v1")==="true"};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="j2grows-save-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setAudioTestMessage("Save backup exported. Keep the JSON file somewhere safe.");}catch{setAudioTestMessage("Could not export save data from this browser.");}}}><Database size={15}/> Export backup</button></div>
+                <div className="preference-row"><div><strong>Import save backup</strong><small>Restore a J2Grows JSON backup. This replaces the current game and browser save slots.</small></div><label className="main-menu-settings-action import-save-label"><input type="file" accept=".json,application/json" onChange={async e=>{const input=e.currentTarget;const file=input.files?.[0];if(!file)return;try{const parsed:unknown=JSON.parse(await file.text());const envelope=isRecord(parsed)&&parsed.format==="j2grows-save-backup"?parsed.autosave:parsed;const check=checkSaveEnvelope(envelope);if(!check.valid||!isRecord(envelope))throw new Error(check.reason||"Unsupported save file.");const recovered=normalizeSpecimens(envelope.specimens);if(!Array.isArray(envelope.specimens)||recovered.dropped>0||recovered.specimens.length!==envelope.specimens.length)throw new Error("The backup contains invalid or duplicate specimens. Your current save has not been changed.");const projects=Array.isArray(envelope.breedingProjects)?envelope.breedingProjects.filter((item:unknown)=>isRecord(item)&&typeof item.id==="string"&&typeof item.parentAId==="string"&&typeof item.parentBId==="string"&&typeof item.startedDay==="number"&&typeof item.completesOnDay==="number"&&typeof item.cost==="number"&&["active","completed","cancelled"].includes(String(item.status))&&typeof item.lineId==="string"&&typeof item.failureChance==="number"):[];if(!window.confirm("Import this backup and replace the current game save? Export a backup of your current game first if you want to keep it."))return;const save:GameSave={version:9,simulationSeed:typeof envelope.simulationSeed==="string"&&envelope.simulationSeed.length>0?envelope.simulationSeed:`migrated-${String(envelope.savedAt)}-${String(envelope.day)}`,specimens:recovered.specimens.map(item=>({...item,genetics:item.genetics??createSpecimenGenetics(item.variegation)})),breedingProjects:projects as BreedingProject[],cash:Math.max(0,Math.min(1_000_000_000,Number(envelope.cash))),research:Math.max(0,Math.min(1_000_000_000,Number(envelope.research))),day:Math.max(1,Math.floor(Number(envelope.day))),projectStarted:Boolean(envelope.projectStarted),analysisTargetSpecimenId:typeof envelope.analysisTargetSpecimenId==="string"?envelope.analysisTargetSpecimenId:undefined,analysisStartedDay:typeof envelope.analysisStartedDay==="number"?envelope.analysisStartedDay:undefined,analysisEquipmentLevel:Math.max(0,Math.min(3,Math.floor(Number(envelope.analysisEquipmentLevel)||0))),greenhouseEnvironment:isRecord(envelope.greenhouseEnvironment)?envelope.greenhouseEnvironment as unknown as PlantEnvironment:{...DEFAULT_ENVIRONMENT},researchUnlocks:Array.isArray(envelope.researchUnlocks)?envelope.researchUnlocks.filter((x:unknown):x is string=>typeof x==="string"):[],facilityLevels:normalizeFacilityLevels(isRecord(envelope.facilityLevels)?envelope.facilityLevels as unknown as Partial<FacilityLevels>:undefined),staffState:normalizeStaffState(isRecord(envelope.staffState)?envelope.staffState as unknown as Partial<StaffState>:undefined),offlineProgressEnabled:false,savedAt:Date.now()};if(!Number.isFinite(save.cash)||!Number.isFinite(save.research)||!Number.isFinite(save.day))throw new Error("The backup's economy or day fields are invalid.");const storageKeys=[SAVE_KEY,"j2grows.manual-save-slots.v1",PREFERENCES_KEY,"j2grows.institute.name.v1","j2grows.tutorial.completed.v1"];const previous=new Map(storageKeys.map(key=>[key,localStorage.getItem(key)]));try{const updates=new Map<string,string>([[SAVE_KEY,JSON.stringify(save)]]);if(isRecord(parsed)&&parsed.format==="j2grows-save-backup"){if(parsed.formatVersion!==1)throw new Error("This backup version is not supported.");if(isRecord(parsed.manualSlots))updates.set("j2grows.manual-save-slots.v1",JSON.stringify(normalizeManualSaveSlots(parsed.manualSlots)));if(isRecord(parsed.preferences)){const imported=parsed.preferences;const clean:UserPreferences={masterVolume:clampPreference(imported.masterVolume,DEFAULT_PREFERENCES.masterVolume,0,100),musicVolume:clampPreference(imported.musicVolume,DEFAULT_PREFERENCES.musicVolume,0,100),effectsVolume:clampPreference(imported.effectsVolume,DEFAULT_PREFERENCES.effectsVolume,0,100),muted:typeof imported.muted==="boolean"?imported.muted:DEFAULT_PREFERENCES.muted,visualQuality:["high","balanced","low"].includes(String(imported.visualQuality))?imported.visualQuality as UserPreferences["visualQuality"]:DEFAULT_PREFERENCES.visualQuality,uiScale:clampPreference(imported.uiScale,DEFAULT_PREFERENCES.uiScale,80,120),reducedMotion:typeof imported.reducedMotion==="boolean"?imported.reducedMotion:DEFAULT_PREFERENCES.reducedMotion,highContrast:typeof imported.highContrast==="boolean"?imported.highContrast:DEFAULT_PREFERENCES.highContrast,showTutorial:typeof imported.showTutorial==="boolean"?imported.showTutorial:DEFAULT_PREFERENCES.showTutorial,confirmNewGame:typeof imported.confirmNewGame==="boolean"?imported.confirmNewGame:DEFAULT_PREFERENCES.confirmNewGame,compactNumbers:typeof imported.compactNumbers==="boolean"?imported.compactNumbers:DEFAULT_PREFERENCES.compactNumbers,notifications:typeof imported.notifications==="boolean"?imported.notifications:DEFAULT_PREFERENCES.notifications};updates.set(PREFERENCES_KEY,JSON.stringify(clean));}if(typeof parsed.instituteName==="string")updates.set("j2grows.institute.name.v1",parsed.instituteName.slice(0,80));if(parsed.tutorialCompleted===true||parsed.tutorialCompleted===false)updates.set("j2grows.tutorial.completed.v1",parsed.tutorialCompleted?"true":"false");}const current=previous.get(SAVE_KEY);if(current)backupRawSave(current,"Before importing a save backup.");for(const [key,value] of updates)localStorage.setItem(key,value);setAudioTestMessage("Backup imported successfully. Reloading the game with the restored save…");window.location.reload();}catch(storageError){for(const [key,value] of previous){try{if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value);}catch{/* Best-effort rollback if storage itself is unavailable. */}}if(storageError instanceof Error&&storageError.message==="This backup version is not supported.")throw storageError;throw new Error("Browser storage could not complete the import. Previous values were restored where possible.");}}catch(err){setAudioTestMessage(err instanceof Error?err.message:"Could not import this save file.");}finally{input.value="";}}}/><Database size={15}/> Choose backup file</label></div>
                 <div className="preference-row"><div><strong>Reset preferences</strong><small>Restore settings to their defaults. Your game save is not affected.</small></div><button className="main-menu-settings-action" onClick={()=>{setPreferences(DEFAULT_PREFERENCES);setAudioTestMessage("Preferences restored to defaults.");}}>Reset preferences</button></div>
                 <div className="preference-row"><div><strong>In-game settings</strong><small>Open the full simulation settings, save slots and reset controls.</small></div><button className="main-menu-settings-action" onClick={()=>{setMainMenuSettingsOpen(false);enterGame("Settings");}}>Open in-game settings <ArrowRight size={15}/></button></div>
                 <div className="preference-row"><div><strong>Version</strong><small>J2Grows prototype 0.1</small></div><span className="settings-live-status">Local-first</span></div>
@@ -1162,7 +1141,7 @@ function App() {
         {page === "Staff" && <StaffPage cash={cash} staffState={staffState} onToggleCare={() => setStaffState((current) => ({ ...current, routineCareEnabled: !current.routineCareEnabled }))} onStartTraining={() => { if (!canStartStaffTraining(cash, staffState)) { announce(cash < STAFF_TRAINING_COST ? `Training costs ${money(STAFF_TRAINING_COST)}.` : staffState.trainingLevel >= 3 ? "Your assistant has reached the maximum training level." : "Training is already in progress."); return; } const next = startStaffTraining(staffState); if (!next) return; setCash((current) => current - STAFF_TRAINING_COST); setStaffState(next); announce(`Basic plant-care training started for ${money(STAFF_TRAINING_COST)}. It completes after ${next.trainingDaysRemaining} simulated days.`); }} /> }
         {page === "Shop" && <ShopPage specimens={specimens} species={tutorialOpen && tutorialStep === 1 ? tutorialShopSpecies : catalogSpecies} tutorialMode={tutorialOpen && tutorialStep === 1} cash={cash} day={day} onSell={sellSpecimen} onBuy={(plant) => { if (tutorialOpen && tutorialStep === 1) { if (!catalogSpecies.some((item) => item.id === plant.id)) setSpeciesCatalog([...catalogSpecies, plant]); acquireSpecies(plant, true); } else purchaseSpecies(plant); }} />}
         {page === "Finances" && <FinancesPage cash={cash} specimens={specimens} weeklyOperatingCost={weeklyFacilityOperatingCost(facilityLevels, analysisEquipmentLevel, researchUnlocks.includes("routine-automation")) + weeklyStaffOperatingCost(staffState)} /> }
-        {page === "Settings" && <SettingsPage onReplayTutorial={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} onResetGame={resetGame} day={day} specimensCount={specimens.length} catalogSource={catalogSource} saveSlots={saveSlots} onSaveSlot={saveToSlot} onLoadSlot={loadFromSlot} offlineProgressEnabled={offlineProgressEnabled} onToggleOfflineProgress={toggleOfflineProgress} />}
+        {page === "Settings" && <SettingsPage onReplayTutorial={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} onResetGame={resetGame} day={day} specimensCount={specimens.length} catalogSource={catalogSource} saveSlots={saveSlots} onSaveSlot={saveToSlot} onLoadSlot={loadFromSlot} />}
       </div>
       <footer className="app-footer"><span>J2Grows <span className="footer-separator">/</span> Prototype 0.1</span><span>All specimen and economic values are early prototype data.</span><span><span className="online-dot" /> Offline-first</span></footer>
     </main>
@@ -1405,13 +1384,13 @@ function FinancesPage({ cash, specimens, weeklyOperatingCost }: { cash: number; 
 export default App;
 
 
-function SettingsPage({ onReplayTutorial, onResetGame, day, specimensCount, catalogSource, saveSlots, onSaveSlot, onLoadSlot, offlineProgressEnabled, onToggleOfflineProgress }: { onReplayTutorial: () => void; onResetGame: () => void; day: number; specimensCount: number; catalogSource: CatalogueSource; saveSlots: Record<string, GameSave | null>; onSaveSlot: (slot: string) => void; onLoadSlot: (slot: string) => void; offlineProgressEnabled: boolean; onToggleOfflineProgress: () => void }) {
+function SettingsPage({ onReplayTutorial, onResetGame, day, specimensCount, catalogSource, saveSlots, onSaveSlot, onLoadSlot }: { onReplayTutorial: () => void; onResetGame: () => void; day: number; specimensCount: number; catalogSource: CatalogueSource; saveSlots: Record<string, GameSave | null>; onSaveSlot: (slot: string) => void; onLoadSlot: (slot: string) => void }) {
   return <div className="settings-layout">
     <section className="panel settings-panel"><div className="settings-heading"><div className="settings-icon"><Settings size={21} /></div><div><h2>Game settings</h2><p>Manage your J2Grows prototype experience.</p></div></div>
       <div className="settings-row"><div><strong>Getting started guide</strong><p>Replay the seven-step introduction to the nursery, collection and gameplay systems.</p></div><button className="button button-quiet" onClick={onReplayTutorial}><BookOpen size={15} /> Replay tutorial</button></div>
       <div className="settings-row"><div><strong>Species catalogue</strong><p>Current catalogue source: <span className="settings-status">{catalogSource === "supabase-table" ? "Supabase species table" : catalogSource === "storage-folders" ? "Supabase Storage folders" : "Local prototype data"}</span></p></div><span className={`pill ${catalogSource === "local" ? "subtle-pill" : ""}`}>{catalogSource === "local" ? "Local fallback" : "Metadata loaded"}</span></div>
       <div className="settings-row"><div><strong>Local save</strong><p>Your progress is stored in this browser. It is not currently synced between devices.</p></div><span className="settings-status"><span className="online-dot" /> Autosaving</span></div>
-      <div className="settings-row"><div><strong>Offline progression</strong><p>When enabled, one in-game day passes for each real-life hour away, up to 14 days (336 hours). Growth, propagation, breeding, mutation events, analysis, staff training and weekly costs use the same daily simulation as when you are playing. Turning this off pauses all progress while you are away.</p></div><button className={`button ${offlineProgressEnabled ? "button-primary" : "button-quiet"}`} aria-pressed={offlineProgressEnabled} onClick={onToggleOfflineProgress}>{offlineProgressEnabled ? "Enabled · Turn off" : "Disabled · Turn on"}</button></div>
+      <div className="settings-row"><div><strong>Simulation clock</strong><p>Turn-based. Growth, breeding, staff training and weekly costs advance only when you choose to advance an in-game day. Your plants and finances will not change while the game is closed.</p></div><span className="pill">Player controlled</span></div>
       <div className="settings-row"><div><strong>Manual save slots</strong><p>Keep up to three named progression snapshots in this browser, including greenhouse settings and active breeding projects.</p></div><div className="save-slots">{["1","2","3"].map((slot) => <div className="save-slot" key={slot}><span>Slot {slot} · {saveSlots[slot] ? `Day ${saveSlots[slot]!.day}` : "Empty"}</span><button className="button button-quiet" onClick={() => onSaveSlot(slot)}>Save</button><button className="button button-quiet" disabled={!saveSlots[slot]} onClick={() => onLoadSlot(slot)}>Load</button></div>)}</div></div>
       <div className="settings-row"><div><strong>Current session</strong><p>Simulation day {day} · {specimensCount} individual specimens</p></div><span className="pill">Prototype 0.1</span></div>
     </section>
