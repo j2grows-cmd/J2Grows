@@ -371,7 +371,7 @@ function App() {
 
   function specimenValue(specimen: Specimen, plantName = findSpecies(specimen.speciesId).name): number {
     const economy = getSpeciesEconomy(specimen.speciesId) ?? getSpeciesEconomy(plantName);
-    const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation);
+    const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation, createEventRandom(simulationSeed, "fallback-genetics:" + day + ":" + specimen.id));
     const calculated = calculateSpecimenValue({
       basePrice: economy?.basePrice ?? findSpecies(specimen.speciesId).basePrice ?? 15,
       health: specimen.health,
@@ -394,7 +394,7 @@ function App() {
     const usedIds = new Set(specimens.map((item) => item.id));
     const id = createUniqueSpecimenId(usedIds);
     usedIds.add(id);
-    const genetics = createSpecimenGenetics(0);
+    const genetics = createSpecimenGenetics(0, createEventRandom(simulationSeed, "purchase-genetics:" + day + ":" + id));
     const specimen: Specimen = {
       id, speciesId: plant.id, nickname: plant.name, location: "Home greenhouse",
       health: 100, stage: "Juvenile", value: 0, purchasePrice: cost, protected: false,
@@ -418,7 +418,7 @@ function App() {
         purchasePrice: undefined,
         protected: true,
         propagation: undefined,
-        genetics: createSpecimenGenetics(0),
+        genetics: createSpecimenGenetics(0, createEventRandom(simulationSeed, "tutorial-demo-genetics:" + day + ":" + demoId)),
       };
       demonstration.value = specimenValue(demonstration, plant.name);
       setSpecimens((current) => [...current, specimen, demonstration]);
@@ -706,8 +706,8 @@ function App() {
         mutationMessage += ` Breeding project ${project.id} failed; its cost was lost, but both parents survived.`;
         return { ...project, status: "cancelled" as const };
       }
-      const recordA = parentA.genetics ?? createSpecimenGenetics(parentA.variegation);
-      const recordB = parentB.genetics ?? createSpecimenGenetics(parentB.variegation);
+      const recordA = parentA.genetics ?? createSpecimenGenetics(parentA.variegation, createEventRandom(simulationSeed, "fallback-genetics:" + day + ":" + parentA.id));
+      const recordB = parentB.genetics ?? createSpecimenGenetics(parentB.variegation, createEventRandom(simulationSeed, "fallback-genetics:" + day + ":" + parentB.id));
       const inherited = applyTraitTargeting(inheritTraits(recordA.genetics, recordB.genetics, random), recordA.genetics, recordB.genetics, project.targetTrait, random);
       const generation = Math.max(parentA.generation ?? 0, parentB.generation ?? 0) + 1;
       const inheritedMutationIds = inherited.mutationIds;
