@@ -14,7 +14,7 @@ import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityU
 import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, startStaffTraining, STAFF_TRAINING_COST, weeklyStaffOperatingCost, type StaffState } from "./game/staff.ts";
 import { getFallbackArtworkType } from "./game/plant-artwork.ts";
 import { canCreateOffset } from "./game/propagation-eligibility.ts";
-import { checkSaveEnvelope, isRecord, normalizeManualSaveSlots, normalizeSpecimens } from "./game/save-validation.ts";
+import { checkSaveEnvelope, isRecord, normalizeBreedingProjectRelations, normalizeManualSaveSlots, normalizeSpecimens } from "./game/save-validation.ts";
 import { loadSpeciesCatalog } from "./supabase";
 import { getArtworkStatusSummary, getCatalogueSourceLabel, type ArtworkState, type CatalogueSource } from "./game/catalogue-status";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
@@ -142,19 +142,21 @@ function loadGameSave(): GameSave & { offlineDays: number; recoveryNotice: strin
       return freshGameSave("Your autosave could not be safely loaded. A recovery backup was saved and a fresh game was started.");
     }
     const recovered = normalizeSpecimens(parsed.specimens);
-    const validProjects = Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects.filter((item) => isRecord(item) && typeof item.id === "string" && typeof item.parentAId === "string" && typeof item.parentBId === "string" && typeof item.startedDay === "number" && typeof item.completesOnDay === "number" && typeof item.cost === "number" && ["active", "completed", "cancelled"].includes(String(item.status)) && typeof item.lineId === "string" && typeof item.failureChance === "number") : [];
-    const droppedProjects = Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects.length - validProjects.length : 0;
+    const projectRecovery = normalizeBreedingProjectRelations(recovered.specimens, parsed.breedingProjects);
+    recovered.specimens = projectRecovery.specimens;
+    const validProjects = projectRecovery.projects;
+    const droppedProjects = projectRecovery.dropped;
     const offlineProgressEnabled = false;
     const offlineDays = 0;
     const simulationSeed = typeof parsed.simulationSeed === "string" && parsed.simulationSeed.length > 0 ? parsed.simulationSeed : `migrated-${String(parsed.savedAt)}-${String(parsed.day)}`;
     const savedFacilityLevels = normalizeFacilityLevels(parsed.facilityLevels as unknown as Partial<FacilityLevels> | null | undefined);
     const savedStaffState = normalizeStaffState(parsed.staffState as unknown as Partial<StaffState> | null | undefined);
     const noticeParts: string[] = [];
-    if (recovered.dropped || recovered.repaired || droppedProjects) {
-      backupRawSave(raw, `Recovered save: skipped ${recovered.dropped} invalid/duplicate specimen(s), repaired ${recovered.repaired} specimen(s), and skipped ${droppedProjects} invalid breeding project(s).`);
+    if (recovered.dropped || recovered.repaired || droppedProjects || projectRecovery.repaired) {
+      backupRawSave(raw, `Recovered save: skipped ${recovered.dropped} invalid/duplicate specimen(s), repaired ${recovered.repaired} specimen(s), and skipped ${droppedProjects} invalid breeding project(s), repaired ${projectRecovery.repaired} relationship(s).`);
       if (recovered.dropped) noticeParts.push(`${recovered.dropped} invalid specimen(s) skipped`);
       if (recovered.repaired) noticeParts.push(`${recovered.repaired} specimen(s) repaired`);
-      if (droppedProjects) noticeParts.push(`${droppedProjects} invalid breeding project(s) skipped`);
+      if (droppedProjects) noticeParts.push(`${droppedProjects} invalid breeding project(s) skipped`);\n      if (projectRecovery.repaired) noticeParts.push(`${projectRecovery.repaired} breeding relationship(s) repaired`);
     }
     const cash = Math.min(1_000_000_000, Math.max(0, parsed.cash as number));
     const research = Math.min(1_000_000_000, Math.max(0, parsed.research as number));
