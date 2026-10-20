@@ -244,21 +244,36 @@ function App() {
   useEffect(() => {
     if (!tutorialOpen) return;
     document.querySelectorAll(".tutorial-spotlight-target").forEach((element) => element.classList.remove("tutorial-spotlight-target"));
-    const pageTarget = tutorialStep === 1
-      ? document.querySelector(".shop-listing .button-primary:not(:disabled)")
-      : tutorialStep === 2
-        ? Array.from(document.querySelectorAll(".detail-section")).find((element) => element.querySelector("h3")?.textContent?.includes("Propagation methods"))
-        : tutorialStep === 0
-        ? document.querySelector(".tutorial-inline-name")
-        : tutorialStep === 3
-          ? document.querySelector(".page-heading .button-primary, .dash-hero-controls .button-primary")
-          : tutorialStep === 4
-            ? document.querySelector(".detail-section .propagation-actions button:first-child")
-            : null;
-    const target = pageTarget ?? document.querySelector(tutorialStep === 0 ? ".guided-field" : ".tutorial-footer .button-primary");
+    const navTarget = (label: string) => Array.from(document.querySelectorAll(".nav-item")).find((element) => element.textContent?.trim() === label) ?? null;
+    const cardTarget = (nickname: string) => Array.from(document.querySelectorAll(".catalogue-card")).find((element) => element.textContent?.includes(nickname))?.querySelector(".catalogue-art-button") ?? null;
+    const pageTarget = tutorialStep === 0
+      ? document.querySelector(".tutorial-inline-name")
+      : tutorialStep === 1
+        ? page === "Shop" ? document.querySelector(".shop-listing .button-primary:not(:disabled)") : navTarget("Shop")
+        : tutorialStep === 2
+          ? page === "Specimen Record"
+            ? Array.from(document.querySelectorAll(".detail-section")).find((element) => element.querySelector("h3")?.textContent?.includes("Propagation methods")) ?? null
+            : page === "Plant Catalogue" ? cardTarget("Tutorial Demonstration") : navTarget("Plant Catalogue")
+          : tutorialStep === 3
+            ? page === "Greenhouse" ? document.querySelector(".season-card button") : navTarget("Greenhouse")
+            : page === "Specimen Record"
+              ? document.querySelector(".detail-section .propagation-actions button:first-child")
+              : page === "Plant Catalogue" ? cardTarget("First Cutting") ?? cardTarget("First Corm") : navTarget("Plant Catalogue");
+    const target = pageTarget ?? document.querySelector(".tutorial-footer .button-primary");
     if (!target) return;
     target.classList.add("tutorial-spotlight-target");
-    if (tutorialStep > 0 && tutorialStep !== 3) target.scrollIntoView({ block: "center", behavior: "smooth" });
+    if (tutorialStep > 0) target.scrollIntoView({ block: "center", behavior: "smooth" });
+    const guide = document.querySelector(".tutorial-dialog") as HTMLElement | null;
+    if (guide) {
+      const rect = target.getBoundingClientRect();
+      const targetOnRight = rect.left + rect.width / 2 > window.innerWidth / 2;
+      const targetInLowerHalf = rect.top + rect.height / 2 > window.innerHeight / 2;
+      const left = window.innerWidth < 680 ? "12px" : "max(220px, 3vw)";
+      guide.style.left = targetOnRight ? left : "auto";
+      guide.style.right = targetOnRight ? "auto" : "clamp(16px, 3vw, 42px)";
+      guide.style.top = targetInLowerHalf ? "clamp(16px, 3vh, 34px)" : "auto";
+      guide.style.bottom = targetInLowerHalf ? "auto" : "clamp(16px, 3vh, 34px)";
+    }
     return () => target.classList.remove("tutorial-spotlight-target");
   }, [tutorialOpen, tutorialStep, page]);
   function saveInstituteName() {
@@ -268,8 +283,7 @@ function App() {
     setInstituteNameDraft(name);
     try { localStorage.setItem("j2grows.institute.name.v1", name); } catch { /* Keep the name for this session. */ }
     setTutorialStep(1);
-    setPage("Shop");
-    announce(`${name} is ready to grow.`);
+    announce(`${name} is ready to grow. Select Shop from the left menu to continue.`);
   }
 
   function specimenValue(specimen: Specimen, plantName = findSpecies(specimen.speciesId).name): number {
@@ -327,8 +341,7 @@ function App() {
       setSpecimens((current) => [...current, specimen, demonstration]);
       setSelected(demoId);
       setTutorialStep(2);
-      setPage("Specimen Record");
-      announce(`${plant.name} acquired. A protected mature demonstration plant is ready for the tutorial; normal shop plants remain juvenile.`);
+      announce(`${plant.name} acquired. Select Plant Catalogue from the left menu to open the demonstration plant record. A protected mature demonstration plant is ready for the tutorial; normal shop plants remain juvenile.`);
     } else {
       setSpecimens((current) => [...current, specimen]);
       setSelected(id);
@@ -339,10 +352,10 @@ function App() {
 
   function takeTutorialCutting() {
     const parent = specimens.find((item) => item.id === selected) ?? specimens[0];
-    if (!parent) { setTutorialStep(1); setPage("Plant Catalogue"); announce("Acquire your first plant before propagating it."); return; }
+    if (!parent) { setTutorialStep(1); announce("Acquire your first plant before propagating it."); return; }
     const existingOffspring = specimens.find((item) => ["First Cutting", "First Corm", "First Mutation"].includes(item.nickname));
     if (existingOffspring) {
-      setTutorialStep(3); setSelected(existingOffspring.id); setPage("Greenhouse"); return;
+      setTutorialStep(3); setSelected(existingOffspring.id); return;
     }
     const genus = findSpecies(parent.speciesId).latin.split(" ")[0].toLowerCase();
     const isAlocasia = genus === "alocasia";
@@ -378,27 +391,24 @@ function App() {
     }), offspring]);
     setSelected(offspring.id);
     setTutorialStep(3);
-    setPage("Greenhouse");
-    announce(isAlocasia ? "First Alocasia corm started. It has its own specimen record." : "First cutting taken. The new specimen has its own identity and record.");
+    announce(isAlocasia ? "First Alocasia corm started. Click Greenhouse in the left menu to continue." : "First cutting taken. Click Greenhouse in the left menu to continue.");
   }
 
   function growTutorialCutting() {
     const cutting = specimens.find((item) => ["First Cutting", "First Corm", "First Mutation"].includes(item.nickname));
-    if (!cutting) { setTutorialStep(1); setPage("Plant Catalogue"); announce("Acquire a plant and propagate it first."); return; }
+    if (!cutting) { setTutorialStep(1); announce("Acquire a plant and propagate it first."); return; }
     const nextSpecimens = advanceDay();
     const nextCutting = nextSpecimens.find((item) => item.id === cutting.id);
     setSelected(cutting.id);
     if (nextCutting?.propagation) {
       setTutorialStep(3);
-      setPage("Greenhouse");
       announce(nextCutting.propagation.phase === "Corm"
         ? "One day passed. The corm is still establishing; advance another day and check its conditions."
         : "One day passed. A shoot is developing; give it more time to establish.");
       return;
     }
     setTutorialStep(4);
-    setPage("Specimen Record");
-    announce("Your propagated specimen has established as a juvenile plant. Record an observation to begin building research evidence.");
+    announce("Your propagated specimen has established. Click Plant Catalogue in the left menu, then open its record to observe it.");
   }
 
   function recordTutorialObservation() {
@@ -410,7 +420,6 @@ function App() {
     setSpecimens((current) => current.map((item) => item.id === cutting.id ? updated : item));
     setResearch((current) => current + 2);
     setSelected(cutting.id);
-    setPage("Specimen Record");
     finishTutorial();
     announce("Growth observation recorded. Research evidence added; future mutations remain rare and uncertain.");
   }
@@ -419,14 +428,7 @@ function App() {
     setTutorialOpen(false);
     try { localStorage.setItem("j2grows.tutorial.completed.v1", "true"); } catch { /* Tutorial can still be dismissed for this session. */ }
   }
-  function moveTutorial(direction: -1 | 1) {
-    const next = tutorialStep + direction;
-    if (next < 0) return;
-    if (next >= tutorialSteps.length) { finishTutorial(); return; }
-    setTutorialStep(next);
-    setPage(tutorialSteps[next].page === "Specimen Record" && !specimens.length ? "Plant Catalogue" : tutorialSteps[next].page);
-    if (tutorialSteps[next].page === "Specimen Record" && specimens.length) setSelected(specimens[0].id);
-  }
+
   useEffect(() => {
     try {
       const save: GameSave = { version: 8, specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, offlineProgressEnabled, savedAt: Date.now() };
@@ -971,7 +973,7 @@ function App() {
       <div className="brand"><img className="brand-logo-image" src="https://lwaxzivcjzpmmantryor.supabase.co/storage/v1/object/public/Artwork/logo.png" alt="J2Grows botanical logo" /><div className="brand-tagline">CULTIVATE<br />BREED · BUILD<br />DISCOVER</div></div>
       <div className="institution-switch"><div className="institution-emblem"><Sprout size={19} /></div><div><strong>{instituteName || "Unnamed Institute"}</strong><span>Home institution</span></div><ChevronDown size={14} /></div>
       <nav className="main-nav">{nav.map(({ label, icon: Icon }) => <button key={label} className={`nav-item ${page === label || (page === "Specimen Record" && label === "Plant Catalogue") ? "active" : ""}`} onClick={() => { setPage(label); setShowMenu(false); }}><Icon size={17} /><span>{label}</span>{label === "Research" && <span className="nav-dot" />}</button>)}</nav>
-      <div className="sidebar-bottom"><div className="facility-mini"><div className="facility-mini-top"><span>STARTER FACILITY</span><span className="status-dot" /></div><strong>Home greenhouse</strong><div className="facility-progress"><span style={{ width: "36%" }} /></div><small>36% capacity used</small></div><div className="season-card"><Sun size={18} /><div><strong>Year 1 · Spring</strong><span>Day {day}</span></div><button onClick={advanceDay} title="Advance one day" aria-label="New day">New day <ArrowRight size={16} /></button></div><div className="sidebar-footer"><span><span className="online-dot" /> Local save active</span><div className="sidebar-footer-actions"><button onClick={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} aria-label="Open tutorial" title="Tutorial"><BookOpen size={16} /></button><button onClick={() => { setPage("Settings"); setShowMenu(false); }} aria-label="Settings" title="Settings"><Settings size={16} /></button></div></div></div>
+      <div className="sidebar-bottom"><div className="facility-mini"><div className="facility-mini-top"><span>STARTER FACILITY</span><span className="status-dot" /></div><strong>Home greenhouse</strong><div className="facility-progress"><span style={{ width: "36%" }} /></div><small>36% capacity used</small></div><div className="season-card"><Sun size={18} /><div><strong>Year 1 · Spring</strong><span>Day {day}</span></div><button onClick={tutorialOpen && tutorialStep === 3 ? growTutorialCutting : advanceDay} title="Advance one day" aria-label="New day">New day <ArrowRight size={16} /></button></div><div className="sidebar-footer"><span><span className="online-dot" /> Local save active</span><div className="sidebar-footer-actions"><button onClick={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} aria-label="Open tutorial" title="Tutorial"><BookOpen size={16} /></button><button onClick={() => { setPage("Settings"); setShowMenu(false); }} aria-label="Settings" title="Settings"><Settings size={16} /></button></div></div></div>
     </aside>
 
     <main className="main-area">
@@ -1010,10 +1012,10 @@ function App() {
     </main>
     {tutorialOpen && <div className="tutorial-backdrop" role="presentation"><section className="tutorial-dialog" role="region" aria-labelledby="tutorial-title"><div className="tutorial-topline"><span className="tutorial-mark"><Sprout size={19} /></span><span>J2GROWS FIRST-GROW GUIDE</span><span className="tutorial-close" aria-hidden="true"><X size={17} /></span></div><div className="tutorial-progress-label"><span>YOUR FIRST DISCOVERY</span><span>{String(tutorialStep + 1).padStart(2, "0")} / {String(tutorialSteps.length).padStart(2, "0")}</span></div><div className="tutorial-progress-track"><span style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="tutorial-content"><div className="tutorial-eyebrow"><span className="eyebrow-line" /> GUIDED TUTORIAL</div><h2 id="tutorial-title">{tutorialSteps[tutorialStep].title}</h2><p>{tutorialSteps[tutorialStep].body}</p>
       {tutorialStep === 0 && <p className="tutorial-action-hint">Use the highlighted name field on your dashboard, then save it to continue.</p>}
-      {tutorialStep === 1 && <p className="tutorial-action-hint">Choose an affordable plant from today’s shop stock using its highlighted Buy button.</p>}
-      {tutorialStep === 2 && <p className="tutorial-action-hint">Choose a propagation method in the highlighted section of this specimen record.</p>}
-      {tutorialStep === 3 && <p className="tutorial-action-hint">Click the highlighted Advance day button to grow your new plant.</p>}
-      {tutorialStep === 4 && <p className="tutorial-action-hint">Click Record observation in the highlighted specimen controls.</p>}
+      {tutorialStep === 1 && <p className="tutorial-action-hint">{page === "Shop" ? "Choose an affordable plant using its highlighted Buy button." : "Click Shop in the left menu, then choose an affordable plant."}</p>}
+      {tutorialStep === 2 && <p className="tutorial-action-hint">{page === "Specimen Record" ? "Choose a propagation method in the highlighted section." : page === "Plant Catalogue" ? "Open the highlighted tutorial demonstration plant to view its record." : "Click Plant Catalogue in the left menu, then open the highlighted tutorial demonstration plant."}</p>}
+      {tutorialStep === 3 && <p className="tutorial-action-hint">{page === "Greenhouse" ? "Click the highlighted New day button to grow your new plant." : "Click Greenhouse in the left menu, then click the highlighted New day button."}</p>}
+      {tutorialStep === 4 && <p className="tutorial-action-hint">{page === "Specimen Record" ? "Click Record observation in the highlighted specimen controls." : page === "Plant Catalogue" ? "Open the highlighted new cutting or corm to view its record." : "Click Plant Catalogue in the left menu, then open the highlighted new cutting or corm."}</p>}
       <div className="tutorial-tip"><Leaf size={16} /><span>{tutorialSteps[tutorialStep].tip}</span></div></div><div className="tutorial-footer"><span>Press Esc to close the guide</span></div></section></div>}
   </div>;
 }
