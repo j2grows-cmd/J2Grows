@@ -1,5 +1,5 @@
 import type { RarityTier } from "./catalog.ts";
-import { createGenome, inheritGenome, phenotypeFromGenome, type GeneticGenome } from "./alleles.ts";
+import { createGenome, inheritGenome, mutateGenomeLocus, phenotypeFromGenome, type GeneticGenome } from "./alleles.ts";
 
 export type GeneticProfile = {
   /** Inherited propensity for visible variegation, 0–100. */
@@ -113,14 +113,21 @@ export function inheritGenetics(parentA: GeneticProfile, parentB: GeneticProfile
   const genome = parentA.genome && parentB.genome ? inheritGenome(parentA.genome, parentB.genome, random) : undefined;
   const phenotype = genome ? phenotypeFromGenome(genome) : undefined;
   const average = (a: number, b: number) => (a + b) / 2;
-  const mutationIds = [...new Set([...parentA.mutationIds, ...parentB.mutationIds])];
+  const mutationIds = [...new Set([...parentA.mutationIds, ...parentB.mutationIds])].filter((id) => {
+    const fromA = parentA.mutationIds.includes(id) && random() < 0.5;
+    const fromB = parentB.mutationIds.includes(id) && random() < 0.5;
+    return fromA || fromB;
+  });
+  const mutationGeneProbability = parentA.mutationGenePresent && parentB.mutationGenePresent
+    ? 0.75
+    : parentA.mutationGenePresent || parentB.mutationGenePresent ? 0.5 : 0;
   const child: GeneticProfile = {
     ...(genome ? { genome } : {}),
     variegationPotential: varied(average(parentA.variegationPotential, parentB.variegationPotential), random, 12),
     stability: varied(average(parentA.stability, parentB.stability), random, 10),
     hiddenPotential: varied(average(parentA.hiddenPotential, parentB.hiddenPotential), random, 18),
     growthPotential: varied(average(parentA.growthPotential, parentB.growthPotential), random, 12),
-    mutationGenePresent: random() < 0.5 ? parentA.mutationGenePresent : parentB.mutationGenePresent,
+    mutationGenePresent: random() < mutationGeneProbability,
     mutationIds,
   };
   if (phenotype) {
@@ -130,10 +137,21 @@ export function inheritGenetics(parentA: GeneticProfile, parentB: GeneticProfile
     child.hiddenPotential = phenotype.hiddenPotential;
   }
   if (random() < 0.025) {
-    const mutation = (random() < 0.5 ? "spontaneous-colour-shift" : "spontaneous-morphology") + "-" + Math.round(random() * 1e9).toString(36);
+    const colourMutation = random() < 0.5;
+    const mutation = (colourMutation ? "spontaneous-colour-shift" : "spontaneous-morphology") + "-" + Math.round(random() * 1e9).toString(36);
     child.mutationIds = [...new Set([...child.mutationIds, mutation])];
-    if (mutation.startsWith("spontaneous-colour-shift-")) child.variegationPotential = varied(Math.max(child.variegationPotential, 55), random, 20);
-    else child.growthPotential = varied(child.growthPotential, random, 28);
+    if (child.genome) {
+      child.genome = mutateGenomeLocus(child.genome, colourMutation ? "variegation" : "growth", random);
+      const mutatedPhenotype = phenotypeFromGenome(child.genome);
+      child.variegationPotential = mutatedPhenotype.variegationPotential;
+      child.stability = mutatedPhenotype.stability;
+      child.growthPotential = mutatedPhenotype.growthPotential;
+      child.hiddenPotential = mutatedPhenotype.hiddenPotential;
+    } else if (colourMutation) {
+      child.variegationPotential = varied(Math.max(child.variegationPotential, 55), random, 20);
+    } else {
+      child.growthPotential = varied(child.growthPotential, random, 28);
+    }
   }
   return child;
 }

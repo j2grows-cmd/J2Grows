@@ -34,3 +34,14 @@ test("shop lists affordable stock and a purchase adds a specimen", async ({ page
   await firstPurchase.click();
   await expect(page.getByText("Your plant listings")).toBeVisible();
 });
+
+
+test("main-menu settings exports a portable JSON backup", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await page.getByRole("button", { name: /Data & System/i }).click();
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: /Export backup/i }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("j2grows-save-backup.json");
+});
