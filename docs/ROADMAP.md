@@ -5,6 +5,12 @@
 **Scope:** ambitious, content-rich management and genetics game designed for long-term replayability.
 **Current status:** playable web-based prototype 0.1. Keep it runnable while the game systems are separated, tested and expanded. Steam packaging is a later milestone, not something this browser prototype currently provides.
 
+## Verified implementation status · 20 October 2026
+
+The current branch has a seeded random utility, a turn-based clock, save recovery for breeding and lineage references, pure health/stage/propagation helpers, explicit diploid loci, mutation provenance, a 30/60/90-day cost forecast, local catalogue audits, Chromium smoke tests, and Windows x64 installer/portable packaging CI.
+
+These are foundation slices, not evidence that the full game design is complete. The browser smoke tests cover starting a game, advancing a day, viewing financial projections, and manual save/load. Windows packaging has passed CI, but Steamworks, code signing, automatic updates, and browser-to-desktop save migration remain outstanding. Live Supabase content has not been exhaustively audited in this repository workflow.
+
 ## Product pillars
 
 1. **Discovery:** investigate hidden traits, mutations, phenotype expression and cultivar stability.
@@ -18,21 +24,21 @@
 ## Production phases
 
 ### Phase 1 — reliable foundation (current priority)
-- [ ] Add a reproducible seeded random source for simulation systems and tests.
+- [x] Add a reproducible seeded random source and event-isolated streams for gameplay decisions.
 - [ ] Move simulation rules out of the React application into focused, pure game modules.
 - [ ] Add deterministic tests for day advancement, breeding outcomes, plant growth, economy and offline progress.
-- [ ] Strengthen save schema validation, migrations, referential integrity and recovery reporting.
-- [ ] Add browser-level end-to-end smoke tests for new game, progression, save/load, shop and settings.
+- [x] Strengthen save validation, legacy-genetics migration, breeding reservations, lineage references and recovery reporting.
+- [ ] Expand browser smoke coverage beyond the implemented new-game, day-advance, finance and manual save/load journeys to cover shop, settings, import/export and tutorial completion.
 - [ ] Establish formatting/linting and CI gates without making local development cumbersome.
 - [ ] Document the supported prototype behaviours and remaining known limitations.
 
 **Exit gate:** repeatable test runs; invalid saves cannot silently corrupt current progress; a new player can complete the core loop in a browser smoke test.
 
 ### Phase 2 — genetics and cultivation simulation
-- [ ] Define explicit genetic loci/alleles and inheritance rules behind a versioned simulation API.
+- [x] Define explicit diploid loci and seeded allele inheritance; versioned genome schema/API refinements remain.
 - [ ] Keep genotype, expressed phenotype, player knowledge and mutation evidence separate.
 - [ ] Implement parent compatibility, probability estimates, offspring generation and lineage records.
-- [ ] Add mutation origin, category, expression, tissue distribution, inheritance stability and evidence history.
+- [x] Add mutation category, origin, tissue distribution, parent-mutation provenance and evidence; deeper expression history and stability evidence remain.
 - [ ] Implement species-aware growth, health, environmental tolerances, propagation and acclimatisation.
 - [ ] Build deterministic fixtures and balance tests for expected outcome ranges.
 - [ ] Make advanced breeding controls unlock progressively through research; targeting must improve odds, never guarantee outcomes.
@@ -45,7 +51,7 @@
 - [ ] Connect growth, propagation, acclimatisation, quality checks, storage and sales into production chains.
 - [ ] Add player-configurable automation priorities, minimum stock and exception handling.
 - [ ] Implement buyers, market demand, contracts, reputation and seasonal/event-driven opportunities.
-- [ ] Build a transparent economy model with forecasts, recurring costs, cash-flow warnings and recovery choices.
+- [ ] Extend the 30/60/90-day operating-cost forecast into a full cash-flow model with transaction history, sales assumptions, tested recovery actions and affordability balancing.
 - [ ] Add a branching research tree with meaningful trade-offs and specialisations.
 
 **Exit gate:** more than one viable strategy exists; automation creates strategic capacity rather than simply removing clicks.
