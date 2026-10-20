@@ -2431,3 +2431,74 @@ input, select, textarea {
   .main-area > .topbar .top-level { min-width: 0; }
   .main-area > .topbar .level-info strong { overflow: hidden; text-overflow: ellipsis; }
 }
+
+
+/* Component-level header repair: no overlap between level title and subtitle. */
+@media (min-width: 981px) {
+  .main-area { margin-left: 232px !important; width: calc(100% - 232px) !important; }
+  .main-area > header.topbar {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: clamp(10px, 1.25vw, 22px) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding-inline: clamp(16px, 1.7vw, 28px) !important;
+    overflow: visible !important;
+  }
+  .main-area > header.topbar > .top-institution {
+    flex: 0 1 215px !important;
+    min-width: 170px !important;
+    max-width: 230px !important;
+  }
+  .main-area > header.topbar > .top-resource {
+    flex: 1 1 170px !important;
+    min-width: 145px !important;
+    max-width: 230px !important;
+  }
+  .main-area > header.topbar > .top-level {
+    flex: 1 1 235px !important;
+    min-width: 225px !important;
+    max-width: 270px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+  .main-area > header.topbar .level-info {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+  .main-area > header.topbar .level-info > div:first-child {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: baseline !important;
+    column-gap: 12px !important;
+    margin-bottom: 6px !important;
+  }
+  .main-area > header.topbar .level-info strong {
+    min-width: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-size: 14px !important;
+  }
+  .main-area > header.topbar .level-info span {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    font-size: 13px !important;
+  }
+  .main-area > header.topbar > .notification-menu { flex: 0 0 42px !important; }
+  .main-area > header.topbar > .profile-chip {
+    flex: 0 1 235px !important;
+    min-width: 190px !important;
+    max-width: 260px !important;
+    margin-left: 0 !important;
+  }
+}
+@media (min-width: 981px) and (max-width: 1450px) {
+  .main-area > header.topbar { gap: 9px !important; padding-inline: 12px !important; }
+  .main-area > header.topbar > .top-institution { flex-basis: 155px !important; min-width: 135px !important; }
+  .main-area > header.topbar > .top-resource { min-width: 125px !important; padding-inline: 8px !important; }
+  .main-area > header.topbar > .top-level { flex-basis: 205px !important; min-width: 190px !important; }
+  .main-area > header.topbar > .profile-chip { flex-basis: 195px !important; min-width: 165px !important; }
+}
