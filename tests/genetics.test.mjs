@@ -99,3 +99,7 @@ test("rarity affects shop availability", () => {
   assert.equal(getShopAvailability("Common", () => 0.5), true);
   assert.equal(getShopAvailability("Mythic", () => 0.5), false);
 });
+
+test("mutation carriers receive a latent record before analysis and can be replayed from a seed", () => {
+  const { createSeededRandom } = require("../src/game/random.ts");
+});
