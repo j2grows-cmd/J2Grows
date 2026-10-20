@@ -1,4 +1,5 @@
 import type { GeneticProfile, PlantEnvironment } from "./genetics";
+import { inheritGenome, phenotypeFromGenome } from "./alleles.ts";
 import type { RarityTier } from "./catalog";
 
 /** Canonical plant lifecycle agreed for J2Grows. Propagation phase remains separate from plant stage. */
@@ -136,12 +137,15 @@ export function calculateTargetedFailureChance(baseChance: number, targeted: boo
 
 /** Explicit trait-wise inheritance with bounded randomness, rather than unrestricted blending. */
 export function inheritTraits(parentA: GeneticProfile, parentB: GeneticProfile, random: () => number = Math.random): GeneticProfile {
+  const genome = parentA.genome && parentB.genome ? inheritGenome(parentA.genome, parentB.genome, random) : undefined;
+  const phenotype = genome ? phenotypeFromGenome(genome) : undefined;
   const inherit = (a: number, b: number, spread: number) => Math.max(0, Math.min(100, Math.round((random() < 0.5 ? a : b) * 0.65 + ((a + b) / 2) * 0.35 + (random() * 2 - 1) * spread)));
   return {
-    variegationPotential: inherit(parentA.variegationPotential, parentB.variegationPotential, 5),
-    stability: inherit(parentA.stability, parentB.stability, 4),
-    hiddenPotential: inherit(parentA.hiddenPotential, parentB.hiddenPotential, 6),
-    growthPotential: inherit(parentA.growthPotential, parentB.growthPotential, 5),
+    ...(genome ? { genome } : {}),
+    variegationPotential: phenotype?.variegationPotential ?? inherit(parentA.variegationPotential, parentB.variegationPotential, 5),
+    stability: phenotype?.stability ?? inherit(parentA.stability, parentB.stability, 4),
+    hiddenPotential: phenotype?.hiddenPotential ?? inherit(parentA.hiddenPotential, parentB.hiddenPotential, 6),
+    growthPotential: phenotype?.growthPotential ?? inherit(parentA.growthPotential, parentB.growthPotential, 5),
     mutationGenePresent: random() < 0.5 ? parentA.mutationGenePresent : parentB.mutationGenePresent,
     mutationIds: [...new Set([...parentA.mutationIds, ...parentB.mutationIds])],
   };
