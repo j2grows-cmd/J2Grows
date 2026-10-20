@@ -47,3 +47,17 @@ export function normalizeGenome(value: unknown): GeneticGenome | undefined {
   }
   return result;
 }
+
+/** Create a backwards-compatible diploid genome whose phenotype matches legacy numeric traits. */
+export function genomeFromPhenotype(profile: { variegationPotential: number; stability: number; growthPotential: number; hiddenPotential: number }): GeneticGenome {
+  const pair = (score: number): GeneticLocus => {
+    const value = allele(clamp(score) / 10);
+    return { maternal: value, paternal: value };
+  };
+  return {
+    variegation: pair(profile.variegationPotential),
+    stability: pair(profile.stability),
+    growth: pair(profile.growthPotential),
+    hiddenPotential: pair(profile.hiddenPotential),
+  };
+}

@@ -1,6 +1,6 @@
 import type { Specimen } from "../data.ts";
 import type { PlantEnvironment } from "./genetics.ts";
-import { normalizeGenome } from "./alleles.ts";
+import { genomeFromPhenotype, normalizeGenome } from "./alleles.ts";
 
 const VALID_STAGES = new Set(["Corm / Seedling", "Juvenile", "Growing", "Mature", "Breeding-ready"]);
 const VALID_PROPAGATION_METHODS = new Set(["corm", "cutting", "division", "tissue-culture"]);
@@ -31,7 +31,7 @@ function validGenetics(value: unknown): Specimen["genetics"] | undefined {
   if (!environmentKeys.every((key) => typeof environmentRaw[key] === "number" && Number.isFinite(environmentRaw[key]))) return undefined;
   if (!["points", "observationCount", "analysisLevel"].every((key) => typeof research[key] === "number" && Number.isFinite(research[key])) || !Array.isArray(research.discoveredTraits)) return undefined;
   const mutationsRaw = research.mutations as unknown[];
-  const mutations = mutationsRaw.filter((item: unknown) => isRecord(item) && typeof item.id === "string" && typeof item.category === "string").map((item: unknown) => ({ ...(item as Record<string, unknown>), strength: finite((item as Record<string, unknown>).strength, 20, 0, 100), detected: (item as Record<string, unknown>).detected === true }));
+  const mutations = mutationsRaw.filter((item: unknown) => isRecord(item) && typeof item.id === "string" && typeof item.category === "string").map((item: unknown) => { const mutation = item as Record<string, unknown>; const origin = ["growth", "propagation", "breeding", "analysis", "legacy"].includes(String(mutation.origin)) ? mutation.origin : "legacy"; const tissueDistribution = ["sectoral", "meristematic", "whole-plant", "unknown"].includes(String(mutation.tissueDistribution)) ? mutation.tissueDistribution : "unknown"; return { ...mutation, strength: finite(mutation.strength, 20, 0, 100), detected: mutation.detected === true, origin, tissueDistribution, ...(typeof mutation.originDay === "number" && Number.isFinite(mutation.originDay) && mutation.originDay >= 1 ? { originDay: Math.floor(mutation.originDay) } : {}), ...(Array.isArray(mutation.parentMutationIds) ? { parentMutationIds: mutation.parentMutationIds.filter((id): id is string => typeof id === "string") } : {}) }; });
   const environment = Object.fromEntries(environmentKeys.map((key) => [key, finite(environmentRaw[key], 65, 0, 100)]));
   return {
     genetics: {
@@ -41,7 +41,7 @@ function validGenetics(value: unknown): Specimen["genetics"] | undefined {
       growthPotential: finite(profile.growthPotential, 50, 0, 100),
       mutationGenePresent: typeof profile.mutationGenePresent === "boolean" ? profile.mutationGenePresent : false,
       mutationIds: profile.mutationIds.filter((item): item is string => typeof item === "string"),
-      ...(normalizeGenome(profile.genome) ? { genome: normalizeGenome(profile.genome)! } : {}),
+      genome: normalizeGenome(profile.genome) ?? genomeFromPhenotype({ variegationPotential: finite(profile.variegationPotential, 0, 0, 100), stability: finite(profile.stability, 50, 0, 100), growthPotential: finite(profile.growthPotential, 50, 0, 100), hiddenPotential: finite(profile.hiddenPotential, 50, 0, 100) }),
     },
     expression: finite(value.expression, 0, 0, 100),
     environment: environment as unknown as PlantEnvironment,
