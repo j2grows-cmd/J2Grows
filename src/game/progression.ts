@@ -178,3 +178,23 @@ export function geneticLineValue(baseValue: number, health: number, maturityMult
   const discoveryBonus = Math.max(0, confirmedStableMutationCount) * 5;
   return Math.max(0, Math.round(baseValue * healthFactor * maturity * potentialFactor + discoveryBonus));
 }
+
+export type MutationStabilityAssessment = {
+  stable: boolean;
+  generationCount: number;
+  mutationStability: number;
+  reason: "insufficient-generations" | "low-intrinsic-stability" | "stable";
+};
+
+/** A line is only labelled stable after repeated inheritance and a high mutation stability score. */
+export function assessMutationStability(generations: number, mutationStability: number, minimumGenerations = 3, minimumStability = 75): MutationStabilityAssessment {
+  const generationCount = Math.max(0, Math.floor(Number.isFinite(generations) ? generations : 0));
+  const stability = Math.max(0, Math.min(100, Number.isFinite(mutationStability) ? mutationStability : 0));
+  if (generationCount < Math.max(1, Math.floor(minimumGenerations))) {
+    return { stable: false, generationCount, mutationStability: stability, reason: "insufficient-generations" };
+  }
+  if (stability < Math.max(0, Math.min(100, minimumStability))) {
+    return { stable: false, generationCount, mutationStability: stability, reason: "low-intrinsic-stability" };
+  }
+  return { stable: true, generationCount, mutationStability: stability, reason: "stable" };
+}
