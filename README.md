@@ -8,7 +8,7 @@ J2Grows is a premium botanical research, cultivation, genetics and management ga
 
 ## Run locally
 
-Requires Node.js 20 or newer.
+Requires Node.js 22 or newer.
 
 ```bash
 npm install
@@ -29,7 +29,7 @@ npm run preview
 
 The desktop shell wraps the existing React/Vite game in Electron; it does not replace the game or its simulation. The first Windows distribution targets are an NSIS installer and a portable executable (x64). Both are built by GitHub Actions on pull requests and can be downloaded from that workflow's artifacts; this is a packaging milestone, not yet a signed public release or Steam build.
 
-Requires Node.js 20 or newer. To run the current production build in Electron locally:
+Requires Node.js 22 or newer. To run the current production build in Electron locally:
 
 ```bash
 npm install
