@@ -113,14 +113,18 @@ export function inheritGenetics(parentA: GeneticProfile, parentB: GeneticProfile
   const genome = parentA.genome && parentB.genome ? inheritGenome(parentA.genome, parentB.genome, random) : undefined;
   const phenotype = genome ? phenotypeFromGenome(genome) : undefined;
   const average = (a: number, b: number) => (a + b) / 2;
-  const mutationIds = [...new Set([...parentA.mutationIds, ...parentB.mutationIds])];
+  const mutationIds = [...new Set([...parentA.mutationIds, ...parentB.mutationIds])]
+    .filter((id) => (parentA.mutationIds.includes(id) && random() < 0.5) || (parentB.mutationIds.includes(id) && random() < 0.5));
+  const mutationGeneProbability = parentA.mutationGenePresent && parentB.mutationGenePresent
+    ? 0.75
+    : parentA.mutationGenePresent || parentB.mutationGenePresent ? 0.5 : 0;
   const child: GeneticProfile = {
     ...(genome ? { genome } : {}),
     variegationPotential: varied(average(parentA.variegationPotential, parentB.variegationPotential), random, 12),
     stability: varied(average(parentA.stability, parentB.stability), random, 10),
     hiddenPotential: varied(average(parentA.hiddenPotential, parentB.hiddenPotential), random, 18),
     growthPotential: varied(average(parentA.growthPotential, parentB.growthPotential), random, 12),
-    mutationGenePresent: random() < 0.5 ? parentA.mutationGenePresent : parentB.mutationGenePresent,
+    mutationGenePresent: random() < mutationGeneProbability,
     mutationIds,
   };
   if (phenotype) {
