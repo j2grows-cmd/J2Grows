@@ -156,7 +156,8 @@ function loadGameSave(): GameSave & { offlineDays: number; recoveryNotice: strin
       backupRawSave(raw, `Recovered save: skipped ${recovered.dropped} invalid/duplicate specimen(s), repaired ${recovered.repaired} specimen(s), and skipped ${droppedProjects} invalid breeding project(s), repaired ${projectRecovery.repaired} relationship(s).`);
       if (recovered.dropped) noticeParts.push(`${recovered.dropped} invalid specimen(s) skipped`);
       if (recovered.repaired) noticeParts.push(`${recovered.repaired} specimen(s) repaired`);
-      if (droppedProjects) noticeParts.push(`${droppedProjects} invalid breeding project(s) skipped`);\n      if (projectRecovery.repaired) noticeParts.push(`${projectRecovery.repaired} breeding relationship(s) repaired`);
+      if (droppedProjects) noticeParts.push(`${droppedProjects} invalid breeding project(s) skipped`);
+      if (projectRecovery.repaired) noticeParts.push(`${projectRecovery.repaired} breeding relationship(s) repaired`);
     }
     const cash = Math.min(1_000_000_000, Math.max(0, parsed.cash as number));
     const research = Math.min(1_000_000_000, Math.max(0, parsed.research as number));
