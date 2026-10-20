@@ -21,9 +21,15 @@ test("defaults missing traits and optional fields and rejects unsafe image paths
   assert.deepEqual(row.traits, []);
   assert.equal(row.image_path, "");
   assert.equal(row.difficulty, null);
-  assert.equal(row.rarity, null);
+  assert.equal(row.rarity, "Mythic");
   assert.equal(row.summary, null);
   assert.equal(normalizeSpeciesRow({ ...valid, image_path: "species/hero.svg" })?.image_path, "");
+});
+
+test("recognizes all supported rarity tiers including Mythic", () => {
+  for (const [label, expected] of [["common", "Common"], ["uncommon", "Uncommon"], ["rare", "Rare"], ["very rare", "Very Rare"], ["ultra rare", "Ultra Rare"], ["mythic", "Mythic"]]) {
+    assert.equal(normalizeSpeciesRow({ ...valid, rarity: label })?.rarity, expected);
+  }
 });
 
 test("filters malformed and duplicate records without discarding valid neighbours", () => {
