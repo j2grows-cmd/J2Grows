@@ -2055,3 +2055,6 @@ body{
 /* Keep the shop rows clear of the dimming layer without outlining plant art or names. */
 .tutorial-spotlight-clear{position:relative!important;z-index:1001!important}
 .tutorial-shop-name{display:inline-block;padding:2px 4px;border-radius:5px}
+
+/* Keep the tutorial guide fully opaque above the spotlight layer. */
+.tutorial-dialog{background:linear-gradient(145deg,#182319 0%,#0c130d 100%)!important;opacity:1!important;backdrop-filter:none!important}
