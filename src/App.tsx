@@ -183,6 +183,7 @@ function App() {
   }, []);
   const [page, setPage] = useState<Page>("Dashboard");
   const [mainMenuOpen, setMainMenuOpen] = useState(true);
+  const [mainMenuSettingsOpen, setMainMenuSettingsOpen] = useState(false);
   const [specimens, setSpecimens] = useState<Specimen[]>(loadedSave.specimens.map((specimen) => ({ ...specimen, genetics: specimen.genetics ?? createSpecimenGenetics(specimen.variegation) })));
   const [breedingProjects, setBreedingProjects] = useState<BreedingProject[]>(loadedSave.breedingProjects ?? []);
   const [researchUnlocks, setResearchUnlocks] = useState<string[]>(loadedSave.researchUnlocks ?? []);
@@ -1042,12 +1043,20 @@ function App() {
           <div className="main-menu-quicklinks">
             <button onClick={() => enterGame("Greenhouse")}><Leaf size={16} /> Greenhouse</button>
             <button onClick={() => enterGame("Research")}><Microscope size={16} /> Research</button>
-            <button onClick={() => enterGame("Settings")}><Settings size={16} /> Settings</button>
+            <button onClick={() => setMainMenuSettingsOpen(true)}><Settings size={16} /> Settings</button>
           </div>
         </div>
         <div className="main-menu-footer"><span><span className="main-menu-status-dot" /> YOUR PRIVATE BOTANICAL INSTITUTE</span><span>PROTOTYPE 0.1 <i>·</i> AUTOSAVE ENABLED</span></div>
       </section>
       <div className="main-menu-edition"><span>J2G</span><span>BOTANICAL<br />SIMULATION</span></div>
+      {mainMenuSettingsOpen && <div className="main-menu-settings-backdrop" role="presentation">
+        <section className="main-menu-settings" role="dialog" aria-modal="true" aria-labelledby="main-menu-settings-title">
+          <div className="main-menu-settings-heading"><div><span>J2GROWS · PRE-GAME</span><h2 id="main-menu-settings-title">Settings</h2><p>Configure your experience before entering the institute.</p></div><button className="main-menu-settings-close" aria-label="Close settings" onClick={() => setMainMenuSettingsOpen(false)}><X size={19} /></button></div>
+          <div className="main-menu-settings-row"><div><strong>Display mode</strong><p>Use the browser's fullscreen mode for a more immersive experience.</p></div><button className="main-menu-settings-action" onClick={() => { if (!document.fullscreenElement) void document.documentElement.requestFullscreen?.(); else void document.exitFullscreen?.(); }}>Toggle fullscreen</button></div>
+          <div className="main-menu-settings-row"><div><strong>Game settings</strong><p>Simulation, saves, offline progression and tutorial options are available once you enter the game.</p></div><button className="main-menu-settings-action" onClick={() => { setMainMenuSettingsOpen(false); enterGame("Settings"); }}>Open in-game settings <ArrowRight size={15} /></button></div>
+          <button className="main-menu-settings-back" onClick={() => setMainMenuSettingsOpen(false)}>Back to main menu</button>
+        </section>
+      </div>}
     </div>;
   }
 
