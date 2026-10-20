@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Activity, AlertTriangle, ArrowDownRight, ArrowRight, Beaker, Bell,
-  BookOpen, Building2, Check, ChevronDown, ChevronRight,
+  BookOpen, Building2, Check, ChevronDown, ChevronRight, Database, Gamepad2,
   CircleDollarSign, Clock3, Droplets, FlaskConical, Flower2, Gauge, Home, Leaf,
   Menu, Microscope, Plus, Search, Settings, ShieldCheck, ShoppingBag, Sparkles,
   Sprout, Sun, Thermometer, TrendingUp, Users, Wallet, X, Zap
@@ -89,6 +89,22 @@ const TUTORIAL_SHOP_PLANTS: Species[] = [
   { id: "monstera-adansonii", name: "Monstera Adansonii", latin: "Monstera adansonii", family: "Araceae", difficulty: "Easy", rarity: "Common", basePrice: 15, image: "monstera", summary: "A climbing Monstera with distinctive fenestrated leaves.", light: "Bright, indirect", humidity: "50–70%", water: "Water when the upper mix begins to dry", traits: ["Fenestrated leaves", "Climbing", "Fast-growing"] },
   { id: "philodendron-birkin", name: "Philodendron Birkin", latin: "Philodendron 'Birkin'", family: "Araceae", difficulty: "Easy", rarity: "Uncommon", basePrice: 18, image: "philodendron", summary: "A compact Philodendron with elegant pale pinstripes.", light: "Bright, indirect", humidity: "50–70%", water: "Water when the upper mix begins to dry", traits: ["Pinstriped leaves", "Compact growth", "Upright habit"] },
 ];
+
+type UserPreferences = {
+  masterVolume: number; musicVolume: number; effectsVolume: number; muted: boolean;
+  visualQuality: "high" | "balanced" | "low"; uiScale: number; reducedMotion: boolean; highContrast: boolean;
+  showTutorial: boolean; confirmNewGame: boolean; compactNumbers: boolean; notifications: boolean;
+};
+const PREFERENCES_KEY = "j2grows.preferences.v1";
+const DEFAULT_PREFERENCES: UserPreferences = { masterVolume: 80, musicVolume: 65, effectsVolume: 85, muted: false, visualQuality: "high", uiScale: 100, reducedMotion: false, highContrast: false, showTutorial: true, confirmNewGame: true, compactNumbers: false, notifications: true };
+function loadPreferences(): UserPreferences {
+  try {
+    const raw = localStorage.getItem(PREFERENCES_KEY);
+    if (!raw) return DEFAULT_PREFERENCES;
+    const saved = JSON.parse(raw) as Partial<UserPreferences>;
+    return { ...DEFAULT_PREFERENCES, ...saved, masterVolume: Math.max(0, Math.min(100, Number(saved.masterVolume ?? 80))), musicVolume: Math.max(0, Math.min(100, Number(saved.musicVolume ?? 65))), effectsVolume: Math.max(0, Math.min(100, Number(saved.effectsVolume ?? 85))), uiScale: Math.max(80, Math.min(120, Number(saved.uiScale ?? 100))), visualQuality: ["high","balanced","low"].includes(String(saved.visualQuality)) ? saved.visualQuality as UserPreferences["visualQuality"] : "high" };
+  } catch { return DEFAULT_PREFERENCES; }
+}
 
 const SAVE_KEY = "j2grows.prototype.save.v1";
 
@@ -184,6 +200,11 @@ function App() {
   const [page, setPage] = useState<Page>("Dashboard");
   const [mainMenuOpen, setMainMenuOpen] = useState(true);
   const [mainMenuSettingsOpen, setMainMenuSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<"Audio" | "Graphics & Display" | "Accessibility" | "Gameplay" | "Data & System">("Audio");
+  const [preferences, setPreferences] = useState<UserPreferences>(() => loadPreferences());
+  const [audioTestMessage, setAudioTestMessage] = useState("");
+  useEffect(() => { try { localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences)); } catch { /* Settings remain active for this session if storage is unavailable. */ } }, [preferences]);
+  useEffect(() => { document.documentElement.style.setProperty("--j2g-ui-scale", String(preferences.uiScale / 100)); document.documentElement.classList.toggle("j2g-reduced-motion", preferences.reducedMotion); document.documentElement.classList.toggle("j2g-high-contrast", preferences.highContrast); document.documentElement.dataset.visualQuality = preferences.visualQuality; return () => { document.documentElement.style.removeProperty("--j2g-ui-scale"); document.documentElement.classList.remove("j2g-reduced-motion", "j2g-high-contrast"); delete document.documentElement.dataset.visualQuality; }; }, [preferences.uiScale, preferences.reducedMotion, preferences.highContrast, preferences.visualQuality]);
   const [specimens, setSpecimens] = useState<Specimen[]>(loadedSave.specimens.map((specimen) => ({ ...specimen, genetics: specimen.genetics ?? createSpecimenGenetics(specimen.variegation) })));
   const [breedingProjects, setBreedingProjects] = useState<BreedingProject[]>(loadedSave.breedingProjects ?? []);
   const [researchUnlocks, setResearchUnlocks] = useState<string[]>(loadedSave.researchUnlocks ?? []);
@@ -236,7 +257,7 @@ function App() {
   ];
   const [tutorialStep, setTutorialStep] = useState(0);
   const [tutorialOpen, setTutorialOpen] = useState(() => {
-    try { return localStorage.getItem("j2grows.tutorial.completed.v1") !== "true"; }
+    try { return loadPreferences().showTutorial && localStorage.getItem("j2grows.tutorial.completed.v1") !== "true"; }
     catch { return true; }
   });
   useEffect(() => {
@@ -1039,7 +1060,7 @@ function App() {
         <p>Build your collection. Unlock hidden traits. Cultivate the next generation of botanical discoveries.</p>
         <div className="main-menu-actions">
           <button className="main-menu-primary" onClick={() => enterGame("Dashboard")}><Sprout size={18} /> {hasSave ? "CONTINUE" : "BEGIN YOUR JOURNEY"} <ArrowRight size={17} /></button>
-          <button className="main-menu-secondary" onClick={() => { if (window.confirm("Start a new game? This will replace your current local save.")) { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem(SAVE_BACKUP_KEY); } catch {} window.location.reload(); } }}><Plus size={17} /> NEW GAME</button>
+          <button className="main-menu-secondary" onClick={() => { if (!preferences.confirmNewGame || window.confirm("Start a new game? This will replace your current local save.")) { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem(SAVE_BACKUP_KEY); } catch {} window.location.reload(); } }}><Plus size={17} /> NEW GAME</button>
           <div className="main-menu-quicklinks">
             <button onClick={() => enterGame("Greenhouse")}><Leaf size={16} /> Greenhouse</button>
             <button onClick={() => enterGame("Research")}><Microscope size={16} /> Research</button>
@@ -1049,14 +1070,47 @@ function App() {
         <div className="main-menu-footer"><span><span className="main-menu-status-dot" /> YOUR PRIVATE BOTANICAL INSTITUTE</span><span>PROTOTYPE 0.1 <i>·</i> AUTOSAVE ENABLED</span></div>
       </section>
       <div className="main-menu-edition"><span>J2G</span><span>BOTANICAL<br />SIMULATION</span></div>
-      {mainMenuSettingsOpen && <div className="main-menu-settings-backdrop" role="presentation">
-        <section className="main-menu-settings" role="dialog" aria-modal="true" aria-labelledby="main-menu-settings-title">
-          <div className="main-menu-settings-heading"><div><span>J2GROWS · PRE-GAME</span><h2 id="main-menu-settings-title">Settings</h2><p>Configure your experience before entering the institute.</p></div><button className="main-menu-settings-close" aria-label="Close settings" onClick={() => setMainMenuSettingsOpen(false)}><X size={19} /></button></div>
-          <div className="main-menu-settings-row"><div><strong>Display mode</strong><p>Use the browser's fullscreen mode for a more immersive experience.</p></div><button className="main-menu-settings-action" onClick={() => { if (!document.fullscreenElement) void document.documentElement.requestFullscreen?.(); else void document.exitFullscreen?.(); }}>Toggle fullscreen</button></div>
-          <div className="main-menu-settings-row"><div><strong>Game settings</strong><p>Simulation, saves, offline progression and tutorial options are available once you enter the game.</p></div><button className="main-menu-settings-action" onClick={() => { setMainMenuSettingsOpen(false); enterGame("Settings"); }}>Open in-game settings <ArrowRight size={15} /></button></div>
-          <button className="main-menu-settings-back" onClick={() => setMainMenuSettingsOpen(false)}>Back to main menu</button>
+      {mainMenuSettingsOpen && <div className="main-menu-settings-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setMainMenuSettingsOpen(false); }}>
+        <section className="main-menu-settings main-menu-settings-expanded" role="dialog" aria-modal="true" aria-labelledby="main-menu-settings-title">
+          <div className="main-menu-settings-heading"><div><span>J2GROWS · PRE-GAME CONFIGURATION</span><h2 id="main-menu-settings-title">Settings</h2><p>Your preferences are saved in this browser and apply before you start playing.</p></div><button className="main-menu-settings-close" aria-label="Close settings" onClick={() => setMainMenuSettingsOpen(false)}><X size={19} /></button></div>
+          <div className="settings-workspace">
+            <nav className="settings-tabs" aria-label="Settings categories">{([{label:"Audio",icon:Zap},{label:"Graphics & Display",icon:Sun},{label:"Accessibility",icon:ShieldCheck},{label:"Gameplay",icon:Gamepad2},{label:"Data & System",icon:Database}] as const).map(({label,icon:Icon}) => <button key={label} className={settingsTab===label?"active":""} onClick={()=>setSettingsTab(label)}><Icon size={17}/><span>{label}</span><ChevronRight size={14}/></button>)}</nav>
+            <div className="settings-tab-content">
+              {settingsTab==="Audio" && <><div className="settings-category-title"><h3>Audio</h3><p>Control volume preferences and preview your levels.</p></div>
+                {([{key:"masterVolume",label:"Master volume",detail:"Overall output level"},{key:"musicVolume",label:"Music volume",detail:"Background music level"},{key:"effectsVolume",label:"Sound effects",detail:"Interface and gameplay effects"}] as const).map(({key,label,detail})=><label className="preference-slider" key={key}><span><strong>{label}</strong><small>{detail}</small></span><input aria-label={label} type="range" min="0" max="100" value={preferences[key]} onChange={e=>setPreferences(p=>({...p,[key]:Number(e.target.value)}))}/><output>{preferences[key]}%</output></label>)}
+                <div className="preference-row"><div><strong>Mute audio</strong><small>Silence audio previews and future game audio.</small></div><button className={preferences.muted?"preference-toggle on":"preference-toggle"} role="switch" aria-checked={preferences.muted} onClick={()=>setPreferences(p=>({...p,muted:!p.muted}))}><span/></button></div>
+                <div className="settings-audio-test"><button className="main-menu-settings-action" onClick={()=>{ try { const Ctx=window.AudioContext || (window as typeof window & {webkitAudioContext?: typeof AudioContext}).webkitAudioContext; if(!Ctx){setAudioTestMessage("Audio preview is not supported by this browser.");return;} const ctx=new Ctx(); const osc=ctx.createOscillator(); const gain=ctx.createGain(); const volume=preferences.muted?0:(preferences.masterVolume/100)*(preferences.effectsVolume/100)*0.16; osc.type="sine";osc.frequency.value=660;gain.gain.setValueAtTime(volume,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.35);osc.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+0.36);osc.onended=()=>void ctx.close();setAudioTestMessage(volume===0?"Preview played at zero volume because audio is muted or set to 0%.":"Played a short audio test tone."); } catch { setAudioTestMessage("Could not play audio preview. Check browser audio permissions."); }}}><Zap size={15}/> Test sound</button><span>{audioTestMessage || "Use the test tone to check master and effects volume."}</span></div>
+                <p className="settings-note">The prototype does not currently contain background music or gameplay sound effects; these levels are saved and the test tone demonstrates your current output settings.</p>
+              </>}
+              {settingsTab==="Graphics & Display" && <><div className="settings-category-title"><h3>Graphics & Display</h3><p>Adjust the presentation to suit your screen and device.</p></div>
+                <div className="preference-row"><div><strong>Fullscreen</strong><small>Use the full browser display area.</small></div><button className="main-menu-settings-action" onClick={()=>{if(!document.fullscreenElement) void document.documentElement.requestFullscreen?.().catch(()=>setAudioTestMessage("Fullscreen was blocked by the browser."));else void document.exitFullscreen?.();}}>{typeof document!=="undefined"&&document.fullscreenElement?"Exit fullscreen":"Enter fullscreen"}</button></div>
+                <div className="preference-row"><div><strong>Visual effects</strong><small>Lower the decorative animation and shadow workload.</small></div><select value={preferences.visualQuality} onChange={e=>setPreferences(p=>({...p,visualQuality:e.target.value as UserPreferences["visualQuality"]}))}><option value="high">High</option><option value="balanced">Balanced</option><option value="low">Low</option></select></div>
+                <label className="preference-slider"><span><strong>Interface scale</strong><small>Scales the game interface</small></span><input type="range" min="80" max="120" step="5" value={preferences.uiScale} onChange={e=>setPreferences(p=>({...p,uiScale:Number(e.target.value)}))}/><output>{preferences.uiScale}%</output></label>
+                <p className="settings-note">Resolution is controlled by your browser and display. Interface scale and visual-effects mode apply immediately.</p>
+              </>}
+              {settingsTab==="Accessibility" && <><div className="settings-category-title"><h3>Accessibility</h3><p>Make the interface more comfortable to read and use.</p></div>
+                <div className="preference-row"><div><strong>Reduced motion</strong><small>Disable non-essential transitions and animations.</small></div><button className={preferences.reducedMotion?"preference-toggle on":"preference-toggle"} role="switch" aria-checked={preferences.reducedMotion} onClick={()=>setPreferences(p=>({...p,reducedMotion:!p.reducedMotion}))}><span/></button></div>
+                <div className="preference-row"><div><strong>High contrast</strong><small>Strengthen text, borders and control contrast.</small></div><button className={preferences.highContrast?"preference-toggle on":"preference-toggle"} role="switch" aria-checked={preferences.highContrast} onClick={()=>setPreferences(p=>({...p,highContrast:!p.highContrast}))}><span/></button></div>
+                <label className="preference-slider"><span><strong>Interface scale</strong><small>Increase or decrease text and controls</small></span><input type="range" min="80" max="120" step="5" value={preferences.uiScale} onChange={e=>setPreferences(p=>({...p,uiScale:Number(e.target.value)}))}/><output>{preferences.uiScale}%</output></label>
+              </>}
+              {settingsTab==="Gameplay" && <><div className="settings-category-title"><h3>Gameplay</h3><p>Choose how the prototype handles prompts and information.</p></div>
+                <div className="preference-row"><div><strong>Show introduction tutorial</strong><small>Allow the first-play guide to appear on a fresh start.</small></div><button className={preferences.showTutorial?"preference-toggle on":"preference-toggle"} role="switch" aria-checked={preferences.showTutorial} onClick={()=>setPreferences(p=>({...p,showTutorial:!p.showTutorial}))}><span/></button></div>
+                <div className="preference-row"><div><strong>Confirm starting a new game</strong><small>Ask before replacing your current local save.</small></div><button className={preferences.confirmNewGame?"preference-toggle on":"preference-toggle"} role="switch" aria-checked={preferences.confirmNewGame} onClick={()=>setPreferences(p=>({...p,confirmNewGame:!p.confirmNewGame}))}><span/></button></div>
+                <div className="preference-row"><div><strong>Compact large numbers</strong><small>Use abbreviated numbers in economy displays.</small></div><button className={preferences.compactNumbers?"preference-toggle on":"preference-toggle"} role="switch" aria-checked={preferences.compactNumbers} onClick={()=>setPreferences(p=>({...p,compactNumbers:!p.compactNumbers}))}><span/></button></div>
+                <div className="preference-row"><div><strong>Gameplay notifications</strong><small>Keep notifications enabled for game events.</small></div><button className={preferences.notifications?"preference-toggle on":"preference-toggle"} role="switch" aria-checked={preferences.notifications} onClick={()=>setPreferences(p=>({...p,notifications:!p.notifications}))}><span/></button></div>
+              </>}
+              {settingsTab==="Data & System" && <><div className="settings-category-title"><h3>Data & System</h3><p>Manage local preferences and keep a copy of your current save.</p></div>
+                <div className="preference-row"><div><strong>Local save</strong><small>Game progress is stored in this browser, not synced between devices.</small></div><span className="settings-live-status">Autosave enabled</span></div>
+                <div className="preference-row"><div><strong>Export save backup</strong><small>Download the current autosave and manual save slots as a JSON backup.</small></div><button className="main-menu-settings-action" onClick={()=>{try{const payload={exportedAt:new Date().toISOString(),autosave:localStorage.getItem(SAVE_KEY),manualSlots:localStorage.getItem("j2grows.manual-save-slots.v1")};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="j2grows-save-backup.json";a.click();URL.revokeObjectURL(url);setAudioTestMessage("Save backup download started.");}catch{setAudioTestMessage("Could not export save data from this browser.");}}}><Database size={15}/> Export backup</button></div>
+                <div className="preference-row"><div><strong>Reset preferences</strong><small>Restore settings to their defaults. Your game save is not affected.</small></div><button className="main-menu-settings-action" onClick={()=>{setPreferences(DEFAULT_PREFERENCES);setAudioTestMessage("Preferences restored to defaults.");}}>Reset preferences</button></div>
+                <div className="preference-row"><div><strong>In-game settings</strong><small>Open the full simulation settings, save slots and reset controls.</small></div><button className="main-menu-settings-action" onClick={()=>{setMainMenuSettingsOpen(false);enterGame("Settings");}}>Open in-game settings <ArrowRight size={15}/></button></div>
+                <div className="preference-row"><div><strong>Version</strong><small>J2Grows prototype 0.1</small></div><span className="settings-live-status">Local-first</span></div>
+              </>}
+            </div>
+          </div>
+          <div className="main-menu-settings-footer"><button className="main-menu-settings-back" onClick={()=>setMainMenuSettingsOpen(false)}>Back to main menu</button><span><Check size={14}/> Preferences save automatically</span></div>
         </section>
-      </div>}
+      </div>}}
     </div>;
   }
 
