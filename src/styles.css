@@ -2061,3 +2061,6 @@ body{
 
 /* Keep the guide above the raised shop rows and their divider lines. */
 .tutorial-dialog{z-index:2000!important;background:#0c130d!important;isolation:isolate}
+
+/* The whole coachmark layer must outrank shop rows raised above the dimmer. */
+.tutorial-backdrop{z-index:1500!important}
