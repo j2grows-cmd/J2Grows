@@ -216,7 +216,7 @@ function App() {
   const [audioTestMessage, setAudioTestMessage] = useState("");
   useEffect(() => { try { localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences)); } catch { /* Settings remain active for this session if storage is unavailable. */ } }, [preferences]);
   useEffect(() => { document.documentElement.style.setProperty("--j2g-ui-scale", String(preferences.uiScale / 100)); document.documentElement.style.zoom = String(preferences.uiScale / 100); document.documentElement.classList.toggle("j2g-reduced-motion", preferences.reducedMotion); document.documentElement.classList.toggle("j2g-high-contrast", preferences.highContrast); document.documentElement.dataset.visualQuality = preferences.visualQuality; return () => { document.documentElement.style.removeProperty("--j2g-ui-scale"); document.documentElement.style.removeProperty("zoom"); document.documentElement.classList.remove("j2g-reduced-motion", "j2g-high-contrast"); delete document.documentElement.dataset.visualQuality; }; }, [preferences.uiScale, preferences.reducedMotion, preferences.highContrast, preferences.visualQuality]);
-  const [specimens, setSpecimens] = useState<Specimen[]>(loadedSave.specimens.map((specimen) => ({ ...specimen, genetics: specimen.genetics ?? createSpecimenGenetics(specimen.variegation) })));
+  const [specimens, setSpecimens] = useState<Specimen[]>(loadedSave.specimens.map((specimen) => ({ ...specimen, genetics: specimen.genetics ?? createSpecimenGenetics(specimen.variegation, createEventRandom(loadedSave.simulationSeed, "save-migration:" + specimen.id)) })));
   const [breedingProjects, setBreedingProjects] = useState<BreedingProject[]>(loadedSave.breedingProjects ?? []);
   const [researchUnlocks, setResearchUnlocks] = useState<string[]>(loadedSave.researchUnlocks ?? []);
   const [cash, setCash] = useState(loadedSave.cash);
@@ -459,7 +459,7 @@ function App() {
       health: isAlocasia ? 75 : 85, stage: "Juvenile",
       propagation: isAlocasia ? { method: "corm", phase: "Corm", daysInPhase: 0, daysToSprout: 2 + Math.floor(tutorialRandom() * 4), daysToEstablish: 3 + Math.floor(tutorialRandom() * 3) } : { method: "cutting", phase: "Establishing", daysInPhase: 0, daysToSprout: 0, daysToEstablish: 2 + Math.floor(tutorialRandom() * 3) },
       value: 0,
-      protected: false, variegation: parent.variegation, discovered: false, genetics: parent.genetics ? { ...parent.genetics, genetics: { ...parent.genetics.genetics, mutationIds: [...parent.genetics.genetics.mutationIds] }, observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: parent.genetics.research.mutations.map((mutation) => ({ ...mutation, detected: false })) } } : createSpecimenGenetics(parent.variegation),
+      protected: false, variegation: parent.variegation, discovered: false, genetics: parent.genetics ? { ...parent.genetics, genetics: { ...parent.genetics.genetics, mutationIds: [...parent.genetics.genetics.mutationIds] }, observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: parent.genetics.research.mutations.map((mutation) => ({ ...mutation, detected: false })) } } : createSpecimenGenetics(parent.variegation, tutorialRandom),
     };
     offspring.value = specimenValue(offspring);
     setCash((current) => current - cost);
@@ -500,7 +500,7 @@ function App() {
   function recordTutorialObservation() {
     const cutting = specimens.find((item) => ["First Cutting", "First Corm", "First Mutation"].includes(item.nickname));
     if (!cutting) { announce("Propagate your first plant before discovering a mutation."); return; }
-    const record = cutting.genetics ?? createSpecimenGenetics(cutting.variegation);
+    const record = cutting.genetics ?? createSpecimenGenetics(cutting.variegation, createEventRandom(simulationSeed, "cutting-analysis:" + day + ":" + cutting.id));
     const observed = observePlant(record, cutting.variegation, false);
     const updated = { ...cutting, genetics: observed, value: specimenValue(cutting) };
     setSpecimens((current) => current.map((item) => item.id === cutting.id ? updated : item));
@@ -538,7 +538,7 @@ function App() {
   function loadFromSlot(slot: string) {
     const save = saveSlots[slot];
     if (!save) { announce(`Save slot ${slot} is empty.`); return; }
-    setSpecimens(save.specimens.map((item) => ({ ...item, genetics: item.genetics ?? createSpecimenGenetics(item.variegation) })));
+    setSpecimens(save.specimens.map((item) => ({ ...item, genetics: item.genetics ?? createSpecimenGenetics(item.variegation, createEventRandom(save.simulationSeed, "manual-load:" + item.id)) })));
     setBreedingProjects(save.breedingProjects ?? []);
     setResearchUnlocks(save.researchUnlocks ?? []);
     setCash(save.cash); setResearch(save.research); setDay(save.day);
@@ -717,7 +717,7 @@ function App() {
         location: "Propagation Bench", health: 88, stage: "Corm / Seedling", stageDays: 0,
         geneticLineId: project.lineId, lineParentIds: [parentA.id, parentB.id], generation, stabilityGenerations, stableMutationIds,
         value: 0, protected: false, variegation: childVariation, discovered: false,
-        genetics: { ...createSpecimenGenetics(childVariation), genetics: inherited, research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: stableMutationIds.length ? ["multi-generation-stability"] : [], mutations: inheritedMutationRecords } },
+        genetics: { ...createSpecimenGenetics(childVariation, random), genetics: inherited, research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: stableMutationIds.length ? ["multi-generation-stability"] : [], mutations: inheritedMutationRecords } },
       };
       if (mutationOccurs("breeding", child.genetics!.environment, researchUnlocks.includes("mutation-screening") ? 2 : 0, researchUnlocks.includes("mutation-screening") ? 0.01 : 0, random)) {
         const mutation = createMutation(random);
@@ -735,7 +735,7 @@ function App() {
             id: createUniqueSpecimenId([...nextSpecimens, ...completedChildren].map((item) => item.id)),
             nickname: `Genetic Line ${generation} · ${completedChildren.length}`,
             variegation: Math.round(batchProfile.variegationPotential),
-            genetics: { ...createSpecimenGenetics(batchProfile.variegationPotential), genetics: batchProfile, research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: inheritedMutationRecords.map((mutation) => ({ ...mutation, detected: false, evidenceCount: 0 })) } },
+            genetics: { ...createSpecimenGenetics(batchProfile.variegationPotential, random), genetics: batchProfile, research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: inheritedMutationRecords.map((mutation) => ({ ...mutation, detected: false, evidenceCount: 0 })) } },
             stabilityGenerations: { ...stabilityGenerations },
             stableMutationIds: [...stableMutationIds],
           };
@@ -801,7 +801,7 @@ function App() {
       announce(`${activeSpecimen.nickname} has already been observed today. Advance a day before recording another observation.`);
       return;
     }
-    const record = activeSpecimen.genetics ?? createSpecimenGenetics(activeSpecimen.variegation);
+    const record = activeSpecimen.genetics ?? createSpecimenGenetics(activeSpecimen.variegation, createEventRandom(simulationSeed, "active-specimen-genetics:" + day + ":" + activeSpecimen.id));
     const observed = observePlant(record, activeSpecimen.variegation, researchUnlocks.includes("mutation-screening") && analysisEquipmentLevel > 0);
     const discovered = observed.research.mutations.some((mutation) => mutation.detected);
     const updated = { ...activeSpecimen, genetics: observed, lastObservedDay: day, discovered: Boolean(activeSpecimen.discovered || discovered) };
@@ -899,7 +899,7 @@ function App() {
         protected: false,
         variegation: parent.variegation,
         discovered: false,
-        genetics: parent.genetics ? { ...parent.genetics, genetics: { ...parent.genetics.genetics, mutationIds: [...parent.genetics.genetics.mutationIds] }, observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: parent.genetics.research.mutations.map((mutation) => ({ ...mutation, detected: false })) } } : createSpecimenGenetics(parent.variegation),
+        genetics: parent.genetics ? { ...parent.genetics, genetics: { ...parent.genetics.genetics, mutationIds: [...parent.genetics.genetics.mutationIds] }, observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: parent.genetics.research.mutations.map((mutation) => ({ ...mutation, detected: false })) } } : createSpecimenGenetics(parent.variegation, propagationRandom),
       };
       if (mutationOccurs("propagation", child.genetics!.environment, researchUnlocks.includes("propagation-science") ? 1 : 0, researchUnlocks.includes("propagation-science") ? 0.005 : 0, propagationRandom)) {
         const mutation = createMutation(propagationRandom);
