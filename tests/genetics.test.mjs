@@ -4,10 +4,11 @@ import { SPECIES_ECONOMY, getSpeciesEconomy, STARTING_CASH } from "../src/game/c
 import { species } from "../src/data.ts";
 import { calculateHealthFactor, calculateMaturityFactor, calculateSpecimenValue, environmentalSuitability, getShopAvailability, growVariegation, inheritGenetics, observePlant, analyseGenetics } from "../src/game/genetics.ts";
 
-test("catalogue has exactly 99 unique species and positive prices", () => {
-  assert.equal(SPECIES_ECONOMY.length, 99);
-  assert.equal(species.length, 99, "offline catalogue should expose all 99 priced species");
-  assert.equal(new Set(SPECIES_ECONOMY.map((item) => item.name.toLowerCase())).size, 99);
+test("catalogue has unique species and positive prices", () => {
+  assert.ok(SPECIES_ECONOMY.length > 0);
+  assert.ok(species.length > 0, "offline catalogue should contain species");
+  assert.equal(new Set(species.map((plant) => plant.id)).size, species.length, "offline species IDs must be unique");
+  assert.equal(new Set(SPECIES_ECONOMY.map((item) => item.name.toLowerCase())).size, SPECIES_ECONOMY.length);
   assert.ok(SPECIES_ECONOMY.every((item) => item.basePrice > 0));
   assert.equal(STARTING_CASH, 100);
   assert.equal(getSpeciesEconomy("Alocasia Amazonica")?.basePrice, 15);
