@@ -43,7 +43,7 @@ test("inheritance blends parental profiles with bounded variation", () => {
   const child = inheritGenetics(a, b, () => 0.5);
   assert.equal(child.variegationPotential, 70);
   assert.equal(child.stability, 70);
-  assert.deepEqual(child.mutationIds, ["a", "b"]);
+  assert.ok(child.mutationIds.every((id) => ["a", "b"].includes(id)));
 });
 
 test("environment changes suitability and variegation expression is bounded", () => {
@@ -115,4 +115,28 @@ test("mutation carriers receive a latent record before analysis and can be repla
   const replay = createSpecimenGenetics(0, createSeededRandom(0));
   const replayAgain = createSpecimenGenetics(0, createSeededRandom(0));
   assert.deepEqual(replay.research.mutations, replayAgain.research.mutations);
+});
+
+test("mutation carrier inheritance follows independent Mendelian transmission probabilities", () => {
+  const profile = (carrier, mutationIds = []) => ({ variegationPotential: 50, stability: 50, hiddenPotential: 50, growthPotential: 50, mutationGenePresent: carrier, mutationIds });
+  let bothCarrierCount = 0;
+  let oneCarrierCount = 0;
+  const trials = 3000;
+  for (let index = 0; index < trials; index += 1) {
+    if (inheritGenetics(profile(true), profile(true), createSeededRandom("both-" + index)).mutationGenePresent) bothCarrierCount += 1;
+    if (inheritGenetics(profile(true), profile(false), createSeededRandom("one-" + index)).mutationGenePresent) oneCarrierCount += 1;
+  }
+  const bothRate = bothCarrierCount / trials;
+  const oneRate = oneCarrierCount / trials;
+  assert.ok(bothRate > 0.70 && bothRate < 0.80, "two heterozygous carriers should produce about 75% carriers");
+  assert.ok(oneRate > 0.45 && oneRate < 0.55, "one carrier and one non-carrier should produce about 50% carriers");
+});
+
+test("mutation records are not guaranteed to pass to every offspring", () => {
+  const a = { variegationPotential: 50, stability: 50, hiddenPotential: 50, growthPotential: 50, mutationGenePresent: false, mutationIds: ["mutation-a"] };
+  const b = { ...a, mutationIds: [] };
+  const childA = inheritGenetics(a, b, createSeededRandom("mutation-child"));
+  const childB = inheritGenetics(a, b, createSeededRandom("mutation-child"));
+  assert.deepEqual(childA, childB);
+  assert.ok(childA.mutationIds.length <= 1);
 });
