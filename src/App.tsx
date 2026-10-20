@@ -10,8 +10,8 @@ import {
 import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeSpecies, type Species, type Specimen } from "./data";
 import { createUniqueSpecimenId } from "./game/specimen-id.ts";
 import { createEventRandom } from "./game/random.ts";
-import { advanceEstablishedGrowthStage, calculateDailyHealth } from "./game/simulation.ts";
-import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, normalizeFacilityLevels, propagationDaysRequired, weeklyFacilityOperatingCost, type FacilityLevels, type FacilityName } from "./game/facilities.ts";
+import { advanceEstablishedGrowthStage, advancePropagationPhase, calculateDailyHealth } from "./game/simulation.ts";
+import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, normalizeFacilityLevels, weeklyFacilityOperatingCost, type FacilityLevels, type FacilityName } from "./game/facilities.ts";
 import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, startStaffTraining, STAFF_TRAINING_COST, weeklyStaffOperatingCost, type StaffState } from "./game/staff.ts";
 import { getFallbackArtworkType } from "./game/plant-artwork.ts";
 import { canCreateOffset } from "./game/propagation-eligibility.ts";
@@ -634,41 +634,19 @@ function App() {
       const speciesFactor = genus === "anthurium" ? 1.25 : genus === "alocasia" ? 1.1 : ["monstera", "philodendron"].includes(genus) ? 0.9 : 1;
       if (propagation) {
         const delay = suitability < 45 ? 2 : suitability < 65 ? 1 : 0;
-        const propagationDays = (baseDays: number) => propagationDaysRequired(baseDays + delay, facilityLevels.propagationBench);
-        propagation = { ...propagation, daysInPhase: propagation.daysInPhase + 1 };
-        if (propagation.phase === "Cutting" && propagation.daysInPhase >= propagationDays(propagation.daysToSprout)) {
-          propagation = { ...propagation, phase: "Rooting", daysInPhase: 0 };
-          location = "Propagation Bench · Rooting";
-          growthMessage = ` ${specimen.nickname} has begun rooting.`;
-        } else if (propagation.phase === "Rooting" && propagation.daysInPhase >= propagationDays(propagation.daysToEstablish)) {
-          propagation = { ...propagation, phase: "New Growth", daysInPhase: 0 };
-          location = "Propagation Bench · New Growth";
-          growthMessage = ` ${specimen.nickname} is showing new growth.`;
-        } else if (propagation.phase === "New Growth" && propagation.daysInPhase >= propagationDays(propagation.daysToJuvenile ?? 5)) {
-          propagation = undefined;
+        const progress = advancePropagationPhase(propagation, delay, facilityLevels.propagationBench);
+        propagation = progress.propagation;
+        if (progress.transition === "cutting-rooting") { location = "Propagation Bench · Rooting"; growthMessage = ` ${specimen.nickname} has begun rooting.`; }
+        else if (progress.transition === "rooting-new-growth") { location = "Propagation Bench · New Growth"; growthMessage = ` ${specimen.nickname} is showing new growth.`; }
+        else if (progress.transition === "corm-sprouting") { location = "Corm Nursery · Sprouting"; growthMessage = ` ${specimen.nickname} has started sprouting.`; }
+        else if (progress.transition === "propagation-established") {
           stage = "Juvenile";
           stageDays = 0;
-          location = "Greenhouse · Establishing";
-          growthMessage = ` ${specimen.nickname} has established as a juvenile plant.`;
-        } else if (propagation.phase === "Corm" && propagation.daysInPhase >= propagation.daysToSprout + delay) {
-          propagation = { ...propagation, phase: "Sprouting", daysInPhase: 0 };
-          location = "Corm Nursery · Sprouting";
-          growthMessage = ` ${specimen.nickname} has started sprouting.`;
-        } else if (propagation.phase === "Sprouting" && propagation.daysInPhase >= propagation.daysToEstablish + delay) {
-          propagation = undefined;
-          stage = "Juvenile";
-          stageDays = 0;
-          location = "Greenhouse · Establishing";
-          growthMessage = ` ${specimen.nickname} has established as a juvenile plant.`;
-        } else if (propagation.phase === "Establishing" && propagation.daysInPhase >= propagation.daysToEstablish + delay) {
-          propagation = undefined;
-          stage = "Juvenile";
-          stageDays = 0;
-          location = "Greenhouse";
+          location = specimen.propagation?.phase === "New Growth" ? "Greenhouse · Establishing" : specimen.propagation?.phase === "Sprouting" ? "Greenhouse · Establishing" : "Greenhouse";
           growthMessage = ` ${specimen.nickname} has established as a juvenile plant.`;
         }
         if (propagation?.phase === "Sprouting") stage = "Juvenile";
-      } else {
+      }else {
         const progress = advanceEstablishedGrowthStage(stage, stageDays, health, speciesFactor, conditionFactor);
         stage = progress.stage;
         stageDays = progress.stageDays;

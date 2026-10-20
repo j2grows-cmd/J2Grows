@@ -28,3 +28,43 @@ export function advanceEstablishedGrowthStage(
   if (stage === "Mature" && healthy >= 70 && days >= Math.ceil(14 * species * conditions)) return { stage: "Breeding-ready", stageDays: 0, transition: "mature-breeding-ready" };
   return { stage, stageDays: days };
 }
+
+export type PropagationState = {
+  method: "corm" | "cutting" | "division" | "tissue-culture";
+  phase: "Corm" | "Sprouting" | "Establishing" | "Cutting" | "Rooting" | "New Growth";
+  daysInPhase: number;
+  daysToSprout: number;
+  daysToEstablish: number;
+  daysToJuvenile?: number;
+};
+export type PropagationTransition = "cutting-rooting" | "rooting-new-growth" | "propagation-established" | "corm-sprouting" | "no-transition";
+
+export function advancePropagationPhase(
+  current: PropagationState,
+  suitabilityDelay: number,
+  benchLevel: number,
+): { propagation: PropagationState | undefined; transition: PropagationTransition } {
+  const delay = Math.max(0, Math.min(2, Math.floor(Number.isFinite(suitabilityDelay) ? suitabilityDelay : 0)));
+  const level = Math.max(0, Math.min(3, Math.floor(Number.isFinite(benchLevel) ? benchLevel : 0)));
+  const days = Math.max(0, Math.floor(Number.isFinite(current.daysInPhase) ? current.daysInPhase : 0)) + 1;
+  const timed = (base: number) => Math.max(1, Math.ceil(Math.max(1, Number.isFinite(base) ? base : 1) + delay) - level);
+  if (current.phase === "Cutting" && days >= timed(current.daysToSprout)) {
+    return { propagation: { ...current, phase: "Rooting", daysInPhase: 0 }, transition: "cutting-rooting" };
+  }
+  if (current.phase === "Rooting" && days >= timed(current.daysToEstablish)) {
+    return { propagation: { ...current, phase: "New Growth", daysInPhase: 0 }, transition: "rooting-new-growth" };
+  }
+  if (current.phase === "New Growth" && days >= timed(current.daysToJuvenile ?? 5)) {
+    return { propagation: undefined, transition: "propagation-established" };
+  }
+  if (current.phase === "Corm" && days >= current.daysToSprout + delay) {
+    return { propagation: { ...current, phase: "Sprouting", daysInPhase: 0 }, transition: "corm-sprouting" };
+  }
+  if (current.phase === "Sprouting" && days >= current.daysToEstablish + delay) {
+    return { propagation: undefined, transition: "propagation-established" };
+  }
+  if (current.phase === "Establishing" && days >= current.daysToEstablish + delay) {
+    return { propagation: undefined, transition: "propagation-established" };
+  }
+  return { propagation: { ...current, daysInPhase: days }, transition: "no-transition" };
+}
