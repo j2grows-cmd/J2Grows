@@ -51,7 +51,7 @@ export function forecastTraitTargeting(a: GeneticProfile, b: GeneticProfile, tar
   const right = b[target];
   const baselineMean = (left + right) / 2;
   const strongestParent = Math.max(left, right);
-  const nudgedMean = baselineMean + Math.max(0, strongestParent - baselineMean) * 0.2;
+  const nudgedMean = baselineMean + Math.max(0, strongestParent - baselineMean) * 0.3;
   const probabilityOfNudge = 0.7;
   return {
     target,
