@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createSeededRandom, randomInteger } from "../src/game/random.ts";
+import { createEventRandom, createSeededRandom, randomInteger } from "../src/game/random.ts";
 
 test("seeded streams produce the same sequence for the same seed", () => {
   const first = createSeededRandom("j2grows-save-123");
@@ -31,4 +31,14 @@ test("randomInteger respects inclusive bounds and deterministic streams", () => 
   assert.ok(a.every((value) => value >= 2 && value <= 5));
   assert.throws(() => randomInteger(first, 3.2, 7), RangeError);
   assert.throws(() => randomInteger(first, 8, 7), RangeError);
+});
+
+test("event streams replay independently of unrelated event consumption", () => {
+  const first = createEventRandom("save-seed", "day:8:specimen:fern-1");
+  const unrelated = createEventRandom("save-seed", "day:8:specimen:fern-2");
+  const expected = Array.from({ length: 5 }, first);
+  Array.from({ length: 100 }, unrelated);
+  const replay = createEventRandom("save-seed", "day:8:specimen:fern-1");
+  assert.deepEqual(Array.from({ length: 5 }, replay), expected);
+  assert.notDeepEqual(expected, Array.from({ length: 5 }, createEventRandom("save-seed", "day:8:specimen:fern-2")));
 });
