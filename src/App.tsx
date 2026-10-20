@@ -578,8 +578,6 @@ function App() {
     setAnalysisEquipmentLevel(0);
     setFacilityLevels({ propagationBench: 0, environmentalController: 0 });
     setStaffState({ ...DEFAULT_STAFF_STATE });
-    setOfflineProgressEnabled(false);
-    setOfflineDaysRemaining(0);
     setSimulationSeed(`j2grows-${Date.now().toString(36)}`);
     setSelected("");
     setInstituteName("");
