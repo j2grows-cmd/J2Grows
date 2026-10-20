@@ -1112,7 +1112,7 @@ function App() {
           </div>
           <div className="main-menu-settings-footer"><button className="main-menu-settings-back" onClick={()=>setMainMenuSettingsOpen(false)}>Back to main menu</button><span><Check size={14}/> Preferences save automatically</span></div>
         </section>
-      </div>}}
+      </div>}
     </div>;
   }
 
