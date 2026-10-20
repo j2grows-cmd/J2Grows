@@ -616,7 +616,7 @@ function App() {
       let nextVariegation = growth.expression;
       let discovered = specimen.discovered;
       if (mutationOccurs("growth", environment, Math.floor(research / 50), analysisEquipmentLevel * 0.001, random)) {
-        const mutation = createMutation(random);
+        const mutation = createMutation(random, { origin: "growth", tissueDistribution: "sectoral", originDay: nextDay });
         mutation.detected = false;
         nextRecord = { ...nextRecord, genetics: { ...nextRecord.genetics, mutationIds: [...new Set([...nextRecord.genetics.mutationIds, mutation.id])] }, research: { ...nextRecord.research, mutations: [...nextRecord.research.mutations, mutation] } };
         if (mutation.category === "colour") { nextVariegation = Math.min(100, Math.max(nextVariegation, 35 + Math.round(random() * 35))); nextRecord = { ...nextRecord, genetics: { ...nextRecord.genetics, variegationPotential: Math.max(nextRecord.genetics.variegationPotential, nextVariegation) } }; }
@@ -720,7 +720,7 @@ function App() {
         genetics: { ...createSpecimenGenetics(childVariation, random), genetics: inherited, research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: stableMutationIds.length ? ["multi-generation-stability"] : [], mutations: inheritedMutationRecords } },
       };
       if (mutationOccurs("breeding", child.genetics!.environment, researchUnlocks.includes("mutation-screening") ? 2 : 0, researchUnlocks.includes("mutation-screening") ? 0.01 : 0, random)) {
-        const mutation = createMutation(random);
+        const mutation = createMutation(random, { origin: "breeding", tissueDistribution: "whole-plant", originDay: nextDay, parentMutationIds: [...recordA.genetics.mutationIds, ...recordB.genetics.mutationIds] });
         mutation.detected = false;
         child.genetics = { ...child.genetics!, genetics: { ...child.genetics!.genetics, mutationIds: [...new Set([...child.genetics!.genetics.mutationIds, mutation.id])] }, research: { ...child.genetics!.research, mutations: [...child.genetics!.research.mutations, mutation] } };
         mutationMessage += ` A potential mutation appeared in ${child.nickname}; recorded evidence is needed to confirm it.`;
@@ -758,7 +758,7 @@ function App() {
         const record = completedTarget.genetics ?? createSpecimenGenetics(completedTarget.variegation, createEventRandom(simulationSeed, "mutation-analysis-genetics:" + completedTarget.id));
         if (record.genetics.mutationGenePresent) {
           const analysisRandom = createEventRandom(simulationSeed, "mutation-analysis:" + target.id);
-          const mutation = { ...createMutation(analysisRandom), detected: true, evidenceCount: 3 };
+          const mutation = { ...createMutation(analysisRandom, { origin: "analysis", tissueDistribution: "unknown", originDay: day }), detected: true, evidenceCount: 3 };
           const geneticsRecord = {
             ...record,
             genetics: { ...record.genetics, mutationIds: [...new Set([...record.genetics.mutationIds, mutation.id])] },
@@ -902,7 +902,7 @@ function App() {
         genetics: parent.genetics ? { ...parent.genetics, genetics: { ...parent.genetics.genetics, mutationIds: [...parent.genetics.genetics.mutationIds] }, observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: parent.genetics.research.mutations.map((mutation) => ({ ...mutation, detected: false })) } } : createSpecimenGenetics(parent.variegation, propagationRandom),
       };
       if (mutationOccurs("propagation", child.genetics!.environment, researchUnlocks.includes("propagation-science") ? 1 : 0, researchUnlocks.includes("propagation-science") ? 0.005 : 0, propagationRandom)) {
-        const mutation = createMutation(propagationRandom);
+        const mutation = createMutation(propagationRandom, { origin: "propagation", tissueDistribution: method === "tissue-culture" ? "meristematic" : method === "division" ? "whole-plant" : "sectoral", originDay: day });
         mutation.detected = false;
         child.genetics = { ...child.genetics!, genetics: { ...child.genetics!.genetics, mutationIds: [...new Set([...child.genetics!.genetics.mutationIds, mutation.id])] }, research: { ...child.genetics!.research, mutations: [...child.genetics!.research.mutations, mutation] } };
       }
