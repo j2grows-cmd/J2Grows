@@ -5,7 +5,7 @@ import {
   breedingFailureChance, calculateElapsedDays, advanceClock, mutationChance,
   mutationOccurs, mutationConfirmed, stableAcrossGenerations, canUnlockResearch,
   unlockResearch, RESEARCH_TREE, geneticLineValue, inheritTraits, applyTraitTargeting,
-  calculateTargetedBreedingCost, calculateTargetedFailureChance,
+  calculateTargetedBreedingCost, calculateTargetedFailureChance, assessMutationStability,
 } from "../src/game/progression.ts";
 import { createGeneticProfile, DEFAULT_ENVIRONMENT } from "../src/game/genetics.ts";
 
@@ -87,4 +87,12 @@ test("trait inheritance is bounded and line value rewards demonstrated potential
     assert.ok(child[key] >= 0 && child[key] <= 100);
   }
   assert.ok(geneticLineValue(20, 100, 1.6, 90, 1) > geneticLineValue(20, 100, 1.6, 20, 0));
+});
+
+test("mutation stability requires both repeated inheritance and high intrinsic stability", () => {
+  assert.equal(assessMutationStability(2, 95).stable, false);
+  assert.equal(assessMutationStability(3, 74).stable, false);
+  assert.equal(assessMutationStability(3, 75).stable, true);
+  assert.equal(assessMutationStability(10, 40).reason, "low-intrinsic-stability");
+  assert.equal(assessMutationStability(Number.NaN, 90).reason, "insufficient-generations");
 });
