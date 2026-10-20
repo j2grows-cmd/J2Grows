@@ -60,3 +60,47 @@ export function normalizeSpeciesRows(values: unknown): ValidatedSpeciesRow[] {
   }
   return rows;
 }
+
+export type SpeciesCatalogueAudit = {
+  totalRows: number;
+  validRows: number;
+  invalidRowIndexes: number[];
+  duplicateIds: string[];
+  missingScientificNames: string[];
+  missingFamilies: string[];
+  missingCareProfiles: string[];
+  missingArtworkPaths: string[];
+  missingTraits: string[];
+};
+
+export function auditSpeciesRows(values: unknown): SpeciesCatalogueAudit {
+  const rows = Array.isArray(values) ? values : [];
+  const invalidRowIndexes: number[] = [];
+  const seenIds = new Set<string>();
+  const duplicateIds = new Set<string>();
+  const missingScientificNames: string[] = [];
+  const missingFamilies: string[] = [];
+  const missingCareProfiles: string[] = [];
+  const missingArtworkPaths: string[] = [];
+  const missingTraits: string[] = [];
+  let validRows = 0;
+  rows.forEach((value, index) => {
+    const normalized = normalizeSpeciesRow(value);
+    if (!normalized) {
+      invalidRowIndexes.push(index);
+      return;
+    }
+    if (seenIds.has(normalized.id)) duplicateIds.add(normalized.id);
+    seenIds.add(normalized.id);
+    validRows += 1;
+    if (!normalized.scientific_name) missingScientificNames.push(normalized.id);
+    if (!normalized.family) missingFamilies.push(normalized.id);
+    if (!normalized.light || !normalized.humidity || !normalized.water) missingCareProfiles.push(normalized.id);
+    if (!normalized.image_path) missingArtworkPaths.push(normalized.id);
+    if (!normalized.traits.length) missingTraits.push(normalized.id);
+  });
+  return {
+    totalRows: rows.length, validRows, invalidRowIndexes, duplicateIds: [...duplicateIds].sort(),
+    missingScientificNames, missingFamilies, missingCareProfiles, missingArtworkPaths, missingTraits,
+  };
+}
