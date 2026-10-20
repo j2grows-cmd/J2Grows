@@ -449,12 +449,13 @@ function App() {
     }
     const cost = isAlocasia ? 2 : 4;
     if (cash < cost) { announce(`You need ${money(cost)} for propagation supplies.`); return; }
+    const tutorialRandom = createEventRandom(simulationSeed, "tutorial-propagation:" + day + ":" + parent.id);
     const offspring: Specimen = {
       id: createUniqueSpecimenId(specimens.map((item) => item.id)),
       speciesId: parent.speciesId, nickname: isAlocasia ? "First Corm" : "First Cutting",
       location: isAlocasia ? "Corm Nursery" : "Propagation Bench",
       health: isAlocasia ? 75 : 85, stage: "Juvenile",
-      propagation: isAlocasia ? { method: "corm", phase: "Corm", daysInPhase: 0, daysToSprout: 2 + Math.floor(Math.random() * 4), daysToEstablish: 3 + Math.floor(Math.random() * 3) } : { method: "cutting", phase: "Establishing", daysInPhase: 0, daysToSprout: 0, daysToEstablish: 2 + Math.floor(Math.random() * 3) },
+      propagation: isAlocasia ? { method: "corm", phase: "Corm", daysInPhase: 0, daysToSprout: 2 + Math.floor(tutorialRandom() * 4), daysToEstablish: 3 + Math.floor(tutorialRandom() * 3) } : { method: "cutting", phase: "Establishing", daysInPhase: 0, daysToSprout: 0, daysToEstablish: 2 + Math.floor(tutorialRandom() * 3) },
       value: 0,
       protected: false, variegation: parent.variegation, discovered: false, genetics: parent.genetics ? { ...parent.genetics, genetics: { ...parent.genetics.genetics, mutationIds: [...parent.genetics.genetics.mutationIds] }, observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: parent.genetics.research.mutations.map((mutation) => ({ ...mutation, detected: false })) } } : createSpecimenGenetics(parent.variegation),
     };
@@ -762,7 +763,8 @@ function App() {
         const completedTarget: Specimen = { ...target, mutationAnalysisCompleted: true };
         const record = completedTarget.genetics ?? createSpecimenGenetics(completedTarget.variegation);
         if (record.genetics.mutationGenePresent) {
-          const mutation = { ...createMutation(), detected: true, evidenceCount: 3 };
+          const analysisRandom = createEventRandom(simulationSeed, "mutation-analysis:" + target.id);
+          const mutation = { ...createMutation(analysisRandom), detected: true, evidenceCount: 3 };
           const geneticsRecord = {
             ...record,
             genetics: { ...record.genetics, mutationIds: [...new Set([...record.genetics.mutationIds, mutation.id])] },
@@ -883,7 +885,8 @@ function App() {
       "tissue-culture": { prefix: "TC", label: "Tissue culture", location: "Tissue Culture Lab", health: 70, nickname: "Tissue Culture" },
     };
     const detail = { ...details[method], cost: propagationCost(method, rarity) };
-    const count = method === "cutting" ? 1 + Math.floor(Math.random() * 3) : 1;
+    const propagationRandom = createEventRandom(simulationSeed, "propagation:" + day + ":" + parent.id + ":" + method + ":" + specimens.length);
+    const count = method === "cutting" ? 1 + Math.floor(propagationRandom() * 3) : 1;
     const totalCost = detail.cost * count;
     if (cash < totalCost) { announce(`Not enough funds. ${count > 1 ? `${count} cuttings cost ${money(totalCost)} in total` : `${detail.label} propagation costs ${money(totalCost)}`}.`); return; }
     const usedIds = new Set(specimens.map((item) => item.id));
@@ -897,15 +900,15 @@ function App() {
         location: detail.location,
         health: detail.health,
         stage: "Juvenile",
-        propagation: { method, phase: method === "corm" ? "Corm" : method === "cutting" ? "Cutting" : "Establishing", daysInPhase: 0, daysToSprout: method === "corm" ? 2 + Math.floor(Math.random() * 4) : method === "cutting" ? 2 + Math.floor(Math.random() * 3) : 0, daysToEstablish: 3 + Math.floor(Math.random() * 3), daysToJuvenile: method === "cutting" ? 4 + Math.floor(Math.random() * 3) : undefined },
+        propagation: { method, phase: method === "corm" ? "Corm" : method === "cutting" ? "Cutting" : "Establishing", daysInPhase: 0, daysToSprout: method === "corm" ? 2 + Math.floor(propagationRandom() * 4) : method === "cutting" ? 2 + Math.floor(propagationRandom() * 3) : 0, daysToEstablish: 3 + Math.floor(propagationRandom() * 3), daysToJuvenile: method === "cutting" ? 4 + Math.floor(propagationRandom() * 3) : undefined },
         value: 0,
         protected: false,
         variegation: parent.variegation,
         discovered: false,
         genetics: parent.genetics ? { ...parent.genetics, genetics: { ...parent.genetics.genetics, mutationIds: [...parent.genetics.genetics.mutationIds] }, observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: parent.genetics.research.mutations.map((mutation) => ({ ...mutation, detected: false })) } } : createSpecimenGenetics(parent.variegation),
       };
-      if (mutationOccurs("propagation", child.genetics!.environment, researchUnlocks.includes("propagation-science") ? 1 : 0, researchUnlocks.includes("propagation-science") ? 0.005 : 0)) {
-        const mutation = createMutation();
+      if (mutationOccurs("propagation", child.genetics!.environment, researchUnlocks.includes("propagation-science") ? 1 : 0, researchUnlocks.includes("propagation-science") ? 0.005 : 0, propagationRandom)) {
+        const mutation = createMutation(propagationRandom);
         mutation.detected = false;
         child.genetics = { ...child.genetics!, genetics: { ...child.genetics!.genetics, mutationIds: [...new Set([...child.genetics!.genetics.mutationIds, mutation.id])] }, research: { ...child.genetics!.research, mutations: [...child.genetics!.research.mutations, mutation] } };
       }
@@ -978,7 +981,7 @@ function App() {
       announce(`This breeding project costs ${money(cost)}. You currently have ${money(cash)}.`);
       return;
     }
-    const id = `BRD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+    const id = "BRD-" + day + "-" + (breedingProjects.length + 1) + "-" + parentA.id + "-" + parentB.id;
     const condition = (greenhouseEnvironment.light + greenhouseEnvironment.nutrition + greenhouseEnvironment.humidity + parentA.health + parentB.health) / 5;
     const project: BreedingProject = {
       id, parentAId, parentBId, startedDay: day,
