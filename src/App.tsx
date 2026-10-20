@@ -20,7 +20,7 @@ import { loadSpeciesCatalog } from "./supabase";
 import { getArtworkStatusSummary, getCatalogueSourceLabel, type ArtworkState, type CatalogueSource } from "./game/catalogue-status";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
 import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, observePlant, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
-import { applyTraitTargeting, breedingDurationDays, breedingFailureChance, calculateBreedingCost, calculateTargetedBreedingCost, calculateTargetedFailureChance, canBreed, inheritTraits, mutationOccurs, type BreedingProject, type TargetableTrait, RESEARCH_TREE, canUnlockResearch, unlockResearch } from "./game/progression";
+import { applyTraitTargeting, breedingDurationDays, breedingFailureChance, calculateBreedingCost, calculateTargetedBreedingCost, calculateTargetedFailureChance, canBreed, inheritTraits, mutationOccurs, type BreedingProject, type TargetableTrait, RESEARCH_TREE, canUnlockResearch, unlockResearch, assessMutationStability } from "./game/progression";
 
 type PropagationMethod = "cutting" | "division" | "corm" | "tissue-culture";
 
