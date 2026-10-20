@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createGenome, inheritGenome, normalizeGenome, phenotypeFromGenome } from "../src/game/alleles.ts";
+import { createGenome, inheritGenome, mutateGenomeLocus, normalizeGenome, phenotypeFromGenome } from "../src/game/alleles.ts";
 import { createSeededRandom } from "../src/game/random.ts";
 
 test("genomes have four diploid loci and bounded integer alleles", () => {
@@ -29,4 +29,13 @@ test("phenotype is derived separately and save normalization rejects malformed a
   assert.deepEqual(phenotypeFromGenome(genome), { variegationPotential:90, stability:60, growthPotential:30, hiddenPotential:20 });
   assert.deepEqual(normalizeGenome(genome), genome);
   assert.equal(normalizeGenome({...genome, growth:{maternal:"999",paternal:"1"}}), undefined);
+});
+
+test("locus mutations stay in range and alter the derived phenotype reproducibly", () => {
+  const genome = { variegation:{maternal:"0",paternal:"10"}, stability:{maternal:"5",paternal:"5"}, growth:{maternal:"3",paternal:"4"}, hiddenPotential:{maternal:"6",paternal:"6"} };
+  const mutated = mutateGenomeLocus(genome, "variegation", () => 0);
+  assert.notDeepEqual(mutated.variegation, genome.variegation);
+  assert.ok(Number(mutated.variegation.maternal) >= 0 && Number(mutated.variegation.maternal) <= 10);
+  assert.ok(Number(mutated.variegation.paternal) >= 0 && Number(mutated.variegation.paternal) <= 10);
+  assert.notEqual(phenotypeFromGenome(mutated).variegationPotential, phenotypeFromGenome(genome).variegationPotential);
 });
