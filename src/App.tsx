@@ -569,9 +569,11 @@ function App() {
     setQuery("");
     setFilter("All plants");
     setPage("Dashboard");
+    setMainMenuOpen(true);
     setTutorialStep(0);
-    setTutorialOpen(true);
-    announce(`New game started: ${money(STARTING_CASH)}, no plants, and 0 research data.`);
+    setTutorialOpen(false);
+    setNotice("");
+    setNotificationsOpen(false);
   }
 
   function advanceDay(): Specimen[] {
