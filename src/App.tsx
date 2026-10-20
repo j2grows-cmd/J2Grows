@@ -1148,94 +1148,64 @@ function SectionHeader({ title, subtitle, action }: { title: string; subtitle?: 
 }
 
 function Dashboard({ specimens, cash, research, day, projectStarted, onNavigate, onSelect, onAdvance, environment, tutorialNameActive, instituteNameDraft, onInstituteNameChange, onSaveInstituteName }: { specimens: Specimen[]; cash: number; research: number; day: number; projectStarted: boolean; onNavigate: (page: Page) => void; onSelect: (id: string) => void; onAdvance: () => void; environment: PlantEnvironment; tutorialNameActive: boolean; instituteNameDraft: string; onInstituteNameChange: (value: string) => void; onSaveInstituteName: () => void }) {
-  const needsAttention = specimens.filter((item) => item.health < 80);
-  const averageHealth = specimens.length ? Math.round(specimens.reduce((total, item) => total + item.health, 0) / specimens.length) : 0;
   const featured = specimens.slice(0, 4);
+  const needsAttention = specimens.filter((item) => item.health < 80);
   const temperature = environment.temperature ?? 24;
   const humidity = environment.humidity ?? 65;
   const lightHours = environment.lightHours ?? 14;
-  const environmentStatus = temperature >= 18 && temperature <= 29 && humidity >= 50 && humidity <= 85 ? "Within target" : "Review conditions";
   const season = ["Spring", "Summer", "Autumn", "Winter"][Math.floor(((day - 1) % 112) / 28)];
-  const timeLabel = `Year ${Math.floor((day - 1) / 112) + 1}, ${season}`;
-  const healthyCount = specimens.filter((item) => item.health >= 80).length;
-  const healthPercent = specimens.length ? Math.round((healthyCount / specimens.length) * 100) : 0;
+  const year = Math.floor((day - 1) / 112) + 1;
+  const healthyPercent = specimens.length ? Math.round((specimens.filter((item) => item.health >= 80).length / specimens.length) * 100) : 0;
+  const conditionsGood = temperature >= 18 && temperature <= 29 && humidity >= 50 && humidity <= 85;
   const tasks = [
-    { title: "Review plant health", detail: needsAttention.length ? `${needsAttention.length} specimen${needsAttention.length === 1 ? "" : "s"} need attention` : specimens.length ? "Your collection is looking healthy" : "Acquire your first specimen", progress: specimens.length ? Math.max(0, Math.min(100, healthPercent)) : 0, icon: <Sprout size={17} />, tone: "green", action: () => onNavigate("Plant Catalogue") },
-    { title: "Begin a breeding line", detail: specimens.length < 2 ? "You need two specimens to begin" : "Explore compatible parent plants", progress: specimens.length >= 2 ? 100 : Math.min(100, specimens.length * 50), icon: <Flower2 size={17} />, tone: "gold", action: () => onNavigate("Breeding") },
-    { title: "Invest in research", detail: projectStarted ? "Your research programme is active" : "Discover traits and unlock techniques", progress: projectStarted ? 50 : Math.min(100, research), icon: <FlaskConical size={17} />, tone: "violet", action: () => onNavigate("Research") },
-    { title: "Tune greenhouse conditions", detail: environmentStatus, progress: environmentStatus === "Within target" ? 100 : 45, icon: <Droplets size={17} />, tone: "blue", action: () => onNavigate("Greenhouse") },
+    { title: "Review plant health", detail: needsAttention.length ? needsAttention.length + " specimen(s) need attention" : specimens.length ? "Your collection is looking healthy" : "Acquire your first specimen", percent: specimens.length ? healthyPercent : 0, icon: <Sprout size={17} />, tone: "green", action: () => onNavigate("Plant Catalogue") },
+    { title: "Begin a breeding line", detail: specimens.length < 2 ? "Two specimens are needed to breed" : "Explore compatible parent plants", percent: Math.min(100, specimens.length * 50), icon: <Flower2 size={17} />, tone: "gold", action: () => onNavigate("Breeding") },
+    { title: "Invest in research", detail: projectStarted ? "Your research programme is active" : "Unlock new techniques and traits", percent: projectStarted ? 50 : 0, icon: <FlaskConical size={17} />, tone: "violet", action: () => onNavigate("Research") },
   ];
-  return <section className="premium-dashboard">
-    <header className="premium-welcome">
-      <div className="premium-welcome-backdrop" />
-      <div className="premium-welcome-content">
-        <div className="eyebrow"><span className="eyebrow-line" /> YOUR BOTANICAL INSTITUTION</div>
+  return <section className="dashboard-rebuilt">
+    <header className="dr-hero">
+      <div className="dr-hero-content">
+        <div className="dr-eyebrow"><span /> YOUR BOTANICAL INSTITUTION</div>
         <h1>Welcome to your nursery</h1>
         <p>A living collection. A growing body of knowledge. Your next discovery starts here.</p>
-        {tutorialNameActive && <div className="tutorial-inline-name premium-name-form"><label htmlFor="institute-name">Name your institution</label><div><input id="institute-name" maxLength={40} value={instituteNameDraft} onChange={(event) => onInstituteNameChange(event.target.value)} placeholder="e.g. Verdant Research Institute" /><button className="button button-primary" onClick={onSaveInstituteName}>Save name <ArrowRight size={15} /></button></div></div>}
-        <div className="premium-welcome-actions">
-          <div className="premium-season"><Sun size={19} /><span><strong>{timeLabel}</strong><small>Day {day}</small></span></div>
-          <button className="button button-quiet" onClick={() => onNavigate("Settings")}><Settings size={15} /> Settings</button>
-          <button className="button button-primary" onClick={onAdvance}><Zap size={15} /> Advance day <ArrowRight size={15} /></button>
-        </div>
+        {tutorialNameActive && <div className="tutorial-inline-name dr-name-form"><label htmlFor="institute-name">Name your institution</label><div><input id="institute-name" maxLength={40} value={instituteNameDraft} onChange={(event) => onInstituteNameChange(event.target.value)} placeholder="e.g. Verdant Research Institute" /><button className="button button-primary" onClick={onSaveInstituteName}>Save name <ArrowRight size={15} /></button></div></div>}
+        <div className="dr-hero-actions"><div className="dr-season"><Sun size={19} /><span><strong>Year {year}, {season}</strong><small>Day {day}</small></span></div><button className="button button-quiet" onClick={() => onNavigate("Settings")}><Settings size={15} /> Settings</button><button className="button button-primary" onClick={onAdvance}><Zap size={15} /> Advance day <ArrowRight size={15} /></button></div>
       </div>
-      <div className="premium-welcome-caption"><span>J2GROWS · BOTANICAL JOURNAL</span><strong>New growth, new possibilities.</strong></div>
+      <div className="dr-journal"><span>J2GROWS · BOTANICAL JOURNAL</span><strong>New growth, new possibilities.</strong></div>
     </header>
-
-    <div className="premium-stat-grid" aria-label="Institution overview">
-      <button className="premium-stat-card" onClick={() => onNavigate("Finances")}><span className="premium-stat-icon gold"><Wallet size={26} /></span><span className="premium-stat-copy"><small>Total balance</small><strong>{money(cash)}</strong><em>Operating funds</em></span></button>
-      <button className="premium-stat-card" onClick={() => onNavigate("Plant Catalogue")}><span className="premium-stat-icon green"><Leaf size={27} /></span><span className="premium-stat-copy"><small>Total plants</small><strong>{specimens.length}</strong><em>Individual specimens</em></span><span className="premium-stat-trend">{specimens.length ? "Collection" : "Get started"}</span></button>
-      <button className="premium-stat-card" onClick={() => onNavigate("Research")}><span className="premium-stat-icon gold"><FlaskConical size={27} /></span><span className="premium-stat-copy"><small>Research data</small><strong>{research.toLocaleString("en-GB")}</strong><em>{projectStarted ? "Programme active" : "Ready to invest"}</em></span></button>
-      <button className="premium-stat-card" onClick={() => onNavigate("Facilities")}><span className="premium-stat-icon gold"><Building2 size={26} /></span><span className="premium-stat-copy"><small>Facilities</small><strong>1</strong><em>Home greenhouse</em></span></button>
-      <button className="premium-stat-card" onClick={() => onNavigate("Staff")}><span className="premium-stat-icon green"><Users size={27} /></span><span className="premium-stat-copy"><small>Staff</small><strong>1</strong><em>Founder-led nursery</em></span><span className="premium-stat-ring"><span>1</span></span></button>
+    <div className="dr-stats">
+      <button className="dr-stat" onClick={() => onNavigate("Finances")}><span className="dr-stat-icon gold"><Wallet size={24} /></span><span><small>Available funds</small><strong>{money(cash)}</strong><em>Operating balance</em></span></button>
+      <button className="dr-stat" onClick={() => onNavigate("Plant Catalogue")}><span className="dr-stat-icon green"><Leaf size={25} /></span><span><small>Total plants</small><strong>{specimens.length}</strong><em>Individual specimens</em></span></button>
+      <button className="dr-stat" onClick={() => onNavigate("Research")}><span className="dr-stat-icon gold"><FlaskConical size={24} /></span><span><small>Research data</small><strong>{research.toLocaleString("en-GB")}</strong><em>Available to invest</em></span></button>
+      <button className="dr-stat" onClick={() => onNavigate("Facilities")}><span className="dr-stat-icon gold"><Building2 size={24} /></span><span><small>Facilities</small><strong>1</strong><em>Home greenhouse</em></span></button>
+      <button className="dr-stat" onClick={() => onNavigate("Staff")}><span className="dr-stat-icon green"><Users size={24} /></span><span><small>Staff</small><strong>1</strong><em>Founder-led nursery</em></span></button>
     </div>
-
-    <div className="premium-dashboard-grid">
-      <section className="premium-panel premium-environment">
-        <div className="premium-panel-heading"><div><span className="premium-heading-icon"><Flower2 size={20} /></span><div><h2>Greenhouse conditions</h2><p>Your growing environment</p></div></div><button className="premium-link" onClick={() => onNavigate("Greenhouse")}>View greenhouse <ArrowRight size={14} /></button></div>
-        <div className="premium-condition-grid">
-          <div className="premium-condition"><span className="condition-symbol red"><Thermometer size={22} /></span><div><small>Temperature</small><strong>{temperature}°C</strong></div><div className="premium-meter"><span style={{ width: `${Math.max(0, Math.min(100, ((temperature - 5) / 35) * 100))}%`, background: "#ee8c72" }} /></div></div>
-          <div className="premium-condition"><span className="condition-symbol blue"><Droplets size={22} /></span><div><small>Humidity</small><strong>{humidity}%</strong></div><div className="premium-meter"><span style={{ width: `${Math.max(0, Math.min(100, humidity))}%` }} /></div></div>
-          <div className="premium-condition"><span className="condition-symbol gold"><Sun size={22} /></span><div><small>Light schedule</small><strong>{lightHours}h</strong></div><div className="premium-meter gold-meter"><span style={{ width: `${Math.max(0, Math.min(100, (lightHours / 16) * 100))}%` }} /></div></div>
-          <div className="premium-condition"><span className="condition-symbol green"><Gauge size={22} /></span><div><small>Environment</small><strong>{environmentStatus}</strong></div><span className="premium-condition-note">{environmentStatus === "Within target" ? "Conditions look suitable" : "Review target ranges"}</span></div>
-        </div>
-        <button className="premium-panel-footer" onClick={() => onNavigate("Greenhouse")}>Manage environment <ArrowRight size={15} /></button>
+    <div className="dr-layout">
+      <section className="dr-panel"><div className="dr-panel-head"><div><Flower2 size={20} /><span><strong>Greenhouse conditions</strong><small>Your growing environment</small></span></div><button onClick={() => onNavigate("Greenhouse")}>View greenhouse <ArrowRight size={14} /></button></div>
+        <div className="dr-condition-grid">
+          <div className="dr-condition"><Thermometer className="red" size={21} /><span><small>Temperature</small><strong>{temperature}°C</strong></span><div className="dr-meter"><i style={{width: Math.max(0,Math.min(100,((temperature-5)/35)*100)) + "%",background:"#e98570"}} /></div></div>
+          <div className="dr-condition"><Droplets className="blue" size={21} /><span><small>Humidity</small><strong>{humidity}%</strong></span><div className="dr-meter"><i style={{width: Math.max(0,Math.min(100,humidity)) + "%"}} /></div></div>
+          <div className="dr-condition"><Sun className="gold" size={21} /><span><small>Light schedule</small><strong>{lightHours}h</strong></span><div className="dr-meter amber"><i style={{width: Math.max(0,Math.min(100,lightHours/16*100)) + "%"}} /></div></div>
+          <div className="dr-condition"><Gauge className="green" size={21} /><span><small>Environment</small><strong>{conditionsGood ? "Within target" : "Review conditions"}</strong></span><small className="dr-condition-note">{conditionsGood ? "Conditions look suitable" : "Adjust growing conditions"}</small></div>
+        </div><button className="dr-footer" onClick={() => onNavigate("Greenhouse")}>Manage environment <ArrowRight size={15} /></button>
       </section>
-
-      <section className="premium-panel premium-activity">
-        <div className="premium-panel-heading"><div><span className="premium-heading-icon"><Clock3 size={20} /></span><div><h2>Collection & activity</h2><p>Your current priorities</p></div></div><button className="premium-link" onClick={() => onNavigate("Plant Catalogue")}>View collection <ArrowRight size={14} /></button></div>
-        <div className="premium-activity-list">
-          <button className="premium-activity-row" onClick={() => onNavigate("Plant Catalogue")}><span className="activity-icon green"><ShieldCheck size={18} /></span><span><strong>Collection health</strong><small>{specimens.length ? `${healthPercent}% of your specimens are in good health` : "Your collection begins with your first plant"}</small></span><ChevronRight size={15} /></button>
-          <button className="premium-activity-row" onClick={() => onNavigate("Research")}><span className="activity-icon gold"><FlaskConical size={18} /></span><span><strong>Research programme</strong><small>{projectStarted ? "Research is underway" : `${research.toLocaleString("en-GB")} research data available to invest`}</small></span><ChevronRight size={15} /></button>
-          <button className="premium-activity-row" onClick={() => onNavigate("Breeding")}><span className="activity-icon violet"><Flower2 size={18} /></span><span><strong>Genetic lines</strong><small>{specimens.length < 2 ? "Acquire a second specimen to begin breeding" : "Explore possible parent combinations"}</small></span><ChevronRight size={15} /></button>
-          <button className="premium-activity-row" onClick={() => onNavigate("Finances")}><span className="activity-icon gold"><Wallet size={18} /></span><span><strong>Operating balance</strong><small>{money(cash)} available for your next decision</small></span><ChevronRight size={15} /></button>
-        </div>
-        <button className="premium-panel-footer" onClick={() => onNavigate("Plant Catalogue")}>Explore your collection <ArrowRight size={15} /></button>
+      <section className="dr-panel"><div className="dr-panel-head"><div><Clock3 size={20} /><span><strong>Collection & activity</strong><small>Your current priorities</small></span></div><button onClick={() => onNavigate("Plant Catalogue")}>View collection <ArrowRight size={14} /></button></div>
+        <div className="dr-activity">
+          <button onClick={() => onNavigate("Plant Catalogue")}><span className="dr-mini green"><ShieldCheck size={18} /></span><span><strong>Collection health</strong><small>{specimens.length ? healthyPercent + "% of specimens in good health" : "Your collection begins with your first plant"}</small></span><ChevronRight size={15} /></button>
+          <button onClick={() => onNavigate("Research")}><span className="dr-mini gold"><FlaskConical size={18} /></span><span><strong>Research programme</strong><small>{projectStarted ? "Your research programme is active" : research.toLocaleString("en-GB") + " research data available"}</small></span><ChevronRight size={15} /></button>
+          <button onClick={() => onNavigate("Breeding")}><span className="dr-mini violet"><Flower2 size={18} /></span><span><strong>Genetic lines</strong><small>{specimens.length < 2 ? "Acquire a second specimen to begin breeding" : "Explore possible parent combinations"}</small></span><ChevronRight size={15} /></button>
+          <button onClick={() => onNavigate("Finances")}><span className="dr-mini gold"><Wallet size={18} /></span><span><strong>Operating balance</strong><small>{money(cash)} available for your next decision</small></span><ChevronRight size={15} /></button>
+        </div><button className="dr-footer" onClick={() => onNavigate("Plant Catalogue")}>Explore your collection <ArrowRight size={15} /></button>
       </section>
-
-      <section className="premium-panel premium-finance">
-        <div className="premium-panel-heading"><div><span className="premium-heading-icon"><TrendingUp size={20} /></span><div><h2>Financial overview</h2><p>Current operating position</p></div></div><button className="premium-link" onClick={() => onNavigate("Finances")}>View finances <ArrowRight size={14} /></button></div>
-        <div className="premium-balance-card"><small>Available balance</small><strong>{money(cash)}</strong><span>Funds available to spend</span></div>
-        <div className="premium-finance-details"><div><small>Research data</small><strong>{research.toLocaleString("en-GB")}</strong></div><div><small>Collection size</small><strong>{specimens.length} {specimens.length === 1 ? "plant" : "plants"}</strong></div></div>
-        <div className="premium-finance-note"><CircleDollarSign size={17} /><span>Financial history will appear here as transactions are recorded.</span></div>
-        <button className="premium-panel-footer" onClick={() => onNavigate("Finances")}>Open finances <ArrowRight size={15} /></button>
+      <section className="dr-panel dr-finance"><div className="dr-panel-head"><div><TrendingUp size={20} /><span><strong>Financial overview</strong><small>Current operating position</small></span></div><button onClick={() => onNavigate("Finances")}>View finances <ArrowRight size={14} /></button></div>
+        <div className="dr-balance"><small>Available balance</small><strong>{money(cash)}</strong><span>Funds available to spend</span></div><div className="dr-finance-details"><span><small>Research data</small><strong>{research.toLocaleString("en-GB")}</strong></span><span><small>Collection size</small><strong>{specimens.length} {specimens.length === 1 ? "plant" : "plants"}</strong></span></div><p className="dr-finance-note"><CircleDollarSign size={16} /> Financial history appears as transactions are recorded.</p><button className="dr-footer" onClick={() => onNavigate("Finances")}>Open finances <ArrowRight size={15} /></button>
       </section>
-
-      <section className="premium-panel premium-featured">
-        <div className="premium-panel-heading"><div><span className="premium-heading-icon"><Sprout size={20} /></span><div><h2>Featured specimens</h2><p>A closer look at your collection</p></div></div><button className="premium-link" onClick={() => onNavigate("Plant Catalogue")}>View catalogue <ArrowRight size={14} /></button></div>
-        {featured.length ? <div className="premium-plant-grid">{featured.map((item) => { const plant = findSpecies(item.speciesId); return <button key={item.id} className="premium-plant-card" onClick={() => onSelect(item.id)}><div className="premium-plant-art"><PlantArt type={plant.image} fallbackType={getFallbackArtworkType(plant.id)} /><span className={item.health < 80 ? "premium-plant-status attention" : "premium-plant-status"}>{item.health < 80 ? "Needs care" : "Healthy"}</span></div><div className="premium-plant-copy"><small>{plant.family}</small><strong>{plant.name}</strong><span>{plant.scientificName || "Scientific name not recorded"}</span></div><div className="premium-plant-meta"><span>{item.health}% health</span><span>{item.stage}</span></div></button>; })}</div> : <div className="premium-empty-collection"><span className="premium-empty-icon"><Sprout size={28} /></span><h3>Your collection starts here</h3><p>Explore the catalogue and acquire your first specimen to begin building your botanical institution.</p><button className="button button-primary" onClick={() => onNavigate("Shop")}><ShoppingBag size={15} /> Visit the shop <ArrowRight size={14} /></button></div>}
+      <section className="dr-panel dr-featured"><div className="dr-panel-head"><div><Sprout size={20} /><span><strong>Featured specimens</strong><small>A closer look at your collection</small></span></div><button onClick={() => onNavigate("Plant Catalogue")}>View catalogue <ArrowRight size={14} /></button></div>
+        {featured.length ? <div className="dr-plants">{featured.map((item) => { const plant = findSpecies(item.speciesId); return <button key={item.id} className="dr-plant" onClick={() => onSelect(item.id)}><div className="dr-plant-art"><PlantArt type={plant.image} fallbackType={getFallbackArtworkType(plant.id)} /><span>{item.health < 80 ? "Needs care" : "Healthy"}</span></div><div className="dr-plant-copy"><small>{plant.family}</small><strong>{plant.name}</strong><em>{plant.scientificName || "Scientific name not recorded"}</em></div><div className="dr-plant-meta"><span>{item.health}% health</span><span>{item.stage}</span></div></button>; })}</div> : <div className="dr-empty"><span><Sprout size={28} /></span><h3>Your collection starts here</h3><p>Explore the catalogue and acquire your first specimen to build your botanical institution.</p><button className="button button-primary" onClick={() => onNavigate("Shop")}><ShoppingBag size={15} /> Visit the shop <ArrowRight size={14} /></button></div>}
       </section>
-
-      <div className="premium-side-stack">
-        <section className="premium-panel premium-research">
-          <div className="premium-panel-heading"><div><span className="premium-heading-icon"><Microscope size={20} /></span><div><h2>Ongoing research</h2><p>Discover and develop</p></div></div><button className="premium-link" onClick={() => onNavigate("Research")}>View all <ArrowRight size={14} /></button></div>
-          <button className="premium-research-card" onClick={() => onNavigate("Research")}><span className="premium-research-art"><FlaskConical size={27} /></span><span><strong>{projectStarted ? "Research programme active" : "No active research project"}</strong><small>{projectStarted ? "Continue developing your findings" : "Invest research data to unlock new techniques"}</small></span><ChevronRight size={16} /></button>
-        </section>
-        <section className="premium-panel premium-tasks">
-          <div className="premium-panel-heading"><div><span className="premium-heading-icon"><Check size={20} /></span><div><h2>Current tasks</h2><p>Practical next steps</p></div></div><span className="premium-task-count">{tasks.length}</span></div>
-          <div className="premium-task-list">{tasks.map((task) => <button key={task.title} className="premium-task-row" onClick={task.action}><span className={`premium-task-icon ${task.tone}`}>{task.icon}</span><span className="premium-task-copy"><strong>{task.title}</strong><small>{task.detail}</small><span className="premium-task-meter"><span style={{ width: `${task.progress}%` }} /></span></span><span className="premium-task-percent">{task.progress}%</span></button>)}</div>
-        </section>
-      </div>
+      <aside className="dr-side"><section className="dr-panel"><div className="dr-panel-head"><div><Microscope size={20} /><span><strong>Ongoing research</strong><small>Discover and develop</small></span></div><button onClick={() => onNavigate("Research")}>View all <ArrowRight size={14} /></button></div><button className="dr-research-card" onClick={() => onNavigate("Research")}><span><FlaskConical size={26} /></span><div><strong>{projectStarted ? "Research programme active" : "No active research project"}</strong><small>{projectStarted ? "Continue developing your findings" : "Invest research data to unlock techniques"}</small></div><ChevronRight size={15} /></button></section>
+        <section className="dr-panel"><div className="dr-panel-head"><div><Check size={20} /><span><strong>Current tasks</strong><small>Practical next steps</small></span></div><b className="dr-task-count">{tasks.length}</b></div><div className="dr-tasks">{tasks.map((task) => <button key={task.title} className="dr-task" onClick={task.action}><span className={"dr-task-icon " + task.tone}>{task.icon}</span><span className="dr-task-copy"><strong>{task.title}</strong><small>{task.detail}</small><i><b style={{width: task.percent + "%"}} /></i></span><em>{task.percent}%</em></button>)}</div></section>
+      </aside>
     </div>
   </section>;
 }
