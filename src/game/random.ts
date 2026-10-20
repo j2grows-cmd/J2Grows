@@ -33,3 +33,8 @@ export function randomInteger(random: RandomSource, min: number, max: number): n
   }
   return min + Math.floor(random() * (max - min + 1));
 }
+
+/** Derive an independent, repeatable stream for a named simulation event. */
+export function createEventRandom(seed: string | number, eventKey: string): RandomSource {
+  return createSeededRandom(`${String(seed)}::${eventKey}`);
+}
