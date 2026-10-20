@@ -51,3 +51,22 @@ test("propagation delays respond to conditions and bench upgrades while corm pha
   assert.equal(advancePropagationPhase(sprouting, 0, 0).transition, "no-transition");
   assert.equal(advancePropagationPhase({ ...sprouting, daysInPhase: 1 }, 0, 0).transition, "propagation-established");
 });
+
+test("90-day healthy simulation remains bounded and reaches breeding readiness reproducibly", () => {
+  const run = () => {
+    let health = 80;
+    let stage = "Juvenile";
+    let stageDays = 0;
+    for (let day = 1; day <= 90; day += 1) {
+      health = calculateDailyHealth(health, 80);
+      const next = advanceEstablishedGrowthStage(stage, stageDays, health, 1, 1);
+      stage = next.stage;
+      stageDays = next.stageDays;
+      assert.ok(health >= 0 && health <= 100);
+      assert.ok(stageDays >= 0);
+    }
+    return { health, stage, stageDays };
+  };
+  assert.deepEqual(run(), run());
+  assert.equal(run().stage, "Breeding-ready");
+});
