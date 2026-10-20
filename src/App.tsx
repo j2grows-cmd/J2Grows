@@ -11,6 +11,7 @@ import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeS
 import { createUniqueSpecimenId } from "./game/specimen-id.ts";
 import { createEventRandom } from "./game/random.ts";
 import { assessCrossEligibility, createBreedingIdentity } from "./game/breeding.ts";
+import { calculateSpeciesSuitability, speciesGrowthDurationFactor } from "./game/species-growth.ts";
 import { advanceEstablishedGrowthStage, advancePropagationPhase, calculateDailyHealth } from "./game/simulation.ts";
 import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, normalizeFacilityLevels, weeklyFacilityOperatingCost, type FacilityLevels, type FacilityName } from "./game/facilities.ts";
 import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, startStaffTraining, STAFF_TRAINING_COST, weeklyStaffOperatingCost, type StaffState } from "./game/staff.ts";
@@ -629,10 +630,10 @@ function App() {
       let stageDays = specimen.stageDays ?? 0;
       let location = specimen.location;
       let growthMessage = "";
-      const suitability = (simulationEnvironment.light + simulationEnvironment.nutrition + simulationEnvironment.humidity + health) / 4;
+      const species = findSpecies(specimen.speciesId);
+      const suitability = calculateSpeciesSuitability(species.latin, species.difficulty, { ...simulationEnvironment, health });
       const conditionFactor = suitability < 45 ? 1.5 : suitability < 65 ? 1.2 : suitability >= 85 ? 0.85 : 1;
-      const genus = findSpecies(specimen.speciesId).latin.split(" ")[0].toLowerCase();
-      const speciesFactor = genus === "anthurium" ? 1.25 : genus === "alocasia" ? 1.1 : ["monstera", "philodendron"].includes(genus) ? 0.9 : 1;
+      const speciesFactor = speciesGrowthDurationFactor(species.latin, species.difficulty);
       if (propagation) {
         const delay = suitability < 45 ? 2 : suitability < 65 ? 1 : 0;
         const progress = advancePropagationPhase(propagation, delay, facilityLevels.propagationBench);
