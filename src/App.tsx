@@ -1149,101 +1149,96 @@ function SectionHeader({ title, subtitle, action }: { title: string; subtitle?: 
 
 function Dashboard({ specimens, cash, research, day, projectStarted, onNavigate, onSelect, onAdvance, environment, tutorialNameActive, instituteNameDraft, onInstituteNameChange, onSaveInstituteName }: { specimens: Specimen[]; cash: number; research: number; day: number; projectStarted: boolean; onNavigate: (page: Page) => void; onSelect: (id: string) => void; onAdvance: () => void; environment: PlantEnvironment; tutorialNameActive: boolean; instituteNameDraft: string; onInstituteNameChange: (value: string) => void; onSaveInstituteName: () => void }) {
   const needsAttention = specimens.filter((item) => item.health < 80);
-  const averageHealth = Math.round(specimens.reduce((total, item) => total + item.health, 0) / Math.max(specimens.length, 1));
+  const averageHealth = specimens.length ? Math.round(specimens.reduce((total, item) => total + item.health, 0) / specimens.length) : 0;
   const featured = specimens.slice(0, 4);
-  const activeResearch = projectStarted;
   const temperature = environment.temperature ?? 24;
   const humidity = environment.humidity ?? 65;
   const lightHours = environment.lightHours ?? 14;
-  const environmentStatus = temperature >= 18 && temperature <= 29 && humidity >= 50 && humidity <= 85 ? "Good" : "Review";
-  const timeLabel = `Year ${Math.floor((day - 1) / 112) + 1} · ${["Spring", "Summer", "Autumn", "Winter"][Math.floor(((day - 1) % 112) / 28)]}`;
+  const environmentStatus = temperature >= 18 && temperature <= 29 && humidity >= 50 && humidity <= 85 ? "Within target" : "Review conditions";
+  const season = ["Spring", "Summer", "Autumn", "Winter"][Math.floor(((day - 1) % 112) / 28)];
+  const timeLabel = `Year ${Math.floor((day - 1) / 112) + 1}, ${season}`;
   const healthyCount = specimens.filter((item) => item.health >= 80).length;
   const healthPercent = specimens.length ? Math.round((healthyCount / specimens.length) * 100) : 0;
-  return <>
-    <section className="dash-feature-hero">
-      <div className="dash-feature-copy">
+  const tasks = [
+    { title: "Review plant health", detail: needsAttention.length ? `${needsAttention.length} specimen${needsAttention.length === 1 ? "" : "s"} need attention` : specimens.length ? "Your collection is looking healthy" : "Acquire your first specimen", progress: specimens.length ? Math.max(0, Math.min(100, healthPercent)) : 0, icon: <Sprout size={17} />, tone: "green", action: () => onNavigate("Plant Catalogue") },
+    { title: "Begin a breeding line", detail: specimens.length < 2 ? "You need two specimens to begin" : "Explore compatible parent plants", progress: specimens.length >= 2 ? 100 : Math.min(100, specimens.length * 50), icon: <Flower2 size={17} />, tone: "gold", action: () => onNavigate("Breeding") },
+    { title: "Invest in research", detail: projectStarted ? "Your research programme is active" : "Discover traits and unlock techniques", progress: projectStarted ? 50 : Math.min(100, research), icon: <FlaskConical size={17} />, tone: "violet", action: () => onNavigate("Research") },
+    { title: "Tune greenhouse conditions", detail: environmentStatus, progress: environmentStatus === "Within target" ? 100 : 45, icon: <Droplets size={17} />, tone: "blue", action: () => onNavigate("Greenhouse") },
+  ];
+  return <section className="premium-dashboard">
+    <header className="premium-welcome">
+      <div className="premium-welcome-backdrop" />
+      <div className="premium-welcome-content">
         <div className="eyebrow"><span className="eyebrow-line" /> YOUR BOTANICAL INSTITUTION</div>
-        <h2>Welcome to your nursery</h2>
-        <p>Your nursery is growing. Here's an overview of your plants, facilities and progress.</p>
-        {tutorialNameActive && <div className="tutorial-inline-name"><label htmlFor="institute-name">Institute name</label><div><input id="institute-name" maxLength={40} value={instituteNameDraft} onChange={(event) => onInstituteNameChange(event.target.value)} placeholder="e.g. Verdant Research Institute" /><button className="button button-primary" onClick={onSaveInstituteName}>Save name <ArrowRight size={15} /></button></div></div>}
-        <div className="dash-hero-controls">
-          <span className="dash-season"><Sun size={17} /> {timeLabel}<small>Day {day}</small></span>
+        <h1>Welcome to your nursery</h1>
+        <p>A living collection. A growing body of knowledge. Your next discovery starts here.</p>
+        {tutorialNameActive && <div className="tutorial-inline-name premium-name-form"><label htmlFor="institute-name">Name your institution</label><div><input id="institute-name" maxLength={40} value={instituteNameDraft} onChange={(event) => onInstituteNameChange(event.target.value)} placeholder="e.g. Verdant Research Institute" /><button className="button button-primary" onClick={onSaveInstituteName}>Save name <ArrowRight size={15} /></button></div></div>}
+        <div className="premium-welcome-actions">
+          <div className="premium-season"><Sun size={19} /><span><strong>{timeLabel}</strong><small>Day {day}</small></span></div>
           <button className="button button-quiet" onClick={() => onNavigate("Settings")}><Settings size={15} /> Settings</button>
-          <button className="button button-primary" onClick={onAdvance}><Zap size={15} /> Advance day <ArrowRight size={14} /></button>
+          <button className="button button-primary" onClick={onAdvance}><Zap size={15} /> Advance day <ArrowRight size={15} /></button>
         </div>
       </div>
-      <div className="dash-feature-photo" role="img" aria-label="J2Grows tropical botanical banner" style={{ backgroundImage: "url(https://lwaxzivcjzpmmantryor.supabase.co/storage/v1/object/public/Artwork/banner.png)" }}>
-        <div className="dash-photo-caption"><span>J2GROWS · BOTANICAL JOURNAL</span><strong>New growth, new possibilities.</strong></div>
-      </div>
-    </section>
+      <div className="premium-welcome-caption"><span>J2GROWS · BOTANICAL JOURNAL</span><strong>New growth, new possibilities.</strong></div>
+    </header>
 
-    <section className="dash-resource-grid" aria-label="Institution resources">
-      <div className="dash-resource-card cash"><span className="dash-resource-icon"><Wallet size={23} /></span><div><small>Available funds</small><strong>{money(cash)}</strong><span>Operating balance</span></div></div>
-      <div className="dash-resource-card"><span className="dash-resource-icon"><Sprout size={23} /></span><div><small>Total plants</small><strong>{specimens.length}</strong><span>Individual specimens</span></div></div>
-      <div className="dash-resource-card"><span className="dash-resource-icon"><FlaskConical size={23} /></span><div><small>Research data</small><strong>{research.toLocaleString("en-GB")}</strong><span>{activeResearch ? "Programme active" : "Available to invest"}</span></div></div>
-      <div className="dash-resource-card"><span className="dash-resource-icon"><Building2 size={23} /></span><div><small>Facilities</small><strong>1</strong><span>Home greenhouse</span></div></div>
-      <div className="dash-resource-card"><span className="dash-resource-icon"><Users size={23} /></span><div><small>Staff</small><strong>1</strong><span>Founder-led nursery</span></div></div>
-    </section>
+    <div className="premium-stat-grid" aria-label="Institution overview">
+      <button className="premium-stat-card" onClick={() => onNavigate("Finances")}><span className="premium-stat-icon gold"><Wallet size={26} /></span><span className="premium-stat-copy"><small>Total balance</small><strong>{money(cash)}</strong><em>Operating funds</em></span></button>
+      <button className="premium-stat-card" onClick={() => onNavigate("Plant Catalogue")}><span className="premium-stat-icon green"><Leaf size={27} /></span><span className="premium-stat-copy"><small>Total plants</small><strong>{specimens.length}</strong><em>Individual specimens</em></span><span className="premium-stat-trend">{specimens.length ? "Collection" : "Get started"}</span></button>
+      <button className="premium-stat-card" onClick={() => onNavigate("Research")}><span className="premium-stat-icon gold"><FlaskConical size={27} /></span><span className="premium-stat-copy"><small>Research data</small><strong>{research.toLocaleString("en-GB")}</strong><em>{projectStarted ? "Programme active" : "Ready to invest"}</em></span></button>
+      <button className="premium-stat-card" onClick={() => onNavigate("Facilities")}><span className="premium-stat-icon gold"><Building2 size={26} /></span><span className="premium-stat-copy"><small>Facilities</small><strong>1</strong><em>Home greenhouse</em></span></button>
+      <button className="premium-stat-card" onClick={() => onNavigate("Staff")}><span className="premium-stat-icon green"><Users size={27} /></span><span className="premium-stat-copy"><small>Staff</small><strong>1</strong><em>Founder-led nursery</em></span><span className="premium-stat-ring"><span>1</span></span></button>
+    </div>
 
-    <section className="dash-three-columns dash-dashboard-main">
-      <section className="panel dash-widget dash-greenhouse-widget">
-        <SectionHeader title="Greenhouse conditions" subtitle="Your growing environment" action="View greenhouse" />
-        <div className="dash-condition-grid">
-          <div className="dash-condition"><span className="condition-icon temperature"><Thermometer size={21} /></span><div><small>Temperature</small><strong>{temperature}°C</strong><div className="condition-meter"><span style={{ width: `${Math.max(0, Math.min(100, (temperature / 35) * 100))}%` }} /></div></div></div>
-          <div className="dash-condition"><span className="condition-icon humidity"><Droplets size={21} /></span><div><small>Humidity</small><strong>{humidity}%</strong><div className="condition-meter"><span style={{ width: `${Math.max(0, Math.min(100, humidity))}%` }} /></div></div></div>
-          <div className="dash-condition"><span className="condition-icon sunlight"><Sun size={21} /></span><div><small>Light schedule</small><strong>{lightHours}h</strong><div className="condition-meter gold"><span style={{ width: `${Math.max(0, Math.min(100, (lightHours / 16) * 100))}%` }} /></div></div></div>
-          <div className="dash-condition"><span className="condition-icon airflow"><Gauge size={21} /></span><div><small>Environment</small><strong>{environmentStatus}</strong><span>{environmentStatus === "Good" ? "Within target ranges" : "Check growing settings"}</span></div></div>
+    <div className="premium-dashboard-grid">
+      <section className="premium-panel premium-environment">
+        <div className="premium-panel-heading"><div><span className="premium-heading-icon"><Flower2 size={20} /></span><div><h2>Greenhouse conditions</h2><p>Your growing environment</p></div></div><button className="premium-link" onClick={() => onNavigate("Greenhouse")}>View greenhouse <ArrowRight size={14} /></button></div>
+        <div className="premium-condition-grid">
+          <div className="premium-condition"><span className="condition-symbol red"><Thermometer size={22} /></span><div><small>Temperature</small><strong>{temperature}°C</strong></div><div className="premium-meter"><span style={{ width: `${Math.max(0, Math.min(100, ((temperature - 5) / 35) * 100))}%`, background: "#ee8c72" }} /></div></div>
+          <div className="premium-condition"><span className="condition-symbol blue"><Droplets size={22} /></span><div><small>Humidity</small><strong>{humidity}%</strong></div><div className="premium-meter"><span style={{ width: `${Math.max(0, Math.min(100, humidity))}%` }} /></div></div>
+          <div className="premium-condition"><span className="condition-symbol gold"><Sun size={22} /></span><div><small>Light schedule</small><strong>{lightHours}h</strong></div><div className="premium-meter gold-meter"><span style={{ width: `${Math.max(0, Math.min(100, (lightHours / 16) * 100))}%` }} /></div></div>
+          <div className="premium-condition"><span className="condition-symbol green"><Gauge size={22} /></span><div><small>Environment</small><strong>{environmentStatus}</strong></div><span className="premium-condition-note">{environmentStatus === "Within target" ? "Conditions look suitable" : "Review target ranges"}</span></div>
         </div>
-        <button className="dash-widget-link" onClick={() => onNavigate("Greenhouse")}>Manage environment <ArrowRight size={14} /></button>
+        <button className="premium-panel-footer" onClick={() => onNavigate("Greenhouse")}>Manage environment <ArrowRight size={15} /></button>
       </section>
 
-      <section className="panel dash-widget dash-activity-widget">
-        <SectionHeader title="Collection & activity" subtitle="Current priorities" action="View catalogue" />
-        <div className="dash-activity-list">
-          {needsAttention.length ? needsAttention.slice(0, 2).map((item) => <button className="dash-activity-row" key={item.id} onClick={() => onSelect(item.id)}><span className="dash-activity-icon warning"><Activity size={18} /></span><span className="dash-activity-copy"><strong>{item.nickname} needs a check</strong><small>{findSpecies(item.speciesId).name} · Health {item.health}%</small></span><ChevronRight size={16} /></button>) : <div className="dash-activity-row static"><span className="dash-activity-icon healthy"><ShieldCheck size={18} /></span><span className="dash-activity-copy"><strong>Collection health</strong><small>{averageHealth}% average health across {specimens.length} specimens</small></span></div>}
-          <button className="dash-activity-row" onClick={() => onNavigate("Research")}><span className="dash-activity-icon research"><FlaskConical size={18} /></span><span className="dash-activity-copy"><strong>{activeResearch ? "Research programme active" : "Research ready"}</strong><small>{activeResearch ? "Continue your current programme" : "Invest in understanding promising traits"}</small></span><ChevronRight size={16} /></button>
-          <button className="dash-activity-row" onClick={() => onNavigate("Breeding")}><span className="dash-activity-icon breeding"><Flower2 size={18} /></span><span className="dash-activity-copy"><strong>Genetic lines</strong><small>{specimens.length >= 2 ? "Review compatible breeding parents" : "Acquire another specimen to begin breeding"}</small></span><ChevronRight size={16} /></button>
+      <section className="premium-panel premium-activity">
+        <div className="premium-panel-heading"><div><span className="premium-heading-icon"><Clock3 size={20} /></span><div><h2>Collection & activity</h2><p>Your current priorities</p></div></div><button className="premium-link" onClick={() => onNavigate("Plant Catalogue")}>View collection <ArrowRight size={14} /></button></div>
+        <div className="premium-activity-list">
+          <button className="premium-activity-row" onClick={() => onNavigate("Plant Catalogue")}><span className="activity-icon green"><ShieldCheck size={18} /></span><span><strong>Collection health</strong><small>{specimens.length ? `${healthPercent}% of your specimens are in good health` : "Your collection begins with your first plant"}</small></span><ChevronRight size={15} /></button>
+          <button className="premium-activity-row" onClick={() => onNavigate("Research")}><span className="activity-icon gold"><FlaskConical size={18} /></span><span><strong>Research programme</strong><small>{projectStarted ? "Research is underway" : `${research.toLocaleString("en-GB")} research data available to invest`}</small></span><ChevronRight size={15} /></button>
+          <button className="premium-activity-row" onClick={() => onNavigate("Breeding")}><span className="activity-icon violet"><Flower2 size={18} /></span><span><strong>Genetic lines</strong><small>{specimens.length < 2 ? "Acquire a second specimen to begin breeding" : "Explore possible parent combinations"}</small></span><ChevronRight size={15} /></button>
+          <button className="premium-activity-row" onClick={() => onNavigate("Finances")}><span className="activity-icon gold"><Wallet size={18} /></span><span><strong>Operating balance</strong><small>{money(cash)} available for your next decision</small></span><ChevronRight size={15} /></button>
         </div>
-        <button className="dash-widget-link" onClick={() => onNavigate("Breeding")}>Explore breeding <ArrowRight size={14} /></button>
+        <button className="premium-panel-footer" onClick={() => onNavigate("Plant Catalogue")}>Explore your collection <ArrowRight size={15} /></button>
       </section>
 
-      <section className="panel dash-widget dash-finance-widget">
-        <SectionHeader title="Financial overview" subtitle="Current operating position" action="View finances" />
-        <div className="dash-finance-total"><span>Available balance</span><strong>{money(cash)}</strong><small>Funds available to spend</small></div>
-        <div className="dash-finance-breakdown"><div><span>Research data</span><strong>{research.toLocaleString("en-GB")}</strong></div><div><span>Collection size</span><strong>{specimens.length} plants</strong></div></div>
-        <div className="dash-finance-note"><CircleDollarSign size={17} /><span>Transaction history will appear here when income and expense tracking is available.</span></div>
-        <button className="dash-widget-link" onClick={() => onNavigate("Finances")}>Open finances <ArrowRight size={14} /></button>
+      <section className="premium-panel premium-finance">
+        <div className="premium-panel-heading"><div><span className="premium-heading-icon"><TrendingUp size={20} /></span><div><h2>Financial overview</h2><p>Current operating position</p></div></div><button className="premium-link" onClick={() => onNavigate("Finances")}>View finances <ArrowRight size={14} /></button></div>
+        <div className="premium-balance-card"><small>Available balance</small><strong>{money(cash)}</strong><span>Funds available to spend</span></div>
+        <div className="premium-finance-details"><div><small>Research data</small><strong>{research.toLocaleString("en-GB")}</strong></div><div><small>Collection size</small><strong>{specimens.length} {specimens.length === 1 ? "plant" : "plants"}</strong></div></div>
+        <div className="premium-finance-note"><CircleDollarSign size={17} /><span>Financial history will appear here as transactions are recorded.</span></div>
+        <button className="premium-panel-footer" onClick={() => onNavigate("Finances")}>Open finances <ArrowRight size={15} /></button>
       </section>
-    </section>
 
-    <section className="dash-lower-grid">
-      <section className="panel dash-featured-panel">
-        <SectionHeader title="Featured plants" subtitle="Your collection, specimen by specimen." action="Open catalogue" />
-        <div className="dash-featured-grid">
-          {featured.map((item) => { const plant = findSpecies(item.speciesId); return <button key={item.id} className="dash-plant-card" onClick={() => onSelect(item.id)}><div className="dash-plant-image"><PlantArt type={plant.image} fallbackType={getFallbackArtworkType(plant.id)} /><span className={item.health < 80 ? "dash-plant-status needs-care" : "dash-plant-status"}>{item.health < 80 ? "Needs attention" : "Healthy"}</span><span className="dash-plant-heart"><Leaf size={16} /></span></div><div className="dash-plant-copy"><small>{item.id}</small><strong>{item.nickname}</strong><span>{plant.name}</span><div><span>{item.health}% health</span><b>{money(item.value)}</b></div></div></button>; })}
-          <button className="dash-plant-add" onClick={() => onNavigate("Shop")}><span><Plus size={22} /></span><strong>Grow your collection</strong><small>Explore plants available to acquire</small><ArrowRight size={15} /></button>
-        </div>
+      <section className="premium-panel premium-featured">
+        <div className="premium-panel-heading"><div><span className="premium-heading-icon"><Sprout size={20} /></span><div><h2>Featured specimens</h2><p>A closer look at your collection</p></div></div><button className="premium-link" onClick={() => onNavigate("Plant Catalogue")}>View catalogue <ArrowRight size={14} /></button></div>
+        {featured.length ? <div className="premium-plant-grid">{featured.map((item) => { const plant = findSpecies(item.speciesId); return <button key={item.id} className="premium-plant-card" onClick={() => onSelect(item.id)}><div className="premium-plant-art"><PlantArt type={plant.image} fallbackType={getFallbackArtworkType(plant.id)} /><span className={item.health < 80 ? "premium-plant-status attention" : "premium-plant-status"}>{item.health < 80 ? "Needs care" : "Healthy"}</span></div><div className="premium-plant-copy"><small>{plant.family}</small><strong>{plant.name}</strong><span>{plant.scientificName || "Scientific name not recorded"}</span></div><div className="premium-plant-meta"><span>{item.health}% health</span><span>{item.stage}</span></div></button>; })}</div> : <div className="premium-empty-collection"><span className="premium-empty-icon"><Sprout size={28} /></span><h3>Your collection starts here</h3><p>Explore the catalogue and acquire your first specimen to begin building your botanical institution.</p><button className="button button-primary" onClick={() => onNavigate("Shop")}><ShoppingBag size={15} /> Visit the shop <ArrowRight size={14} /></button></div>}
       </section>
-      <div className="dash-side-stack">
-        <section className="panel dash-side-panel">
-          <SectionHeader title="Research focus" subtitle="Knowledge that moves your nursery forward" action="View research" />
-          <button className="dash-research-card" onClick={() => onNavigate("Research")}>
-            <span className="dash-side-icon"><FlaskConical size={22} /></span>
-            <span className="dash-side-copy"><strong>{activeResearch ? "Programme in progress" : "Discover your next breakthrough"}</strong><small>{activeResearch ? "Review your active research programme" : `${research.toLocaleString("en-GB")} research data available to invest`}</small><span className="dash-progress"><i style={{ width: activeResearch ? "42%" : "8%" }} /></span></span>
-            <ArrowRight size={16} />
-          </button>
+
+      <div className="premium-side-stack">
+        <section className="premium-panel premium-research">
+          <div className="premium-panel-heading"><div><span className="premium-heading-icon"><Microscope size={20} /></span><div><h2>Ongoing research</h2><p>Discover and develop</p></div></div><button className="premium-link" onClick={() => onNavigate("Research")}>View all <ArrowRight size={14} /></button></div>
+          <button className="premium-research-card" onClick={() => onNavigate("Research")}><span className="premium-research-art"><FlaskConical size={27} /></span><span><strong>{projectStarted ? "Research programme active" : "No active research project"}</strong><small>{projectStarted ? "Continue developing your findings" : "Invest research data to unlock new techniques"}</small></span><ChevronRight size={16} /></button>
         </section>
-        <section className="panel dash-side-panel">
-          <SectionHeader title="Current priorities" subtitle="Based on your collection" action="Open greenhouse" />
-          <button className="dash-task-row" onClick={() => needsAttention[0] ? onSelect(needsAttention[0].id) : onNavigate("Greenhouse")}><span className="dash-task-icon"><ShieldCheck size={19} /></span><span><strong>{needsAttention.length ? "Check plant health" : "Maintain plant health"}</strong><small>{needsAttention.length ? `${needsAttention.length} specimen(s) below 80% health` : `${healthPercent}% of your collection is in good health`}</small></span><ChevronRight size={16} /></button>
-          <button className="dash-task-row" onClick={() => onNavigate("Breeding")}><span className="dash-task-icon breeding"><Flower2 size={19} /></span><span><strong>Build a genetic line</strong><small>{specimens.length < 2 ? "Acquire a second specimen to begin" : "Review available parent combinations"}</small></span><ChevronRight size={16} /></button>
-          <button className="dash-task-row" onClick={() => onNavigate("Plant Catalogue")}><span className="dash-task-icon research"><Sprout size={19} /></span><span><strong>Expand your collection</strong><small>Explore plants for your nursery</small></span><ChevronRight size={16} /></button>
+        <section className="premium-panel premium-tasks">
+          <div className="premium-panel-heading"><div><span className="premium-heading-icon"><Check size={20} /></span><div><h2>Current tasks</h2><p>Practical next steps</p></div></div><span className="premium-task-count">{tasks.length}</span></div>
+          <div className="premium-task-list">{tasks.map((task) => <button key={task.title} className="premium-task-row" onClick={task.action}><span className={`premium-task-icon ${task.tone}`}>{task.icon}</span><span className="premium-task-copy"><strong>{task.title}</strong><small>{task.detail}</small><span className="premium-task-meter"><span style={{ width: `${task.progress}%` }} /></span></span><span className="premium-task-percent">{task.progress}%</span></button>)}</div>
         </section>
       </div>
-    </section>
-  </>;
+    </div>
+  </section>;
 }
-
 function Catalogue({ specimens, allSpecimens, species, catalogSource, query, setQuery, filter, setFilter, onSelect, onSell, onNavigate }: { specimens: Specimen[]; allSpecimens: Specimen[]; species: Species[]; catalogSource: CatalogueSource; query: string; setQuery: (value: string) => void; filter: string; setFilter: (value: string) => void; onSelect: (id: string) => void; onSell: (specimen: Specimen) => void; onNavigate: (page: Page) => void }) {
   const [imageStates, setImageStates] = useState<Record<string, ArtworkState>>({});
   const imageSummary = getArtworkStatusSummary(species, imageStates);

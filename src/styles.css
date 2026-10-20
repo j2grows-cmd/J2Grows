@@ -2502,3 +2502,151 @@ input, select, textarea {
   .main-area > header.topbar > .top-level { flex-basis: 205px !important; min-width: 190px !important; }
   .main-area > header.topbar > .profile-chip { flex-basis: 195px !important; min-width: 165px !important; }
 }
+
+
+/* Reference-inspired J2Grows dashboard redesign */
+.premium-dashboard{display:flex;flex-direction:column;gap:14px;min-width:0;color:var(--text)}
+.premium-welcome{position:relative;isolation:isolate;overflow:hidden;min-height:225px;display:flex;align-items:center;padding:28px 30px;border:1px solid rgba(201,173,104,.52);border-radius:14px;background:#07100a url("https://lwaxzivcjzpmmantryor.supabase.co/storage/v1/object/public/Artwork/banner.png") center 44%/cover no-repeat}
+.premium-welcome:before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(3,10,5,.98) 0%,rgba(4,12,6,.88) 37%,rgba(4,12,6,.23) 100%),linear-gradient(0deg,rgba(4,10,5,.35),transparent 60%)}
+.premium-welcome-backdrop{position:absolute;inset:0;z-index:-1;box-shadow:inset 0 0 70px rgba(0,0,0,.24)}
+.premium-welcome-content{position:relative;z-index:1;max-width:690px}
+.premium-welcome .eyebrow{font-size:12px;letter-spacing:1.6px;color:var(--gold);font-weight:700}
+.premium-welcome h1{margin:13px 0 7px;font:500 clamp(34px,3.25vw,55px)/1.05 "Playfair Display",Georgia,serif;letter-spacing:-1.3px;color:#f1ead7;text-wrap:balance}
+.premium-welcome p{max-width:590px;margin:0;color:#e0e4d4;font-size:15px;line-height:1.65}
+.premium-welcome-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:20px}
+.premium-season{display:flex;align-items:center;gap:9px;margin-right:6px;color:#e9d28b}
+.premium-season span,.premium-season strong,.premium-season small{display:block}
+.premium-season strong{font-size:13px;color:#f1e8d0}
+.premium-season small{margin-top:2px;color:#aeb79e;font-size:12px}
+.premium-welcome-caption{position:absolute;right:18px;bottom:16px;display:flex;flex-direction:column;gap:5px;align-items:flex-end;padding:10px 13px;border:1px solid rgba(201,173,104,.45);border-radius:8px;background:rgba(4,9,5,.78);backdrop-filter:blur(10px)}
+.premium-welcome-caption span{font-size:10px;letter-spacing:1.1px;color:#d6c17f}
+.premium-welcome-caption strong{font:500 14px "Playfair Display",Georgia,serif;color:#f0e6cc}
+.premium-stat-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.premium-stat-card{position:relative;display:flex;align-items:center;gap:12px;min-width:0;min-height:96px;padding:15px 13px;text-align:left;color:var(--text);border:1px solid rgba(201,173,104,.28);border-radius:11px;background:linear-gradient(145deg,rgba(18,28,17,.97),rgba(7,13,8,.98));transition:border-color .18s,transform .18s,background .18s}
+.premium-stat-card:hover{border-color:rgba(201,173,104,.72);transform:translateY(-2px);background:linear-gradient(145deg,#1b2a18,#0a120b)}
+.premium-stat-icon{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;border:1px solid rgba(201,173,104,.18);border-radius:10px;background:rgba(201,173,104,.08)}
+.premium-stat-icon.gold{color:#e9c66d}.premium-stat-icon.green{color:#a8d87b}
+.premium-stat-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+.premium-stat-copy small{color:#bdc5b2;font-size:12px;white-space:nowrap}
+.premium-stat-copy strong{font:500 24px/1.1 "Playfair Display",Georgia,serif;color:#f4ecd9;overflow-wrap:anywhere}
+.premium-stat-copy em{font-style:normal;font-size:11px;color:#8f9b83;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.premium-stat-trend{margin-left:auto;align-self:flex-start;color:#a8d87b;font-size:11px;white-space:nowrap}
+.premium-stat-ring{margin-left:auto;display:grid;place-items:center;flex:0 0 39px;width:39px;height:39px;border:3px solid #9dcc70;border-bottom-color:#d8bd68;border-radius:50%;font-size:11px;color:#e8eddc}
+.premium-dashboard-grid{display:grid;grid-template-columns:minmax(0,1.18fr) minmax(0,1fr) minmax(0,1.12fr);gap:12px;align-items:stretch}
+.premium-panel{min-width:0;overflow:hidden;border:1px solid rgba(201,173,104,.42);border-radius:11px;background:linear-gradient(145deg,rgba(7,15,9,.97),rgba(5,11,7,.98));box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.premium-environment,.premium-activity,.premium-finance{padding:15px 15px 0;display:flex;flex-direction:column}
+.premium-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;margin-bottom:13px}
+.premium-panel-heading>div{display:flex;align-items:center;gap:10px;min-width:0}
+.premium-heading-icon{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;color:#edc86d}
+.premium-panel-heading h2{margin:0;font:500 17px/1.2 "Playfair Display",Georgia,serif;color:#f0e8d7}
+.premium-panel-heading p{margin:4px 0 0;color:#8f9c82;font-size:11px}
+.premium-link{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;border:0;background:transparent;color:#b9d96e;font-size:11px;white-space:nowrap;cursor:pointer}
+.premium-link:hover,.premium-panel-footer:hover{color:#e8cf78}
+.premium-condition-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;flex:1}
+.premium-condition{display:grid;grid-template-columns:30px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;column-gap:8px;row-gap:8px;min-width:0;padding:12px 11px;border:1px solid rgba(151,174,112,.19);border-radius:9px;background:linear-gradient(145deg,rgba(21,32,20,.9),rgba(11,19,12,.9))}
+.condition-symbol{grid-row:1;grid-column:1;display:grid;place-items:center}.condition-symbol.red{color:#ef8b79}.condition-symbol.blue{color:#6cc8e8}.condition-symbol.gold{color:#eacb6c}.condition-symbol.green{color:#a8d87b}
+.premium-condition>div:nth-child(2){display:flex;flex-direction:column;gap:4px;min-width:0}
+.premium-condition small{font-size:11px;color:#aebba0}
+.premium-condition strong{font-size:16px;font-weight:650;color:#f0ead8;overflow-wrap:anywhere}
+.premium-meter{grid-column:1/-1;height:7px;border-radius:99px;overflow:hidden;background:#202a20}
+.premium-meter>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#7fbd60,#b7e47e)}
+.premium-meter.gold-meter>span{background:linear-gradient(90deg,#caa854,#f4d982)}
+.premium-condition-note{grid-column:1/-1;color:#8fa084;font-size:10px}
+.premium-panel-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:10px;padding:11px 0;border:0;border-top:1px solid rgba(201,173,104,.15);background:transparent;color:#c7df7a;text-align:left;font-size:12px;cursor:pointer}
+.premium-activity-list{display:flex;flex-direction:column;flex:1}
+.premium-activity-row{display:flex;align-items:center;gap:10px;min-width:0;padding:12px 1px;border:0;border-bottom:1px solid rgba(151,174,112,.13);background:transparent;color:var(--text);text-align:left;cursor:pointer}
+.premium-activity-row:last-child{border-bottom:0}
+.premium-activity-row>span:nth-child(2){display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.premium-activity-row strong{font-size:12px;color:#e9eddf}
+.premium-activity-row small{font-size:11px;color:#99a58d;line-height:1.4}
+.premium-activity-row>svg{flex:0 0 auto;color:#7c8971}
+.activity-icon{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;border-radius:8px;background:#17251a}
+.activity-icon.green{color:#a8d87b}.activity-icon.gold{color:#e9c66d}.activity-icon.violet{color:#c5a5df}
+.premium-balance-card{display:flex;flex-direction:column;gap:7px;padding:15px;border:1px solid rgba(151,174,112,.28);border-radius:9px;background:linear-gradient(135deg,#192719,#0e170f)}
+.premium-balance-card small{color:#b2bea5;font-size:12px}
+.premium-balance-card strong{font:500 29px/1.1 "Playfair Display",Georgia,serif;color:#b9df75}
+.premium-balance-card span{font-size:11px;color:#91a087}
+.premium-finance-details{display:grid;grid-template-columns:1fr 1fr;margin-top:13px}
+.premium-finance-details>div{display:flex;flex-direction:column;gap:5px;min-width:0;padding:0 10px}
+.premium-finance-details>div:first-child{padding-left:0;border-right:1px solid rgba(151,174,112,.18)}
+.premium-finance-details small{color:#a5b19a;font-size:11px}
+.premium-finance-details strong{color:#e9eddf;font-size:14px;overflow-wrap:anywhere}
+.premium-finance-note{display:flex;align-items:flex-start;gap:8px;margin-top:14px;color:#a7b397;font-size:11px;line-height:1.5}
+.premium-finance-note svg{flex:0 0 auto;color:#d7b95f}
+.premium-featured{grid-column:1/span 2;padding:15px}
+.premium-plant-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.premium-plant-card{overflow:hidden;min-width:0;padding:0;border:1px solid rgba(201,173,104,.3);border-radius:9px;background:#0b130c;color:var(--text);text-align:left;cursor:pointer;transition:transform .18s,border-color .18s}
+.premium-plant-card:hover{transform:translateY(-2px);border-color:rgba(201,173,104,.75)}
+.premium-plant-art{position:relative;height:clamp(95px,10vw,155px);overflow:hidden;background:radial-gradient(ellipse at 50% 35%,#263d20,#071009)}
+.premium-plant-art>div,.premium-plant-art svg{width:100%;height:100%}
+.premium-plant-art>span.premium-plant-status{position:absolute;left:7px;top:7px;padding:4px 7px;border:1px solid rgba(170,218,120,.25);border-radius:99px;background:rgba(5,16,7,.85);color:#b6df82;font-size:9px}
+.premium-plant-art>span.premium-plant-status.attention{color:#efb09b;border-color:rgba(239,140,114,.4)}
+.premium-plant-copy{display:flex;flex-direction:column;gap:4px;padding:10px 10px 7px;min-width:0}
+.premium-plant-copy small{color:#b9d975;font-size:10px}
+.premium-plant-copy strong{font:500 15px/1.2 "Playfair Display",Georgia,serif;color:#f0e8d7;overflow-wrap:anywhere}
+.premium-plant-copy>span{color:#879681;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.premium-plant-meta{display:flex;justify-content:space-between;gap:5px;padding:8px 10px;border-top:1px solid rgba(151,174,112,.14);color:#c9d1bb;font-size:10px}
+.premium-empty-collection{display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;padding:25px 18px 30px}
+.premium-empty-icon{display:grid;place-items:center;width:50px;height:50px;border-radius:14px;background:#1b2a18;color:#b8dc78}
+.premium-empty-collection h3{margin:0;font:500 20px "Playfair Display",Georgia,serif}
+.premium-empty-collection p{max-width:400px;margin:0 0 4px;color:#9aa58d;font-size:12px;line-height:1.6}
+.premium-side-stack{display:flex;flex-direction:column;gap:12px;min-width:0}
+.premium-research,.premium-tasks{padding:14px}
+.premium-research-card{display:flex;align-items:center;gap:10px;width:100%;min-width:0;padding:9px;border:1px solid rgba(151,174,112,.18);border-radius:9px;background:rgba(17,29,17,.75);color:var(--text);text-align:left;cursor:pointer}
+.premium-research-art{display:grid;place-items:center;flex:0 0 52px;width:52px;height:55px;border-radius:7px;background:linear-gradient(145deg,#273e20,#0d180d);color:#c5e47e}
+.premium-research-card>span:nth-child(2){display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
+.premium-research-card strong{font-size:12px;line-height:1.35}
+.premium-research-card small{color:#98a68d;font-size:10px;line-height:1.4}
+.premium-research-card>svg{flex:0 0 auto;color:#8e9b81}
+.premium-task-count{display:grid;place-items:center;width:27px;height:27px;border:1px solid rgba(201,173,104,.3);border-radius:8px;color:#e6c66d;font-size:12px}
+.premium-task-list{display:flex;flex-direction:column;gap:12px}
+.premium-task-row{display:flex;align-items:center;gap:9px;width:100%;min-width:0;padding:0;border:0;background:transparent;color:var(--text);text-align:left;cursor:pointer}
+.premium-task-icon{display:grid;place-items:center;flex:0 0 31px;width:31px;height:31px;border-radius:8px;background:#182719}
+.premium-task-icon.green{color:#b3dd7c}.premium-task-icon.gold{color:#e8c66d}.premium-task-icon.violet{color:#c6a3e2}.premium-task-icon.blue{color:#75cce8}
+.premium-task-copy{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.premium-task-copy strong{font-size:11px;line-height:1.3}
+.premium-task-copy small{color:#8e9b83;font-size:10px;line-height:1.3;overflow-wrap:anywhere}
+.premium-task-meter{height:6px;overflow:hidden;border-radius:99px;background:#1d281e}
+.premium-task-meter>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#7db95c,#b8e57e)}
+.premium-task-percent{flex:0 0 34px;text-align:right;color:#aebba0;font-size:10px}
+@media(max-width:1350px){
+ .premium-stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .premium-dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .premium-featured{grid-column:1/-1;grid-row:auto}
+ .premium-side-stack{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .premium-plant-art{height:clamp(110px,14vw,175px)}
+}
+@media(max-width:900px){
+ .premium-welcome{min-height:220px;padding:23px}
+ .premium-welcome-caption{display:none}
+ .premium-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .premium-dashboard-grid{grid-template-columns:minmax(0,1fr)}
+ .premium-featured,.premium-side-stack{grid-column:auto}
+ .premium-side-stack{display:flex}
+ .premium-plant-art{height:150px}
+}
+@media(max-width:560px){
+ .premium-dashboard{gap:10px}
+ .premium-welcome{min-height:255px;padding:18px}
+ .premium-welcome h1{font-size:34px}
+ .premium-welcome p{font-size:13px}
+ .premium-welcome-actions{gap:7px}
+ .premium-season{width:100%;margin-bottom:2px}
+ .premium-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .premium-stat-card{min-height:82px;padding:10px;gap:8px}
+ .premium-stat-icon{flex-basis:34px;width:34px;height:34px}
+ .premium-stat-icon svg{width:21px;height:21px}
+ .premium-stat-copy strong{font-size:20px}
+ .premium-stat-copy small{font-size:10px}
+ .premium-stat-copy em{font-size:10px}
+ .premium-stat-trend,.premium-stat-ring{display:none}
+ .premium-environment,.premium-activity,.premium-finance,.premium-featured,.premium-research,.premium-tasks{padding:12px}
+ .premium-panel-heading h2{font-size:15px}
+ .premium-panel-heading p{font-size:10px}
+ .premium-link{font-size:10px}
+ .premium-condition-grid{gap:7px}
+ .premium-condition{padding:10px 8px;column-gap:5px}
+ .premium-condition strong{font-size:14px}
+ .premium-plant-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .premium-plant-art{height:130px}
+}
