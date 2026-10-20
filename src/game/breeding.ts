@@ -31,9 +31,9 @@ function normalizeGenus(value: string): string {
 export function createBreedingIdentity(day: number, projectOrdinal: number, parentAId: string, parentBId: string): { projectId: string; lineId: string } {
   const safeDay = Math.max(1, Math.floor(Number.isFinite(day) ? day : 1));
   const safeOrdinal = Math.max(1, Math.floor(Number.isFinite(projectOrdinal) ? projectOrdinal : 1));
-  const parents = [parentAId.trim(), parentBId.trim()].sort();
-  const slug = (value: string) => value.replace(/[^a-zA-Z0-9-]/g, "-").slice(0, 48) || "unknown";
-  const identity = parents.map(slug).join("--");
+  const slug = (value: string) => value.trim().replace(/[^a-zA-Z0-9-]/g, "-").slice(0, 48) || "unknown";
+  const parents = [slug(parentAId), slug(parentBId)].sort();
+  const identity = parents.join("--");
   return { projectId: "BRD-" + safeDay + "-" + safeOrdinal + "-" + identity, lineId: "LINE-" + safeDay + "-" + identity };
 }
 
