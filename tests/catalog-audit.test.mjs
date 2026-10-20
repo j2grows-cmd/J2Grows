@@ -5,7 +5,7 @@ import { species } from "../src/data.ts";
 
 test("economy catalogue has valid prices, unique normalized names and complete fallback coverage", () => {
   const audit = auditSpeciesEconomy();
-  assert.equal(audit.total, 100);
+  assert.equal(audit.total, SPECIES_ECONOMY.length);
   assert.deepEqual(audit.duplicateNames, []);
   assert.deepEqual(audit.invalidPrices, []);
   assert.equal(species.length, SPECIES_ECONOMY.length);
