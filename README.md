@@ -52,7 +52,7 @@ These mechanics are a playable foundation, not final balance. The 99 base prices
 - Adjust greenhouse temperature and humidity; these conditions influence health, growth speed and propagation timing during simulated days.
 - Save institution state automatically in browser local storage. On return, eligible prototype progress is calculated at one simulated day per real-life hour away, capped at fourteen days.
 
-Known prototype limitations: plant artwork includes stylised fallback illustrations; genetic inheritance and mutation rates are fictional, simplified and not scientifically predictive; the finance trend graphic is illustrative rather than a forecast; the species/price dataset and progression balance need playtesting; browser localStorage is not cloud-synchronised; and no automated browser-level end-to-end test is configured yet. Do not treat example prices, care values or research costs as final balance or real-world plant-care advice.
+Known prototype limitations: plant artwork includes stylised fallback illustrations; genetic inheritance and mutation rates are fictional, simplified and not scientifically predictive; the finance screen provides a cost-only estimate rather than a full forecast; the species/price dataset and progression balance need playtesting; browser localStorage is not cloud-synchronised; and no automated browser-level end-to-end test is configured yet. Do not treat example prices, care values or research costs as final balance or real-world plant-care advice.
 
 ## Design documents
 
