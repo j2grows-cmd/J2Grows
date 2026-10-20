@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { normalizeSpeciesRow, normalizeSpeciesRows } from "../src/game/supabase-catalog.ts";
+import { auditSpeciesRows, normalizeSpeciesRow, normalizeSpeciesRows } from "../src/game/supabase-catalog.ts";
 
 const valid = { id: "alocasia-frydek", name: "Alocasia Frydek", scientific_name: "Alocasia micholitziana", family: "Araceae", difficulty: "Moderate", rarity: "Rare", image_path: "species/alocasia-frydek/hero.png", summary: "A velvet-leaf aroid", light: "Bright indirect", humidity: "High", water: "Keep evenly moist", traits: ["Velvet", "Variegated"] };
 
@@ -39,4 +39,17 @@ test("filters malformed and duplicate records without discarding valid neighbour
   assert.equal(rows[1].name, "Pink Princess");
   assert.deepEqual(rows[1].traits, ["Pink"]);
   assert.deepEqual(normalizeSpeciesRows({ not: "an array" }), []);
+});
+
+test("catalogue audit reports invalid rows, duplicates and incomplete care/artwork metadata", () => {
+  const partial = { id: "monstera-dubia", name: "Monstera dubia", traits: [] };
+  const audit = auditSpeciesRows([valid, partial, partial, null]);
+  assert.equal(audit.totalRows, 4);
+  assert.equal(audit.validRows, 3);
+  assert.deepEqual(audit.invalidRowIndexes, [3]);
+  assert.deepEqual(audit.duplicateIds, ["monstera-dubia"]);
+  assert.deepEqual(audit.missingScientificNames, ["monstera-dubia", "monstera-dubia"]);
+  assert.deepEqual(audit.missingArtworkPaths, ["monstera-dubia", "monstera-dubia"]);
+  assert.deepEqual(audit.missingCareProfiles, ["monstera-dubia", "monstera-dubia"]);
+  assert.deepEqual(audit.missingTraits, ["monstera-dubia", "monstera-dubia"]);
 });
