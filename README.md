@@ -4,7 +4,7 @@ J2Grows is a premium botanical research, cultivation, genetics and management ga
 
 ## Current status
 
-**Prototype 0.1 is under development** on the [agent/first-playable-foundation](https://github.com/j2grows-cmd/J2Grows/tree/agent/first-playable-foundation) branch. This first slice establishes the premium 2D interface, starter specimen data, navigation, collection filters, specimen records, basic research/upgrade interactions, and versioned browser-local saving with capped offline progress. The simulation and displayed economic values are still prototype-level.
+**Prototype 0.1 is a playable vertical slice** on `main`. It includes the premium 2D interface, collection/catalogue, specimen records, growth and propagation, breeding, research, mutation discovery, facility upgrades, staff care, shop/sales, browser-local saves, backup import/export, manual save slots and capped offline progression. It is not a finished game: balance is provisional, the simulation uses simplified fictional genetics, some visualisations are illustrative, and desktop packaging/cloud sync are deferred. Use the automated checks and the acceptance checklist below before calling a build verified.
 
 ## Run locally
 
@@ -49,10 +49,10 @@ These mechanics are a playable foundation, not final balance. The 99 base prices
 - Search and filter individual specimens; open their records and toggle protection.
 - Sell unprotected specimens and use funds for a starter facility upgrade or research project.
 - Advance a simulated day to progress the prototype's research data and improve eligible plant-health values.
-- Adjust the greenhouse's illustrative temperature and humidity controls.
+- Adjust greenhouse temperature and humidity; these conditions influence health, growth speed and propagation timing during simulated days.
 - Save institution state automatically in browser local storage. On return, eligible prototype progress is calculated at one simulated day per real-life hour away, capped at fourteen days.
 
-The prototype intentionally labels unfinished mechanics: plant artwork is stylised placeholder art, genetics and valuation are not yet a full simulation, and environmental controls do not yet alter plant health. Do not treat example prices, care values or research costs as final balance or real-world plant-care advice.
+Known prototype limitations: plant artwork includes stylised fallback illustrations; genetic inheritance and mutation rates are fictional, simplified and not scientifically predictive; the finance trend graphic is illustrative rather than a forecast; the species/price dataset and progression balance need playtesting; browser localStorage is not cloud-synchronised; and no automated browser-level end-to-end test is configured yet. Do not treat example prices, care values or research costs as final balance or real-world plant-care advice.
 
 ## Design documents
 
@@ -69,3 +69,27 @@ The prototype intentionally labels unfinished mechanics: plant artwork is stylis
 - Reuse and validate existing plant catalogue data and artwork wherever practical.
 - Never commit secrets or expose Supabase service-role credentials in client code.
 - Keep the core game playable offline; online features must not gate solo progression.
+
+## First-playable acceptance checklist
+
+Before a milestone is considered verified, run all three checks in a clean checkout:
+
+```bash
+npm test
+npm run typecheck
+npm run build
+```
+
+Then manually smoke-test the app in a browser:
+
+1. Start a new game, complete the tutorial and acquire an affordable plant.
+2. Open its specimen record, record an observation and inspect research/evidence changes.
+3. Advance several days and verify plant health, stage, propagation and active breeding projects update.
+4. Change greenhouse temperature/humidity and verify the next simulated day responds to conditions.
+5. Sell an unprotected specimen; verify cash increases. Protect another specimen and verify it cannot be sold.
+6. Purchase an affordable facility upgrade and verify its level, effect and weekly cost.
+7. Save to a manual slot, reload it, export a backup, and import that backup. Verify a malformed/unsupported backup is rejected without replacing the current save.
+8. Reload the browser and verify local progress persists; test offline progression enabled and disabled.
+9. Test the app at desktop and narrow viewport widths, keyboard navigation, reduced motion and high contrast.
+
+Passing unit tests alone is not proof that these browser interactions have been manually exercised. Report them separately.
