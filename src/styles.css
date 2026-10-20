@@ -2400,3 +2400,34 @@ input, select, textarea {
   .main-area > .topbar .top-institution { gap: 5px; }
   .main-area > .topbar .top-brand-logo { flex-basis: 27px; width: 27px; height: 27px; }
 }
+
+
+/* Correct the desktop header boundary and preserve the full level label. */
+@media (min-width: 981px) {
+  .main-area {
+    margin-left: 232px !important;
+    width: calc(100% - 232px) !important;
+    min-width: 0 !important;
+  }
+  .main-area > .topbar {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 22px !important;
+    padding-right: 22px !important;
+    grid-template-columns: minmax(165px, 1fr) minmax(150px, .95fr) minmax(150px, .95fr) minmax(205px, 1.2fr) 42px minmax(205px, 1.15fr);
+    gap: 12px !important;
+  }
+  .main-area > .topbar .top-level { min-width: 205px; }
+  .main-area > .topbar .level-info strong { overflow: visible; text-overflow: clip; }
+}
+@media (min-width: 981px) and (max-width: 1450px) {
+  .main-area > .topbar {
+    grid-template-columns: minmax(120px, .9fr) minmax(120px, .9fr) minmax(120px, .9fr) minmax(160px, 1fr) 38px minmax(160px, 1fr);
+    gap: 8px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  .main-area > .topbar .top-level { min-width: 0; }
+  .main-area > .topbar .level-info strong { overflow: hidden; text-overflow: ellipsis; }
+}
