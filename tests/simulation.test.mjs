@@ -48,5 +48,6 @@ test("propagation delays respond to conditions and bench upgrades while corm pha
   const corm = { method: "corm", phase: "Corm", daysInPhase: 1, daysToSprout: 2, daysToEstablish: 2 };
   assert.equal(advancePropagationPhase(corm, 0, 0).transition, "corm-sprouting");
   const sprouting = advancePropagationPhase(corm, 0, 0).propagation;
-  assert.equal(advancePropagationPhase(sprouting, 0, 0).transition, "propagation-established");
+  assert.equal(advancePropagationPhase(sprouting, 0, 0).transition, "no-transition");
+  assert.equal(advancePropagationPhase({ ...sprouting, daysInPhase: 1 }, 0, 0).transition, "propagation-established");
 });
