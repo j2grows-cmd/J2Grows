@@ -220,9 +220,7 @@ function App() {
   const [greenhouseEnvironment, setGreenhouseEnvironment] = useState<PlantEnvironment>(loadedSave.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
   const [facilityLevels, setFacilityLevels] = useState<FacilityLevels>(loadedSave.facilityLevels ?? { propagationBench: 0, environmentalController: 0 });
   const [staffState, setStaffState] = useState<StaffState>(normalizeStaffState(loadedSave.staffState));
-  const [offlineProgressEnabled, setOfflineProgressEnabled] = useState(false);
   const [simulationSeed, setSimulationSeed] = useState(loadedSave.simulationSeed);
-  const [, setOfflineDaysRemaining] = useState(loadedSave.offlineDays);
   const [saveSlots, setSaveSlots] = useState<Record<string, GameSave | null>>(() => {
     const slotsKey = "j2grows.manual-save-slots.v1";
     try {
@@ -543,9 +541,7 @@ function App() {
     setGreenhouseEnvironment(save.greenhouseEnvironment ?? { ...DEFAULT_ENVIRONMENT });
     setFacilityLevels(normalizeFacilityLevels(save.facilityLevels));
     setStaffState(normalizeStaffState(save.staffState));
-    setOfflineProgressEnabled(false);
     setSimulationSeed(typeof save.simulationSeed === "string" ? save.simulationSeed : `migrated-${String(save.savedAt)}-${String(save.day)}`);
-    setOfflineDaysRemaining(0);
     setSelected(save.specimens[0]?.id ?? "");
     announce(`Loaded save slot ${slot}.`);
   }
