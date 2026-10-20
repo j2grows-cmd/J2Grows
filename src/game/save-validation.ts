@@ -109,10 +109,11 @@ export function normalizeManualSaveSlots(value: unknown): Record<string, unknown
     if (candidate === null || candidate === undefined) continue;
     if (checkSaveEnvelope(candidate).valid && isRecord(candidate)) {
       const recovered = normalizeSpecimens(candidate.specimens);
-      const projects = Array.isArray(candidate.breedingProjects) ? candidate.breedingProjects.filter((item: unknown) => isRecord(item) && typeof item.id === "string" && typeof item.parentAId === "string" && typeof item.parentBId === "string" && typeof item.startedDay === "number" && Number.isFinite(item.startedDay) && typeof item.completesOnDay === "number" && Number.isFinite(item.completesOnDay) && typeof item.cost === "number" && Number.isFinite(item.cost) && ["active", "completed", "cancelled"].includes(String(item.status)) && typeof item.lineId === "string" && typeof item.failureChance === "number" && Number.isFinite(item.failureChance)) : [];
+      const relationships = normalizeBreedingProjectRelations(recovered.specimens, candidate.breedingProjects);
+      const projects = relationships.projects;
       const env = isRecord(candidate.greenhouseEnvironment) ? candidate.greenhouseEnvironment : {};
       const envValue = (field: string, fallback: number) => finite(env[field], fallback, 0, 100);
-      slots[key] = { ...candidate, version: 9, simulationSeed: typeof candidate.simulationSeed === "string" && candidate.simulationSeed.length > 0 ? candidate.simulationSeed : `migrated-${String(candidate.savedAt)}-${String(candidate.day)}`, offlineProgressEnabled: false, specimens: recovered.specimens, breedingProjects: projects,
+      slots[key] = { ...candidate, version: 9, simulationSeed: typeof candidate.simulationSeed === "string" && candidate.simulationSeed.length > 0 ? candidate.simulationSeed : `migrated-${String(candidate.savedAt)}-${String(candidate.day)}`, offlineProgressEnabled: false, specimens: relationships.specimens, breedingProjects: projects,
         cash: finite(candidate.cash, 0, 0, 1_000_000_000),
         research: finite(candidate.research, 0, 0, 1_000_000_000),
         day: finite(candidate.day, 1, 1, 1_000_000_000, true),
