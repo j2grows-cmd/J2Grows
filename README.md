@@ -4,7 +4,7 @@ J2Grows is a premium botanical research, cultivation, genetics and management ga
 
 ## Current status
 
-**Prototype 0.1 is a playable vertical slice** on `main`. It includes the premium 2D interface, collection/catalogue, specimen records, growth and propagation, breeding, research, mutation discovery, facility upgrades, staff care, shop/sales, browser-local saves, backup import/export, manual save slots and capped offline progression. It is not a finished game: balance is provisional, the simulation uses simplified fictional genetics, some visualisations are illustrative, and desktop packaging/cloud sync are deferred. Use the automated checks and the acceptance checklist below before calling a build verified.
+**Prototype 0.1 is a playable vertical slice** on `main`. It includes the premium 2D interface, collection/catalogue, specimen records, growth and propagation, breeding, research, mutation discovery, facility upgrades, staff care, shop/sales, browser-local saves, backup import/export, manual save slots and capped offline progression. It is not a finished game: balance is provisional, the simulation uses simplified fictional genetics, some visualisations are illustrative, and desktop packaging is being introduced as a Windows Electron milestone; cloud sync remains deferred. Use the automated checks and the acceptance checklist below before calling a build verified.
 
 ## Run locally
 
@@ -23,6 +23,26 @@ npm run typecheck
 npm run build
 npm run preview
 ```
+
+
+## Windows desktop application (first packaging milestone)
+
+The desktop shell wraps the existing React/Vite game in Electron; it does not replace the game or its simulation. The first Windows distribution targets are an NSIS installer and a portable executable (x64). Both are built by GitHub Actions on pull requests and can be downloaded from that workflow's artifacts; this is a packaging milestone, not yet a signed public release or Steam build.
+
+Requires Node.js 20 or newer. To run the current production build in Electron locally:
+
+```bash
+npm install
+npm run desktop:dev
+```
+
+To create both Windows package formats on a Windows build machine:
+
+```bash
+npm run desktop:pack
+```
+
+The desktop renderer loads the locally packaged Vite output and keeps Electron Node.js integration disabled, context isolation enabled and sandboxing enabled. External navigation is blocked in the application window. Plant catalogue images and optional Supabase access still require internet access when the game uses those remote services. Existing browser saves are not automatically imported into the desktop app; export a backup from the browser prototype and keep it safe while desktop save compatibility is tested. Steamworks integration, code signing, auto-updates, custom app icon, and a verified in-game save migration are out of scope for this first milestone.
 
 ## Connect the plant species library
 
