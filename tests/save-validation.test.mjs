@@ -30,3 +30,48 @@ test("unknown or malformed manual slots normalize to three safe empty/valid slot
   assert.equal(result["3"], null);
   assert.deepEqual(normalizeManualSaveSlots(null), { "1": null, "2": null, "3": null });
 });
+
+
+import { normalizeBreedingProjectRelations } from "../src/game/save-validation.ts";
+
+const project = (overrides = {}) => ({
+  id: "project-1", parentAId: "parent-a", parentBId: "parent-b",
+  startedDay: 1, completesOnDay: 6, cost: 20, status: "active",
+  lineId: "line-1", failureChance: 0.1, ...overrides,
+});
+
+test("breeding relationship recovery repairs active parent reservations and clears orphan reservations", () => {
+  const a = specimen({ id: "parent-a" });
+  const b = specimen({ id: "parent-b", reservedByProjectId: "missing-project" });
+  const orphan = specimen({ id: "orphan", reservedByProjectId: "missing-project" });
+  const result = normalizeBreedingProjectRelations([a, b, orphan], [project()]);
+  assert.equal(result.dropped, 0);
+  assert.equal(result.specimens.find((item) => item.id === "parent-a")?.reservedByProjectId, "project-1");
+  assert.equal(result.specimens.find((item) => item.id === "parent-b")?.reservedByProjectId, "project-1");
+  assert.equal(result.specimens.find((item) => item.id === "orphan")?.reservedByProjectId, undefined);
+  assert.equal(result.repaired, 3);
+});
+
+test("breeding relationship recovery drops orphaned, duplicate-parent, duplicate-id and conflicting active projects", () => {
+  const parents = [specimen({ id: "parent-a" }), specimen({ id: "parent-b" }), specimen({ id: "parent-c" })];
+  const result = normalizeBreedingProjectRelations(parents, [
+    project(),
+    project({ id: "project-2", parentAId: "parent-a", parentBId: "parent-c" }),
+    project({ id: "project-3", parentAId: "missing", parentBId: "parent-c" }),
+    project({ id: "project-4", parentAId: "parent-a", parentBId: "parent-a" }),
+    project(),
+  ]);
+  assert.equal(result.projects.length, 1);
+  assert.equal(result.dropped, 4);
+});
+
+test("breeding relationship recovery rejects invalid project values but retains historical closed projects without live parents", () => {
+  const result = normalizeBreedingProjectRelations([], [
+    project({ status: "completed", parentAId: "sold-a", parentBId: "sold-b" }),
+    project({ id: "bad-cost", cost: -1 }),
+    project({ id: "bad-chance", failureChance: 1.5 }),
+  ]);
+  assert.equal(result.projects.length, 1);
+  assert.equal(result.projects[0].status, "completed");
+  assert.equal(result.dropped, 2);
+});

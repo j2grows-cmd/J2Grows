@@ -14,7 +14,7 @@ import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityU
 import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, startStaffTraining, STAFF_TRAINING_COST, weeklyStaffOperatingCost, type StaffState } from "./game/staff.ts";
 import { getFallbackArtworkType } from "./game/plant-artwork.ts";
 import { canCreateOffset } from "./game/propagation-eligibility.ts";
-import { checkSaveEnvelope, isRecord, normalizeManualSaveSlots, normalizeSpecimens } from "./game/save-validation.ts";
+import { checkSaveEnvelope, isRecord, normalizeBreedingProjectRelations, normalizeManualSaveSlots, normalizeSpecimens } from "./game/save-validation.ts";
 import { loadSpeciesCatalog } from "./supabase";
 import { getArtworkStatusSummary, getCatalogueSourceLabel, type ArtworkState, type CatalogueSource } from "./game/catalogue-status";
 import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
@@ -142,19 +142,22 @@ function loadGameSave(): GameSave & { offlineDays: number; recoveryNotice: strin
       return freshGameSave("Your autosave could not be safely loaded. A recovery backup was saved and a fresh game was started.");
     }
     const recovered = normalizeSpecimens(parsed.specimens);
-    const validProjects = Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects.filter((item) => isRecord(item) && typeof item.id === "string" && typeof item.parentAId === "string" && typeof item.parentBId === "string" && typeof item.startedDay === "number" && typeof item.completesOnDay === "number" && typeof item.cost === "number" && ["active", "completed", "cancelled"].includes(String(item.status)) && typeof item.lineId === "string" && typeof item.failureChance === "number") : [];
-    const droppedProjects = Array.isArray(parsed.breedingProjects) ? parsed.breedingProjects.length - validProjects.length : 0;
+    const projectRecovery = normalizeBreedingProjectRelations(recovered.specimens, parsed.breedingProjects);
+    recovered.specimens = projectRecovery.specimens;
+    const validProjects = projectRecovery.projects;
+    const droppedProjects = projectRecovery.dropped;
     const offlineProgressEnabled = false;
     const offlineDays = 0;
     const simulationSeed = typeof parsed.simulationSeed === "string" && parsed.simulationSeed.length > 0 ? parsed.simulationSeed : `migrated-${String(parsed.savedAt)}-${String(parsed.day)}`;
     const savedFacilityLevels = normalizeFacilityLevels(parsed.facilityLevels as unknown as Partial<FacilityLevels> | null | undefined);
     const savedStaffState = normalizeStaffState(parsed.staffState as unknown as Partial<StaffState> | null | undefined);
     const noticeParts: string[] = [];
-    if (recovered.dropped || recovered.repaired || droppedProjects) {
-      backupRawSave(raw, `Recovered save: skipped ${recovered.dropped} invalid/duplicate specimen(s), repaired ${recovered.repaired} specimen(s), and skipped ${droppedProjects} invalid breeding project(s).`);
+    if (recovered.dropped || recovered.repaired || droppedProjects || projectRecovery.repaired) {
+      backupRawSave(raw, `Recovered save: skipped ${recovered.dropped} invalid/duplicate specimen(s), repaired ${recovered.repaired} specimen(s), and skipped ${droppedProjects} invalid breeding project(s), repaired ${projectRecovery.repaired} relationship(s).`);
       if (recovered.dropped) noticeParts.push(`${recovered.dropped} invalid specimen(s) skipped`);
       if (recovered.repaired) noticeParts.push(`${recovered.repaired} specimen(s) repaired`);
       if (droppedProjects) noticeParts.push(`${droppedProjects} invalid breeding project(s) skipped`);
+      if (projectRecovery.repaired) noticeParts.push(`${projectRecovery.repaired} breeding relationship(s) repaired`);
     }
     const cash = Math.min(1_000_000_000, Math.max(0, parsed.cash as number));
     const research = Math.min(1_000_000_000, Math.max(0, parsed.research as number));
@@ -369,7 +372,7 @@ function App() {
 
   function specimenValue(specimen: Specimen, plantName = findSpecies(specimen.speciesId).name): number {
     const economy = getSpeciesEconomy(specimen.speciesId) ?? getSpeciesEconomy(plantName);
-    const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation);
+    const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation, createEventRandom(simulationSeed, "fallback-genetics:" + day + ":" + specimen.id));
     const calculated = calculateSpecimenValue({
       basePrice: economy?.basePrice ?? findSpecies(specimen.speciesId).basePrice ?? 15,
       health: specimen.health,
@@ -392,7 +395,7 @@ function App() {
     const usedIds = new Set(specimens.map((item) => item.id));
     const id = createUniqueSpecimenId(usedIds);
     usedIds.add(id);
-    const genetics = createSpecimenGenetics(0);
+    const genetics = createSpecimenGenetics(0, createEventRandom(simulationSeed, "purchase-genetics:" + day + ":" + id));
     const specimen: Specimen = {
       id, speciesId: plant.id, nickname: plant.name, location: "Home greenhouse",
       health: 100, stage: "Juvenile", value: 0, purchasePrice: cost, protected: false,
@@ -416,7 +419,7 @@ function App() {
         purchasePrice: undefined,
         protected: true,
         propagation: undefined,
-        genetics: createSpecimenGenetics(0),
+        genetics: createSpecimenGenetics(0, createEventRandom(simulationSeed, "tutorial-demo-genetics:" + day + ":" + demoId)),
       };
       demonstration.value = specimenValue(demonstration, plant.name);
       setSpecimens((current) => [...current, specimen, demonstration]);
@@ -447,12 +450,13 @@ function App() {
     }
     const cost = isAlocasia ? 2 : 4;
     if (cash < cost) { announce(`You need ${money(cost)} for propagation supplies.`); return; }
+    const tutorialRandom = createEventRandom(simulationSeed, "tutorial-propagation:" + day + ":" + parent.id);
     const offspring: Specimen = {
       id: createUniqueSpecimenId(specimens.map((item) => item.id)),
       speciesId: parent.speciesId, nickname: isAlocasia ? "First Corm" : "First Cutting",
       location: isAlocasia ? "Corm Nursery" : "Propagation Bench",
       health: isAlocasia ? 75 : 85, stage: "Juvenile",
-      propagation: isAlocasia ? { method: "corm", phase: "Corm", daysInPhase: 0, daysToSprout: 2 + Math.floor(Math.random() * 4), daysToEstablish: 3 + Math.floor(Math.random() * 3) } : { method: "cutting", phase: "Establishing", daysInPhase: 0, daysToSprout: 0, daysToEstablish: 2 + Math.floor(Math.random() * 3) },
+      propagation: isAlocasia ? { method: "corm", phase: "Corm", daysInPhase: 0, daysToSprout: 2 + Math.floor(tutorialRandom() * 4), daysToEstablish: 3 + Math.floor(tutorialRandom() * 3) } : { method: "cutting", phase: "Establishing", daysInPhase: 0, daysToSprout: 0, daysToEstablish: 2 + Math.floor(tutorialRandom() * 3) },
       value: 0,
       protected: false, variegation: parent.variegation, discovered: false, genetics: parent.genetics ? { ...parent.genetics, genetics: { ...parent.genetics.genetics, mutationIds: [...parent.genetics.genetics.mutationIds] }, observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: parent.genetics.research.mutations.map((mutation) => ({ ...mutation, detected: false })) } } : createSpecimenGenetics(parent.variegation),
     };
@@ -604,7 +608,7 @@ function App() {
       const staffCondition = effectiveStaffCareCondition(simulationEnvironment, nextStaffState);
       const environmentalMean = simulationEnvironment.autoCare ? Math.max(60, staffCondition) : staffCondition;
       const health = Math.max(0, Math.min(100, environmentalMean < 35 ? specimen.health - 5 : environmentalMean < 50 ? specimen.health - 2 : environmentalMean >= 75 && specimen.health < 100 ? specimen.health + 2 : specimen.health));
-      const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation);
+      const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation, createEventRandom(simulationSeed, "fallback-genetics:" + day + ":" + specimen.id));
       const environment = { ...simulationEnvironment, health };
       const growth = growVariegation(record.genetics, environment, specimen.variegation, random);
       let nextRecord: SpecimenGenetics = { ...record, environment, expression: growth.expression };
@@ -703,8 +707,8 @@ function App() {
         mutationMessage += ` Breeding project ${project.id} failed; its cost was lost, but both parents survived.`;
         return { ...project, status: "cancelled" as const };
       }
-      const recordA = parentA.genetics ?? createSpecimenGenetics(parentA.variegation);
-      const recordB = parentB.genetics ?? createSpecimenGenetics(parentB.variegation);
+      const recordA = parentA.genetics ?? createSpecimenGenetics(parentA.variegation, createEventRandom(simulationSeed, "fallback-genetics:" + day + ":" + parentA.id));
+      const recordB = parentB.genetics ?? createSpecimenGenetics(parentB.variegation, createEventRandom(simulationSeed, "fallback-genetics:" + day + ":" + parentB.id));
       const inherited = applyTraitTargeting(inheritTraits(recordA.genetics, recordB.genetics, random), recordA.genetics, recordB.genetics, project.targetTrait, random);
       const generation = Math.max(parentA.generation ?? 0, parentB.generation ?? 0) + 1;
       const inheritedMutationIds = inherited.mutationIds;
@@ -760,7 +764,8 @@ function App() {
         const completedTarget: Specimen = { ...target, mutationAnalysisCompleted: true };
         const record = completedTarget.genetics ?? createSpecimenGenetics(completedTarget.variegation);
         if (record.genetics.mutationGenePresent) {
-          const mutation = { ...createMutation(), detected: true, evidenceCount: 3 };
+          const analysisRandom = createEventRandom(simulationSeed, "mutation-analysis:" + target.id);
+          const mutation = { ...createMutation(analysisRandom), detected: true, evidenceCount: 3 };
           const geneticsRecord = {
             ...record,
             genetics: { ...record.genetics, mutationIds: [...new Set([...record.genetics.mutationIds, mutation.id])] },
@@ -881,7 +886,8 @@ function App() {
       "tissue-culture": { prefix: "TC", label: "Tissue culture", location: "Tissue Culture Lab", health: 70, nickname: "Tissue Culture" },
     };
     const detail = { ...details[method], cost: propagationCost(method, rarity) };
-    const count = method === "cutting" ? 1 + Math.floor(Math.random() * 3) : 1;
+    const propagationRandom = createEventRandom(simulationSeed, "propagation:" + day + ":" + parent.id + ":" + method + ":" + specimens.length);
+    const count = method === "cutting" ? 1 + Math.floor(propagationRandom() * 3) : 1;
     const totalCost = detail.cost * count;
     if (cash < totalCost) { announce(`Not enough funds. ${count > 1 ? `${count} cuttings cost ${money(totalCost)} in total` : `${detail.label} propagation costs ${money(totalCost)}`}.`); return; }
     const usedIds = new Set(specimens.map((item) => item.id));
@@ -895,15 +901,15 @@ function App() {
         location: detail.location,
         health: detail.health,
         stage: "Juvenile",
-        propagation: { method, phase: method === "corm" ? "Corm" : method === "cutting" ? "Cutting" : "Establishing", daysInPhase: 0, daysToSprout: method === "corm" ? 2 + Math.floor(Math.random() * 4) : method === "cutting" ? 2 + Math.floor(Math.random() * 3) : 0, daysToEstablish: 3 + Math.floor(Math.random() * 3), daysToJuvenile: method === "cutting" ? 4 + Math.floor(Math.random() * 3) : undefined },
+        propagation: { method, phase: method === "corm" ? "Corm" : method === "cutting" ? "Cutting" : "Establishing", daysInPhase: 0, daysToSprout: method === "corm" ? 2 + Math.floor(propagationRandom() * 4) : method === "cutting" ? 2 + Math.floor(propagationRandom() * 3) : 0, daysToEstablish: 3 + Math.floor(propagationRandom() * 3), daysToJuvenile: method === "cutting" ? 4 + Math.floor(propagationRandom() * 3) : undefined },
         value: 0,
         protected: false,
         variegation: parent.variegation,
         discovered: false,
         genetics: parent.genetics ? { ...parent.genetics, genetics: { ...parent.genetics.genetics, mutationIds: [...parent.genetics.genetics.mutationIds] }, observations: [], research: { points: 0, observationCount: 0, analysisLevel: 0, discoveredTraits: [], mutations: parent.genetics.research.mutations.map((mutation) => ({ ...mutation, detected: false })) } } : createSpecimenGenetics(parent.variegation),
       };
-      if (mutationOccurs("propagation", child.genetics!.environment, researchUnlocks.includes("propagation-science") ? 1 : 0, researchUnlocks.includes("propagation-science") ? 0.005 : 0)) {
-        const mutation = createMutation();
+      if (mutationOccurs("propagation", child.genetics!.environment, researchUnlocks.includes("propagation-science") ? 1 : 0, researchUnlocks.includes("propagation-science") ? 0.005 : 0, propagationRandom)) {
+        const mutation = createMutation(propagationRandom);
         mutation.detected = false;
         child.genetics = { ...child.genetics!, genetics: { ...child.genetics!.genetics, mutationIds: [...new Set([...child.genetics!.genetics.mutationIds, mutation.id])] }, research: { ...child.genetics!.research, mutations: [...child.genetics!.research.mutations, mutation] } };
       }
@@ -976,7 +982,7 @@ function App() {
       announce(`This breeding project costs ${money(cost)}. You currently have ${money(cash)}.`);
       return;
     }
-    const id = `BRD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+    const id = "BRD-" + day + "-" + (breedingProjects.length + 1) + "-" + parentA.id + "-" + parentB.id;
     const condition = (greenhouseEnvironment.light + greenhouseEnvironment.nutrition + greenhouseEnvironment.humidity + parentA.health + parentB.health) / 5;
     const project: BreedingProject = {
       id, parentAId, parentBId, startedDay: day,
@@ -1085,7 +1091,7 @@ function App() {
               {settingsTab==="Data & System" && <><div className="settings-category-title"><h3>Data & System</h3><p>Manage local preferences and keep a copy of your current save.</p></div>
                 <div className="preference-row"><div><strong>Local save</strong><small>Game progress is stored in this browser, not synced between devices.</small></div><span className="settings-live-status">Autosave enabled</span></div>
                 <div className="preference-row"><div><strong>Export save backup</strong><small>Download your current game, manual save slots and preferences to a portable JSON file.</small></div><button className="main-menu-settings-action" onClick={()=>{try{const save:GameSave={version:9,simulationSeed,specimens,breedingProjects,cash,research,day,projectStarted,analysisTargetSpecimenId,analysisStartedDay,analysisEquipmentLevel,greenhouseEnvironment,researchUnlocks,facilityLevels,staffState,offlineProgressEnabled:false,savedAt:Date.now()};const payload={format:"j2grows-save-backup",formatVersion:1,exportedAt:new Date().toISOString(),autosave:save,manualSlots:saveSlots,preferences,instituteName,tutorialCompleted:localStorage.getItem("j2grows.tutorial.completed.v1")==="true"};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="j2grows-save-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);setAudioTestMessage("Save backup exported. Keep the JSON file somewhere safe.");}catch{setAudioTestMessage("Could not export save data from this browser.");}}}><Database size={15}/> Export backup</button></div>
-                <div className="preference-row"><div><strong>Import save backup</strong><small>Restore a J2Grows JSON backup. This replaces the current game and browser save slots.</small></div><label className="main-menu-settings-action import-save-label"><input type="file" accept=".json,application/json" onChange={async e=>{const input=e.currentTarget;const file=input.files?.[0];if(!file)return;try{const parsed:unknown=JSON.parse(await file.text());const envelope=isRecord(parsed)&&parsed.format==="j2grows-save-backup"?parsed.autosave:parsed;const check=checkSaveEnvelope(envelope);if(!check.valid||!isRecord(envelope))throw new Error(check.reason||"Unsupported save file.");const recovered=normalizeSpecimens(envelope.specimens);if(!Array.isArray(envelope.specimens)||recovered.dropped>0||recovered.specimens.length!==envelope.specimens.length)throw new Error("The backup contains invalid or duplicate specimens. Your current save has not been changed.");const projects=Array.isArray(envelope.breedingProjects)?envelope.breedingProjects.filter((item:unknown)=>isRecord(item)&&typeof item.id==="string"&&typeof item.parentAId==="string"&&typeof item.parentBId==="string"&&typeof item.startedDay==="number"&&typeof item.completesOnDay==="number"&&typeof item.cost==="number"&&["active","completed","cancelled"].includes(String(item.status))&&typeof item.lineId==="string"&&typeof item.failureChance==="number"):[];if(!window.confirm("Import this backup and replace the current game save? Export a backup of your current game first if you want to keep it."))return;const save:GameSave={version:9,simulationSeed:typeof envelope.simulationSeed==="string"&&envelope.simulationSeed.length>0?envelope.simulationSeed:`migrated-${String(envelope.savedAt)}-${String(envelope.day)}`,specimens:recovered.specimens.map(item=>({...item,genetics:item.genetics??createSpecimenGenetics(item.variegation)})),breedingProjects:projects as BreedingProject[],cash:Math.max(0,Math.min(1_000_000_000,Number(envelope.cash))),research:Math.max(0,Math.min(1_000_000_000,Number(envelope.research))),day:Math.max(1,Math.floor(Number(envelope.day))),projectStarted:Boolean(envelope.projectStarted),analysisTargetSpecimenId:typeof envelope.analysisTargetSpecimenId==="string"?envelope.analysisTargetSpecimenId:undefined,analysisStartedDay:typeof envelope.analysisStartedDay==="number"?envelope.analysisStartedDay:undefined,analysisEquipmentLevel:Math.max(0,Math.min(3,Math.floor(Number(envelope.analysisEquipmentLevel)||0))),greenhouseEnvironment:isRecord(envelope.greenhouseEnvironment)?envelope.greenhouseEnvironment as unknown as PlantEnvironment:{...DEFAULT_ENVIRONMENT},researchUnlocks:Array.isArray(envelope.researchUnlocks)?envelope.researchUnlocks.filter((x:unknown):x is string=>typeof x==="string"):[],facilityLevels:normalizeFacilityLevels(isRecord(envelope.facilityLevels)?envelope.facilityLevels as unknown as Partial<FacilityLevels>:undefined),staffState:normalizeStaffState(isRecord(envelope.staffState)?envelope.staffState as unknown as Partial<StaffState>:undefined),offlineProgressEnabled:false,savedAt:Date.now()};if(!Number.isFinite(save.cash)||!Number.isFinite(save.research)||!Number.isFinite(save.day))throw new Error("The backup's economy or day fields are invalid.");const storageKeys=[SAVE_KEY,"j2grows.manual-save-slots.v1",PREFERENCES_KEY,"j2grows.institute.name.v1","j2grows.tutorial.completed.v1"];const previous=new Map(storageKeys.map(key=>[key,localStorage.getItem(key)]));try{const updates=new Map<string,string>([[SAVE_KEY,JSON.stringify(save)]]);if(isRecord(parsed)&&parsed.format==="j2grows-save-backup"){if(parsed.formatVersion!==1)throw new Error("This backup version is not supported.");if(isRecord(parsed.manualSlots))updates.set("j2grows.manual-save-slots.v1",JSON.stringify(normalizeManualSaveSlots(parsed.manualSlots)));if(isRecord(parsed.preferences)){const imported=parsed.preferences;const clean:UserPreferences={masterVolume:clampPreference(imported.masterVolume,DEFAULT_PREFERENCES.masterVolume,0,100),musicVolume:clampPreference(imported.musicVolume,DEFAULT_PREFERENCES.musicVolume,0,100),effectsVolume:clampPreference(imported.effectsVolume,DEFAULT_PREFERENCES.effectsVolume,0,100),muted:typeof imported.muted==="boolean"?imported.muted:DEFAULT_PREFERENCES.muted,visualQuality:["high","balanced","low"].includes(String(imported.visualQuality))?imported.visualQuality as UserPreferences["visualQuality"]:DEFAULT_PREFERENCES.visualQuality,uiScale:clampPreference(imported.uiScale,DEFAULT_PREFERENCES.uiScale,80,120),reducedMotion:typeof imported.reducedMotion==="boolean"?imported.reducedMotion:DEFAULT_PREFERENCES.reducedMotion,highContrast:typeof imported.highContrast==="boolean"?imported.highContrast:DEFAULT_PREFERENCES.highContrast,showTutorial:typeof imported.showTutorial==="boolean"?imported.showTutorial:DEFAULT_PREFERENCES.showTutorial,confirmNewGame:typeof imported.confirmNewGame==="boolean"?imported.confirmNewGame:DEFAULT_PREFERENCES.confirmNewGame,compactNumbers:typeof imported.compactNumbers==="boolean"?imported.compactNumbers:DEFAULT_PREFERENCES.compactNumbers,notifications:typeof imported.notifications==="boolean"?imported.notifications:DEFAULT_PREFERENCES.notifications};updates.set(PREFERENCES_KEY,JSON.stringify(clean));}if(typeof parsed.instituteName==="string")updates.set("j2grows.institute.name.v1",parsed.instituteName.slice(0,80));if(parsed.tutorialCompleted===true||parsed.tutorialCompleted===false)updates.set("j2grows.tutorial.completed.v1",parsed.tutorialCompleted?"true":"false");}const current=previous.get(SAVE_KEY);if(current)backupRawSave(current,"Before importing a save backup.");for(const [key,value] of updates)localStorage.setItem(key,value);setAudioTestMessage("Backup imported successfully. Reloading the game with the restored save…");window.location.reload();}catch(storageError){for(const [key,value] of previous){try{if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value);}catch{/* Best-effort rollback if storage itself is unavailable. */}}if(storageError instanceof Error&&storageError.message==="This backup version is not supported.")throw storageError;throw new Error("Browser storage could not complete the import. Previous values were restored where possible.");}}catch(err){setAudioTestMessage(err instanceof Error?err.message:"Could not import this save file.");}finally{input.value="";}}}/><Database size={15}/> Choose backup file</label></div>
+                <div className="preference-row"><div><strong>Import save backup</strong><small>Restore a J2Grows JSON backup. This replaces the current game and browser save slots.</small></div><label className="main-menu-settings-action import-save-label"><input type="file" accept=".json,application/json" onChange={async e=>{const input=e.currentTarget;const file=input.files?.[0];if(!file)return;try{const parsed:unknown=JSON.parse(await file.text());const envelope=isRecord(parsed)&&parsed.format==="j2grows-save-backup"?parsed.autosave:parsed;const check=checkSaveEnvelope(envelope);if(!check.valid||!isRecord(envelope))throw new Error(check.reason||"Unsupported save file.");const recovered=normalizeSpecimens(envelope.specimens);if(!Array.isArray(envelope.specimens)||recovered.dropped>0||recovered.specimens.length!==envelope.specimens.length)throw new Error("The backup contains invalid or duplicate specimens. Your current save has not been changed.");const relationships=normalizeBreedingProjectRelations(recovered.specimens,envelope.breedingProjects);const projects=relationships.projects;if(!window.confirm("Import this backup and replace the current game save? Export a backup of your current game first if you want to keep it."))return;const save:GameSave={version:9,simulationSeed:typeof envelope.simulationSeed==="string"&&envelope.simulationSeed.length>0?envelope.simulationSeed:`migrated-${String(envelope.savedAt)}-${String(envelope.day)}`,specimens:relationships.specimens.map(item=>({...item,genetics:item.genetics??createSpecimenGenetics(item.variegation)})),breedingProjects:projects as BreedingProject[],cash:Math.max(0,Math.min(1_000_000_000,Number(envelope.cash))),research:Math.max(0,Math.min(1_000_000_000,Number(envelope.research))),day:Math.max(1,Math.floor(Number(envelope.day))),projectStarted:Boolean(envelope.projectStarted),analysisTargetSpecimenId:typeof envelope.analysisTargetSpecimenId==="string"?envelope.analysisTargetSpecimenId:undefined,analysisStartedDay:typeof envelope.analysisStartedDay==="number"?envelope.analysisStartedDay:undefined,analysisEquipmentLevel:Math.max(0,Math.min(3,Math.floor(Number(envelope.analysisEquipmentLevel)||0))),greenhouseEnvironment:isRecord(envelope.greenhouseEnvironment)?envelope.greenhouseEnvironment as unknown as PlantEnvironment:{...DEFAULT_ENVIRONMENT},researchUnlocks:Array.isArray(envelope.researchUnlocks)?envelope.researchUnlocks.filter((x:unknown):x is string=>typeof x==="string"):[],facilityLevels:normalizeFacilityLevels(isRecord(envelope.facilityLevels)?envelope.facilityLevels as unknown as Partial<FacilityLevels>:undefined),staffState:normalizeStaffState(isRecord(envelope.staffState)?envelope.staffState as unknown as Partial<StaffState>:undefined),offlineProgressEnabled:false,savedAt:Date.now()};if(!Number.isFinite(save.cash)||!Number.isFinite(save.research)||!Number.isFinite(save.day))throw new Error("The backup's economy or day fields are invalid.");const storageKeys=[SAVE_KEY,"j2grows.manual-save-slots.v1",PREFERENCES_KEY,"j2grows.institute.name.v1","j2grows.tutorial.completed.v1"];const previous=new Map(storageKeys.map(key=>[key,localStorage.getItem(key)]));try{const updates=new Map<string,string>([[SAVE_KEY,JSON.stringify(save)]]);if(isRecord(parsed)&&parsed.format==="j2grows-save-backup"){if(parsed.formatVersion!==1)throw new Error("This backup version is not supported.");if(isRecord(parsed.manualSlots))updates.set("j2grows.manual-save-slots.v1",JSON.stringify(normalizeManualSaveSlots(parsed.manualSlots)));if(isRecord(parsed.preferences)){const imported=parsed.preferences;const clean:UserPreferences={masterVolume:clampPreference(imported.masterVolume,DEFAULT_PREFERENCES.masterVolume,0,100),musicVolume:clampPreference(imported.musicVolume,DEFAULT_PREFERENCES.musicVolume,0,100),effectsVolume:clampPreference(imported.effectsVolume,DEFAULT_PREFERENCES.effectsVolume,0,100),muted:typeof imported.muted==="boolean"?imported.muted:DEFAULT_PREFERENCES.muted,visualQuality:["high","balanced","low"].includes(String(imported.visualQuality))?imported.visualQuality as UserPreferences["visualQuality"]:DEFAULT_PREFERENCES.visualQuality,uiScale:clampPreference(imported.uiScale,DEFAULT_PREFERENCES.uiScale,80,120),reducedMotion:typeof imported.reducedMotion==="boolean"?imported.reducedMotion:DEFAULT_PREFERENCES.reducedMotion,highContrast:typeof imported.highContrast==="boolean"?imported.highContrast:DEFAULT_PREFERENCES.highContrast,showTutorial:typeof imported.showTutorial==="boolean"?imported.showTutorial:DEFAULT_PREFERENCES.showTutorial,confirmNewGame:typeof imported.confirmNewGame==="boolean"?imported.confirmNewGame:DEFAULT_PREFERENCES.confirmNewGame,compactNumbers:typeof imported.compactNumbers==="boolean"?imported.compactNumbers:DEFAULT_PREFERENCES.compactNumbers,notifications:typeof imported.notifications==="boolean"?imported.notifications:DEFAULT_PREFERENCES.notifications};updates.set(PREFERENCES_KEY,JSON.stringify(clean));}if(typeof parsed.instituteName==="string")updates.set("j2grows.institute.name.v1",parsed.instituteName.slice(0,80));if(parsed.tutorialCompleted===true||parsed.tutorialCompleted===false)updates.set("j2grows.tutorial.completed.v1",parsed.tutorialCompleted?"true":"false");}const current=previous.get(SAVE_KEY);if(current)backupRawSave(current,"Before importing a save backup.");for(const [key,value] of updates)localStorage.setItem(key,value);setAudioTestMessage("Backup imported successfully. Reloading the game with the restored save…");window.location.reload();}catch(storageError){for(const [key,value] of previous){try{if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value);}catch{/* Best-effort rollback if storage itself is unavailable. */}}if(storageError instanceof Error&&storageError.message==="This backup version is not supported.")throw storageError;throw new Error("Browser storage could not complete the import. Previous values were restored where possible.");}}catch(err){setAudioTestMessage(err instanceof Error?err.message:"Could not import this save file.");}finally{input.value="";}}}/><Database size={15}/> Choose backup file</label></div>
                 <div className="preference-row"><div><strong>Reset preferences</strong><small>Restore settings to their defaults. Your game save is not affected.</small></div><button className="main-menu-settings-action" onClick={()=>{setPreferences(DEFAULT_PREFERENCES);setAudioTestMessage("Preferences restored to defaults.");}}>Reset preferences</button></div>
                 <div className="preference-row"><div><strong>In-game settings</strong><small>Open the full simulation settings, save slots and reset controls.</small></div><button className="main-menu-settings-action" onClick={()=>{setMainMenuSettingsOpen(false);enterGame("Settings");}}>Open in-game settings <ArrowRight size={15}/></button></div>
                 <div className="preference-row"><div><strong>Version</strong><small>J2Grows prototype 0.1</small></div><span className="settings-live-status">Local-first</span></div>
