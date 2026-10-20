@@ -93,3 +93,14 @@ Then manually smoke-test the app in a browser:
 9. Test the app at desktop and narrow viewport widths, keyboard navigation, reduced motion and high contrast.
 
 Passing unit tests alone is not proof that these browser interactions have been manually exercised. Report them separately.
+
+
+## Windows desktop packaging
+
+The Electron desktop wrapper is configured for Windows x64 with both an NSIS installer and a portable executable.
+
+- `npm run desktop:dev` builds the renderer and launches the Electron shell.
+- `npm run desktop:pack` builds the renderer and creates both Windows package targets.
+- The `Windows desktop packages` GitHub Actions workflow runs tests, type-checking, renderer build and package generation, then uploads the artifacts for 14 days.
+
+The desktop wrapper is a packaging milestone, not a Steam release. Steamworks integration, code signing, automatic updates, a production app icon, and automatic migration of browser localStorage saves are not yet implemented. Keep an exported JSON backup before moving from browser play to desktop.

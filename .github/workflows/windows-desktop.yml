@@ -1,0 +1,45 @@
+name: Windows desktop packages
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - "electron/**"
+      - "index.html"
+      - "vite.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/windows-desktop.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks-and-package:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run unit tests
+        run: npm test
+      - name: Type-check
+        run: npm run typecheck
+      - name: Build web renderer
+        run: npm run build
+      - name: Package installer and portable executable
+        run: npx --yes electron-builder@26.0.12 --win nsis portable --x64 --publish never
+      - name: Upload Windows packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: J2Grows-Windows-x64
+          path: release/*.exe
+          if-no-files-found: error
+          retention-days: 14
