@@ -2047,3 +2047,5 @@ body{
 .tutorial-tip{gap:8px;margin-top:12px;padding:9px 10px;font-size:12px;line-height:1.5}
 .tutorial-footer{padding:10px 15px;font-size:12px}
 .tutorial-action-hint{margin-top:10px!important;padding:8px 10px;font-size:12px!important}
+
+.tutorial-shop-price{display:inline-block;padding:2px 4px;border-radius:5px}
