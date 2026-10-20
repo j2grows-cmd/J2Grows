@@ -25,10 +25,12 @@ These are foundation slices, not evidence that the full game design is complete.
 
 ### Phase 1 — reliable foundation (current priority)
 - [x] Add a reproducible seeded random source and event-isolated streams for gameplay decisions.
-- [ ] Move simulation rules out of the React application into focused, pure game modules.
-- [ ] Add deterministic tests for day advancement, breeding outcomes, plant growth, economy and offline progress.
+- [ ] Move the complete simulation orchestration out of the React application into focused, pure game modules.
+- [x] Extract and test daily health, established-stage progression and propagation phase helpers.
+- [x] Add deterministic tests for breeding eligibility/identity, growth-stage rules, propagation phases, 90-day growth bounds, and 30/60/90-day operating-cost projections.
+- [ ] Add a pure end-to-end day reducer and deterministic full-game replay fixtures; the current React handler still orchestrates multiple systems.
 - [x] Strengthen save validation, legacy-genetics migration, breeding reservations, lineage references and recovery reporting.
-- [ ] Expand browser smoke coverage beyond the implemented new-game, day-advance, finance and manual save/load journeys to cover shop, settings, import/export and tutorial completion.
+- [ ] Expand browser smoke coverage to cover settings, import/export and tutorial completion; shop purchase and backup export smoke tests are now included.
 - [ ] Establish formatting/linting and CI gates without making local development cumbersome.
 - [ ] Document the supported prototype behaviours and remaining known limitations.
 
@@ -36,8 +38,9 @@ These are foundation slices, not evidence that the full game design is complete.
 
 ### Phase 2 — genetics and cultivation simulation
 - [x] Define explicit diploid loci and seeded allele inheritance; versioned genome schema/API refinements remain.
-- [ ] Keep genotype, expressed phenotype, player knowledge and mutation evidence separate.
-- [ ] Implement parent compatibility, probability estimates, offspring generation and lineage records.
+- [ ] Fully separate genotype, expressed phenotype, player knowledge and mutation evidence; genotype/phenotype fields and evidence records are distinct, but the domain model still needs a stricter API boundary.
+- [x] Centralise parent compatibility checks, expose probabilistic trait-targeting forecasts, and generate deterministic lineage identities.
+- [ ] Add UI-visible cross probability ranges and fully model line-level parentage rather than only specimen lineage references.
 - [x] Add mutation category, origin, tissue distribution, parent-mutation provenance and evidence; deeper expression history and stability evidence remain.
 - [ ] Implement species-aware growth, health, environmental tolerances, propagation and acclimatisation.
 - [ ] Build deterministic fixtures and balance tests for expected outcome ranges.
@@ -51,7 +54,8 @@ These are foundation slices, not evidence that the full game design is complete.
 - [ ] Connect growth, propagation, acclimatisation, quality checks, storage and sales into production chains.
 - [ ] Add player-configurable automation priorities, minimum stock and exception handling.
 - [ ] Implement buyers, market demand, contracts, reputation and seasonal/event-driven opportunities.
-- [ ] Extend the 30/60/90-day operating-cost forecast into a full cash-flow model with transaction history, sales assumptions, tested recovery actions and affordability balancing.
+- [ ] Extend the 30/60/90-day cost-only forecast into a full cash-flow model with transaction history, explicit sales assumptions, and affordability balancing.
+- [x] Add actionable recovery options that let players sell eligible stock when the 30-day cost forecast predicts a deficit; reserved and protected specimens are excluded.
 - [ ] Add a branching research tree with meaningful trade-offs and specialisations.
 
 **Exit gate:** more than one viable strategy exists; automation creates strategic capacity rather than simply removing clicks.
@@ -107,8 +111,8 @@ These must never gate the single-player core loop.
 
 ## Immediate next actions
 
-1. Land a small deterministic random utility and tests.
-2. Refactor day advancement into a testable simulation module and replace direct `Math.random()` use in game decisions with a simulation random source.
-3. Add regression coverage around breeding, plant growth, weekly costs and offline catch-up.
-4. Add browser-level smoke tests and use them to identify real interaction failures.
-5. Strengthen save migration and referential integrity before adding high-volume content.
+1. Extract the complete day advancement reducer, including breeding completion, staff, research, mutations and weekly costs, so identical save + action sequences replay exactly.
+2. Complete allele/phenotype consistency for all mutation paths, add statistical inheritance tests and make cross forecasts visible in the breeding UI.
+3. Finish the finance model with transaction history and player-controlled recovery actions, then run 30/60/90-day economy simulations across starter and upgraded facilities.
+4. Extend browser smoke tests to cover import/export, settings, tutorial completion and malformed-save recovery; run the Windows package and smoke suite before merging release-facing changes.
+5. Audit the actual remote Supabase dataset using a configured project environment; local tests validate audit behaviour but do not establish the quality of live remote records.
