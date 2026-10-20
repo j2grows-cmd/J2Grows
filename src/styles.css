@@ -2058,3 +2058,6 @@ body{
 
 /* Keep the tutorial guide fully opaque above the spotlight layer. */
 .tutorial-dialog{background:linear-gradient(145deg,#182319 0%,#0c130d 100%)!important;opacity:1!important;backdrop-filter:none!important}
+
+/* Keep the guide above the raised shop rows and their divider lines. */
+.tutorial-dialog{z-index:2000!important;background:#0c130d!important;isolation:isolate}
