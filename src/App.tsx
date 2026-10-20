@@ -546,7 +546,7 @@ function App() {
   function resetGame() {
     const confirmed = window.confirm("Reset J2Grows? This permanently replaces your current local save with a fresh game and cannot be undone.");
     if (!confirmed) return;
-    try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem("j2grows.tutorial.completed.v1"); } catch { /* State can still reset for this session. */ }
+    try { localStorage.removeItem(SAVE_KEY); localStorage.setItem("j2grows.tutorial.completed.v1", "true"); } catch { /* State can still reset for this session. */ }
     setSpecimens([]);
     setBreedingProjects([]);
     setResearchUnlocks([]);
