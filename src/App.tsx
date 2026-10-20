@@ -607,7 +607,7 @@ function App() {
       const staffCondition = effectiveStaffCareCondition(simulationEnvironment, nextStaffState);
       const environmentalMean = simulationEnvironment.autoCare ? Math.max(60, staffCondition) : staffCondition;
       const health = Math.max(0, Math.min(100, environmentalMean < 35 ? specimen.health - 5 : environmentalMean < 50 ? specimen.health - 2 : environmentalMean >= 75 && specimen.health < 100 ? specimen.health + 2 : specimen.health));
-      const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation);
+      const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation, createEventRandom(simulationSeed, "fallback-genetics:" + day + ":" + specimen.id));
       const environment = { ...simulationEnvironment, health };
       const growth = growVariegation(record.genetics, environment, specimen.variegation, random);
       let nextRecord: SpecimenGenetics = { ...record, environment, expression: growth.expression };
