@@ -10,6 +10,7 @@ import {
 import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeSpecies, type Species, type Specimen } from "./data";
 import { createUniqueSpecimenId } from "./game/specimen-id.ts";
 import { createEventRandom } from "./game/random.ts";
+import { advanceEstablishedGrowthStage, calculateDailyHealth } from "./game/simulation.ts";
 import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, normalizeFacilityLevels, propagationDaysRequired, weeklyFacilityOperatingCost, type FacilityLevels, type FacilityName } from "./game/facilities.ts";
 import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, startStaffTraining, STAFF_TRAINING_COST, weeklyStaffOperatingCost, type StaffState } from "./game/staff.ts";
 import { getFallbackArtworkType } from "./game/plant-artwork.ts";
@@ -607,7 +608,7 @@ function App() {
       const simulationEnvironment = applyEnvironmentalController(greenhouseEnvironment, facilityLevels.environmentalController);
       const staffCondition = effectiveStaffCareCondition(simulationEnvironment, nextStaffState);
       const environmentalMean = simulationEnvironment.autoCare ? Math.max(60, staffCondition) : staffCondition;
-      const health = Math.max(0, Math.min(100, environmentalMean < 35 ? specimen.health - 5 : environmentalMean < 50 ? specimen.health - 2 : environmentalMean >= 75 && specimen.health < 100 ? specimen.health + 2 : specimen.health));
+      const health = calculateDailyHealth(specimen.health, environmentalMean);
       const record = specimen.genetics ?? createSpecimenGenetics(specimen.variegation, createEventRandom(simulationSeed, "fallback-genetics:" + day + ":" + specimen.id));
       const environment = { ...simulationEnvironment, health };
       const growth = growVariegation(record.genetics, environment, specimen.variegation, random);
@@ -667,24 +668,16 @@ function App() {
         }
         if (propagation?.phase === "Sprouting") stage = "Juvenile";
       } else {
-        stageDays += 1;
-        if (stage === "Corm / Seedling" && health >= 40 && stageDays >= 5) {
-          stage = "Juvenile";
-          stageDays = 0;
-          growthMessage = ` ${specimen.nickname} has established from seedling to juvenile growth.`;
-        } else if (stage === "Juvenile" && health >= 40 && stageDays >= Math.ceil(10 * speciesFactor * conditionFactor)) {
-          stage = "Growing";
-          stageDays = 0;
-          growthMessage = ` ${specimen.nickname} has entered the growing stage.`;
-        } else if (stage === "Growing" && health >= 50 && stageDays >= Math.ceil(21 * speciesFactor * conditionFactor)) {
-          stage = "Mature";
-          stageDays = 0;
-          growthMessage = ` ${specimen.nickname} has reached maturity.`;
-        } else if (stage === "Mature" && health >= 70 && stageDays >= Math.ceil(14 * speciesFactor * conditionFactor)) {
-          stage = "Breeding-ready";
-          stageDays = 0;
-          growthMessage = ` ${specimen.nickname} is now breeding-ready.`;
-        }
+        const progress = advanceEstablishedGrowthStage(stage, stageDays, health, speciesFactor, conditionFactor);
+        stage = progress.stage;
+        stageDays = progress.stageDays;
+        const transitionMessages = {
+          "seedling-established": ` ${specimen.nickname} has established from seedling to juvenile growth.`,
+          "juvenile-growing": ` ${specimen.nickname} has entered the growing stage.`,
+          "growing-mature": ` ${specimen.nickname} has reached maturity.`,
+          "mature-breeding-ready": ` ${specimen.nickname} is now breeding-ready.`,
+        };
+        growthMessage = progress.transition ? transitionMessages[progress.transition] : "";
       }
       const updated = { ...specimen, health, dead: health <= 0, stage, stageDays, location, propagation, variegation: nextVariegation, discovered, genetics: { ...nextRecord, expression: nextVariegation, environment } };
       if (growthMessage) mutationMessage += growthMessage;
