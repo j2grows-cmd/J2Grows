@@ -262,11 +262,15 @@ function App() {
     const shopStockPanel = tutorialStep === 1 && page === "Shop"
       ? document.querySelector(".page-content section.panel .shop-listing")?.closest("section.panel") ?? null
       : null;
+    const shopPriceTargets = shopStockPanel
+      ? Array.from(shopStockPanel.querySelectorAll(".tutorial-shop-price"))
+      : [];
     const shopBuyTargets = shopStockPanel
       ? Array.from(shopStockPanel.querySelectorAll(".shop-listing .button-primary"))
       : [];
-    const highlightTargets: Element[] = shopBuyTargets.length ? shopBuyTargets : pageTarget ? [pageTarget] : [];
-    const target = highlightTargets[0] ?? document.querySelector(".tutorial-footer .button-primary");
+    const shopTargets = [...shopPriceTargets, ...shopBuyTargets];
+    const highlightTargets: Element[] = shopTargets.length ? shopTargets : pageTarget ? [pageTarget] : [];
+    const target = shopPriceTargets[0] ?? shopBuyTargets[0] ?? pageTarget ?? document.querySelector(".tutorial-footer .button-primary");
     if (!target) return;
     highlightTargets.forEach((element) => element.classList.add("tutorial-spotlight-target"));
     if (tutorialStep > 0) target.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -283,7 +287,13 @@ function App() {
       const margin = 12;
       let left: number;
       let top: number;
-      if (shopStockPanel) {
+      if (shopStockPanel && shopPriceTargets.length) {
+        const firstPrice = shopPriceTargets[0].getBoundingClientRect();
+        const lastPrice = shopPriceTargets[shopPriceTargets.length - 1].getBoundingClientRect();
+        left = firstPrice.left - guideWidth - gap;
+        top = (firstPrice.top + lastPrice.bottom - guideHeight) / 2;
+        left = Math.max(margin, Math.min(window.innerWidth - guideWidth - margin, left));
+      } else if (shopStockPanel) {
         const panelRect = shopStockPanel.getBoundingClientRect();
         left = Math.max(margin, Math.min(window.innerWidth - guideWidth - margin, panelRect.right - guideWidth));
         top = panelRect.bottom + gap + guideHeight <= window.innerHeight - margin
@@ -1045,7 +1055,7 @@ function App() {
     </main>
     {tutorialOpen && <div className="tutorial-backdrop" role="presentation"><section className="tutorial-dialog" role="region" aria-labelledby="tutorial-title"><div className="tutorial-topline"><span className="tutorial-mark"><Sprout size={19} /></span><span>J2GROWS FIRST-GROW GUIDE</span><span className="tutorial-close" aria-hidden="true"><X size={17} /></span></div><div className="tutorial-progress-label"><span>YOUR FIRST DISCOVERY</span><span>{String(tutorialStep + 1).padStart(2, "0")} / {String(tutorialSteps.length).padStart(2, "0")}</span></div><div className="tutorial-progress-track"><span style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="tutorial-content"><div className="tutorial-eyebrow"><span className="eyebrow-line" /> GUIDED TUTORIAL</div><h2 id="tutorial-title">{tutorialSteps[tutorialStep].title}</h2><p>{tutorialSteps[tutorialStep].body}</p>
       {tutorialStep === 0 && <p className="tutorial-action-hint">Use the highlighted name field on your dashboard, then save it to continue.</p>}
-      {tutorialStep === 1 && <p className="tutorial-action-hint">{page === "Shop" ? "Choose one of the four plants; all four Buy buttons are highlighted beside their prices." : "Click Shop in the left menu, then choose an affordable plant."}</p>}
+      {tutorialStep === 1 && <p className="tutorial-action-hint">{page === "Shop" ? "All four prices and Buy buttons are highlighted. Compare the price with your available funds." : "Click Shop in the left menu, then choose an affordable plant."}</p>}
       {tutorialStep === 2 && <p className="tutorial-action-hint">{page === "Specimen Record" ? "Choose a propagation method in the highlighted section." : page === "Plant Catalogue" ? "Open the highlighted tutorial demonstration plant to view its record." : "Click Plant Catalogue in the left menu, then open the highlighted tutorial demonstration plant."}</p>}
       {tutorialStep === 3 && <p className="tutorial-action-hint">{page === "Greenhouse" ? "Click the highlighted New day button to grow your new plant." : "Click Greenhouse in the left menu, then click the highlighted New day button."}</p>}
       {tutorialStep === 4 && <p className="tutorial-action-hint">{page === "Specimen Record" ? "Click Record observation in the highlighted specimen controls." : page === "Plant Catalogue" ? "Open the highlighted new cutting or corm to view its record." : "Click Plant Catalogue in the left menu, then open the highlighted new cutting or corm."}</p>}
@@ -1239,7 +1249,7 @@ function ShopPage({ specimens, species, cash, day, onBuy, onSell, tutorialMode =
     const roll = [...(plant.id + day)].reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) % 1000, 7) / 1000;
     return getShopAvailability(plant.rarity, () => roll);
   });
-  return <><div className="metric-grid"><Metric label="Available species" value={String(available.length)} detail="Stock varies by rarity and day" icon={ShoppingBag} /><Metric label="Your sale-ready specimens" value={String(specimens.filter((item) => !item.protected).length)} detail="Not protected or reserved" icon={TrendingUp} /><Metric label="Available funds" value={money(cash)} detail="Starting budget: £100" icon={Wallet} tone="gold" /></div><section className="panel"><SectionHeader title="Today's nursery stock" subtitle="Base prices apply to standard juvenile plants. Variegation, stability, health, maturity and genetics affect individual value." />{available.length ? available.map((plant) => { const price = getSpeciesEconomy(plant.id)?.basePrice ?? getSpeciesEconomy(plant.name)?.basePrice ?? plant.basePrice ?? 15; return <div className="shop-listing" key={plant.id}><PlantArt type={plant.image} /><div className="shop-listing-copy"><strong>{plant.name}</strong><span>{plant.rarity} · Juvenile base price</span></div><strong>{money(price)}</strong><button className="button button-primary" disabled={cash < price} onClick={() => onBuy(plant)}>{cash < price ? "Too expensive" : "Buy"}</button></div>; }) : <div className="empty-state">No plants available today. Advance a day to refresh stock.</div>}</section><section className="panel"><SectionHeader title="Your plant listings" subtitle="Review each specimen before listing it. Protected plants cannot be sold." />{specimens.map((item) => <div className="shop-listing" key={item.id}><PlantArt type={findSpecies(item.speciesId).image} /><div className="shop-listing-copy"><strong>{item.nickname} · {findSpecies(item.speciesId).name}</strong><span>{item.id} · {item.protected ? "Protected specimen" : "Eligible for sale"}</span></div><strong>{money(item.value)}</strong><button className="button button-primary" disabled={item.protected} onClick={() => onSell(item)}>{item.protected ? "Protected" : "Sell"}</button></div>)}</section></>;
+  return <><div className="metric-grid"><Metric label="Available species" value={String(available.length)} detail="Stock varies by rarity and day" icon={ShoppingBag} /><Metric label="Your sale-ready specimens" value={String(specimens.filter((item) => !item.protected).length)} detail="Not protected or reserved" icon={TrendingUp} /><Metric label="Available funds" value={money(cash)} detail="Starting budget: £100" icon={Wallet} tone="gold" /></div><section className="panel"><SectionHeader title="Today's nursery stock" subtitle="Base prices apply to standard juvenile plants. Variegation, stability, health, maturity and genetics affect individual value." />{available.length ? available.map((plant) => { const price = getSpeciesEconomy(plant.id)?.basePrice ?? getSpeciesEconomy(plant.name)?.basePrice ?? plant.basePrice ?? 15; return <div className="shop-listing" key={plant.id}><PlantArt type={plant.image} /><div className="shop-listing-copy"><strong>{plant.name}</strong><span>{plant.rarity} · Juvenile base price</span></div><strong className={tutorialMode ? "tutorial-shop-price" : undefined}>{money(price)}</strong><button className="button button-primary" disabled={cash < price} onClick={() => onBuy(plant)}>{cash < price ? "Too expensive" : "Buy"}</button></div>; }) : <div className="empty-state">No plants available today. Advance a day to refresh stock.</div>}</section><section className="panel"><SectionHeader title="Your plant listings" subtitle="Review each specimen before listing it. Protected plants cannot be sold." />{specimens.map((item) => <div className="shop-listing" key={item.id}><PlantArt type={findSpecies(item.speciesId).image} /><div className="shop-listing-copy"><strong>{item.nickname} · {findSpecies(item.speciesId).name}</strong><span>{item.id} · {item.protected ? "Protected specimen" : "Eligible for sale"}</span></div><strong>{money(item.value)}</strong><button className="button button-primary" disabled={item.protected} onClick={() => onSell(item)}>{item.protected ? "Protected" : "Sell"}</button></div>)}</section></>;
 }
 
 function FinancesPage({ cash, specimens }: { cash: number; specimens: Specimen[] }) {
