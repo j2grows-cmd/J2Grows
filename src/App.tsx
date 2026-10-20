@@ -259,9 +259,16 @@ function App() {
             : page === "Specimen Record"
               ? document.querySelector(".detail-section .propagation-actions button:first-child")
               : page === "Plant Catalogue" ? cardTarget("First Cutting") ?? cardTarget("First Corm") : navTarget("Plant Catalogue");
-    const target = pageTarget ?? document.querySelector(".tutorial-footer .button-primary");
+    const shopStockPanel = tutorialStep === 1 && page === "Shop"
+      ? document.querySelector(".page-content section.panel .shop-listing")?.closest("section.panel") ?? null
+      : null;
+    const shopBuyTargets = shopStockPanel
+      ? Array.from(shopStockPanel.querySelectorAll(".shop-listing .button-primary"))
+      : [];
+    const highlightTargets: Element[] = shopBuyTargets.length ? shopBuyTargets : pageTarget ? [pageTarget] : [];
+    const target = highlightTargets[0] ?? document.querySelector(".tutorial-footer .button-primary");
     if (!target) return;
-    target.classList.add("tutorial-spotlight-target");
+    highlightTargets.forEach((element) => element.classList.add("tutorial-spotlight-target"));
     if (tutorialStep > 0) target.scrollIntoView({ block: "center", behavior: "smooth" });
     const guide = document.querySelector(".tutorial-dialog") as HTMLElement | null;
     if (guide) {
@@ -270,27 +277,37 @@ function App() {
       guide.style.right = "auto";
       guide.style.top = "0";
       guide.style.bottom = "auto";
-      const rect = target.getBoundingClientRect();
       const guideWidth = guide.offsetWidth;
       const guideHeight = guide.offsetHeight;
       const gap = 14;
       const margin = 12;
-      const rightSpace = window.innerWidth - rect.right - gap;
-      const leftSpace = rect.left - gap;
-      let left = rightSpace >= guideWidth || rightSpace >= leftSpace
-        ? rect.right + gap
-        : rect.left - guideWidth - gap;
-      let top = rect.top + rect.height / 2 - guideHeight / 2;
-      if (left < margin || left + guideWidth > window.innerWidth - margin) {
-        left = Math.max(margin, Math.min(window.innerWidth - guideWidth - margin, rect.left + rect.width / 2 - guideWidth / 2));
-        const fitsBelow = rect.bottom + gap + guideHeight <= window.innerHeight - margin;
-        top = fitsBelow ? rect.bottom + gap : rect.top - guideHeight - gap;
+      let left: number;
+      let top: number;
+      if (shopStockPanel) {
+        const panelRect = shopStockPanel.getBoundingClientRect();
+        left = Math.max(margin, Math.min(window.innerWidth - guideWidth - margin, panelRect.right - guideWidth));
+        top = panelRect.bottom + gap + guideHeight <= window.innerHeight - margin
+          ? panelRect.bottom + gap
+          : Math.max(margin, panelRect.top - guideHeight - gap);
+      } else {
+        const rect = target.getBoundingClientRect();
+        const rightSpace = window.innerWidth - rect.right - gap;
+        const leftSpace = rect.left - gap;
+        left = rightSpace >= guideWidth || rightSpace >= leftSpace
+          ? rect.right + gap
+          : rect.left - guideWidth - gap;
+        top = rect.top + rect.height / 2 - guideHeight / 2;
+        if (left < margin || left + guideWidth > window.innerWidth - margin) {
+          left = Math.max(margin, Math.min(window.innerWidth - guideWidth - margin, rect.left + rect.width / 2 - guideWidth / 2));
+          const fitsBelow = rect.bottom + gap + guideHeight <= window.innerHeight - margin;
+          top = fitsBelow ? rect.bottom + gap : rect.top - guideHeight - gap;
+        }
       }
       top = Math.max(margin, Math.min(window.innerHeight - guideHeight - margin, top));
       guide.style.left = `${left}px`;
       guide.style.top = `${top}px`;
     }
-    return () => target.classList.remove("tutorial-spotlight-target");
+    return () => highlightTargets.forEach((element) => element.classList.remove("tutorial-spotlight-target"));
   }, [tutorialOpen, tutorialStep, page]);
   function saveInstituteName() {
     const name = instituteNameDraft.trim().slice(0, 40);
@@ -1028,7 +1045,7 @@ function App() {
     </main>
     {tutorialOpen && <div className="tutorial-backdrop" role="presentation"><section className="tutorial-dialog" role="region" aria-labelledby="tutorial-title"><div className="tutorial-topline"><span className="tutorial-mark"><Sprout size={19} /></span><span>J2GROWS FIRST-GROW GUIDE</span><span className="tutorial-close" aria-hidden="true"><X size={17} /></span></div><div className="tutorial-progress-label"><span>YOUR FIRST DISCOVERY</span><span>{String(tutorialStep + 1).padStart(2, "0")} / {String(tutorialSteps.length).padStart(2, "0")}</span></div><div className="tutorial-progress-track"><span style={{ width: `${((tutorialStep + 1) / tutorialSteps.length) * 100}%` }} /></div><div className="tutorial-content"><div className="tutorial-eyebrow"><span className="eyebrow-line" /> GUIDED TUTORIAL</div><h2 id="tutorial-title">{tutorialSteps[tutorialStep].title}</h2><p>{tutorialSteps[tutorialStep].body}</p>
       {tutorialStep === 0 && <p className="tutorial-action-hint">Use the highlighted name field on your dashboard, then save it to continue.</p>}
-      {tutorialStep === 1 && <p className="tutorial-action-hint">{page === "Shop" ? "Choose an affordable plant using its highlighted Buy button." : "Click Shop in the left menu, then choose an affordable plant."}</p>}
+      {tutorialStep === 1 && <p className="tutorial-action-hint">{page === "Shop" ? "Choose one of the four plants; all four Buy buttons are highlighted beside their prices." : "Click Shop in the left menu, then choose an affordable plant."}</p>}
       {tutorialStep === 2 && <p className="tutorial-action-hint">{page === "Specimen Record" ? "Choose a propagation method in the highlighted section." : page === "Plant Catalogue" ? "Open the highlighted tutorial demonstration plant to view its record." : "Click Plant Catalogue in the left menu, then open the highlighted tutorial demonstration plant."}</p>}
       {tutorialStep === 3 && <p className="tutorial-action-hint">{page === "Greenhouse" ? "Click the highlighted New day button to grow your new plant." : "Click Greenhouse in the left menu, then click the highlighted New day button."}</p>}
       {tutorialStep === 4 && <p className="tutorial-action-hint">{page === "Specimen Record" ? "Click Record observation in the highlighted specimen controls." : page === "Plant Catalogue" ? "Open the highlighted new cutting or corm to view its record." : "Click Plant Catalogue in the left menu, then open the highlighted new cutting or corm."}</p>}
