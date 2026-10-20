@@ -213,6 +213,7 @@ function App() {
   const [filter, setFilter] = useState("All plants");
   const [selected, setSelected] = useState<string>(initialSpecimens[0].id);
   const [notice, setNotice] = useState(loadedSave.recoveryNotice || (loadedSave.offlineDays > 0 ? `Welcome back. ${loadedSave.offlineDays} simulated day(s) of eligible offline progress applied.` : ""));
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [projectStarted, setProjectStarted] = useState(loadedSave.projectStarted);
   const [analysisTargetSpecimenId, setAnalysisTargetSpecimenId] = useState<string | undefined>(loadedSave.analysisTargetSpecimenId);
   const [analysisStartedDay, setAnalysisStartedDay] = useState<number | undefined>(loadedSave.analysisStartedDay);
@@ -538,7 +539,7 @@ function App() {
 
   function announce(message: string) {
     setNotice(message);
-    window.setTimeout(() => setNotice(""), 3200);
+    setNotificationsOpen(true);
   }
 
   function resetGame() {
@@ -1028,14 +1029,19 @@ function App() {
     </aside>
 
     <main className="main-area">
-      {notice && <div className="notice-banner" role="status"><span>{notice}</span><button onClick={() => setNotice("")} aria-label="Dismiss notification"><X size={15} /></button></div>}
       <header className="topbar">
         <button className="mobile-menu icon-button" onClick={() => setShowMenu((value) => !value)} aria-label="Toggle navigation"><Menu size={18} /></button>
         <div className="top-institution"><img className="top-brand-logo" src="https://lwaxzivcjzpmmantryor.supabase.co/storage/v1/object/public/Artwork/logo.png" alt="" /><div><strong>J2Grows</strong><span>{instituteName || "Name your institute"}</span></div></div>
         <div className="top-resource"><span className="resource-symbol">£</span><div><strong>{money(cash)}</strong><small>Available funds</small></div></div>
         <div className="top-resource research-resource"><span className="resource-symbol"><Beaker size={17} /></span><div><strong>{research.toLocaleString("en-GB")}</strong><small>Research data</small></div></div>
         <div className="top-level"><div className="level-star"><Sprout size={18} /></div><div className="level-info"><div><strong>Institution level 1</strong><span>First roots</span></div><div className="progress-track"><span style={{ width: "28%" }} /></div></div></div>
-        <button className="icon-button notification-button" onClick={() => announce("You're all caught up on nursery alerts.")} aria-label="Notifications"><Bell size={17} /><i /></button>
+        <div className="notification-menu">
+          <button className="icon-button notification-button" onClick={() => setNotificationsOpen((open) => !open)} aria-label="Notifications" aria-expanded={notificationsOpen}><Bell size={17} />{notice && <i />}</button>
+          {notificationsOpen && <section className="notification-card" role="status" aria-label="Nursery notifications">
+            <div className="notification-card-heading"><strong>Notifications</strong>{notice && <button onClick={() => setNotice("")} aria-label="Dismiss notification"><X size={15} /></button>}</div>
+            <p>{notice || "You're all caught up on nursery alerts."}</p>
+          </section>}
+        </div>
         <button className="profile-chip" onClick={() => announce(instituteName || "Name your institute in the guided introduction.")}><div className="profile-avatar"><Leaf size={18} /></div><div><strong>Nursery Manager</strong><span>Founder</span></div><ChevronDown size={14} /></button>
       </header>
 
