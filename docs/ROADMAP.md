@@ -1,68 +1,108 @@
-# J2Grows implementation roadmap
+# J2Grows — production roadmap
 
-**Current status:** Prototype 0.1 foundation is implemented on `agent/first-playable-foundation`; automated typecheck/build is being validated. The first slice includes the premium 2D shell, starter specimen data, navigation, catalogue filters, specimen records, basic breeding/research/upgrade interactions and browser-local persistence.
+**Target:** premium single-player PC management game, Windows first, intended for Steam.
+**Creative direction:** rich botanical environments paired with a sophisticated dark-luxury genetics laboratory UI.
+**Scope:** ambitious, content-rich management and genetics game designed for long-term replayability.
+**Current status:** playable web-based prototype 0.1. Keep it runnable while the game systems are separated, tested and expanded. Steam packaging is a later milestone, not something this browser prototype currently provides.
 
-## Phase 0 — specification and validation
-- [ ] Review and approve `docs/GAME_DESIGN_SPEC.md`.
-- [ ] Apply the confirmed rule: online/social and any rankings are opt-in, non-essential and deferred until the offline core is reliable.
-- [ ] Inspect and validate the existing plant catalogue, stable IDs and artwork paths.
-- [ ] Use the first-playable acceptance criteria in `docs/DESIGN_AUDIT_AND_DECISIONS.md` and define initial balance values as data.
-- [ ] Write focused genetics and save-system technical designs before implementing those systems.
-- [ ] Review `docs/UI_BLUEPRINT.md` and agree the prototype screen scope.
+## Product pillars
 
-## Phase 1 — runnable foundation
-- [x] Add React + TypeScript + Vite scaffold.
-- [ ] Establish strict TypeScript, formatting and consistent scripts.
-- [x] Build the responsive premium-dark 2D application shell from `docs/UI_BLUEPRINT.md`; no required 3D scene.
-- [ ] Add a deterministic test runner and smoke tests.
-- [x] Add Vite host configuration for Codespaces/browser development; verify through CI.
-- [ ] Verify installation, test and build commands before documenting them.
+1. **Discovery:** investigate hidden traits, mutations, phenotype expression and cultivar stability.
+2. **Cultivation:** grow a broad roster of real plant species in configurable environments; clearly label abstracted fictional genetics.
+3. **Breeding:** plan crosses, track parentage, compare offspring, select candidates and run multi-generation programmes.
+4. **Management:** operate rooms, equipment, staff, budgets and connected production chains.
+5. **Automation:** earn reliable workflows through research, specialist staff and equipment, with player-defined priorities.
+6. **Collection and enterprise:** build a scientifically documented collection, serve specialist buyers, fulfil contracts and expand the institute.
+7. **Presentation:** deliver a premium botanical atmosphere, legible scientific UI, responsive controls, accessibility and useful audiovisual feedback.
 
-## Phase 2 — first playable loop
-- [ ] Starter home lab and three fully supported species: Philodendron, Alocasia and Monstera.
-- [ ] Data-driven catalogue architecture validated for progressive expansion toward 25–50+ species.
-- [ ] Basic growth, care and environmental controls.
-- [ ] Earn cash, research and plant material through understandable actions.
-- [ ] Analyse specimens to detect possible hidden mutations, with progressive levels of certainty.
-- [ ] Propagate a specimen and compare offspring to test mutation preservation and stability.
-- [ ] Clone and run simple crosses.
-- [ ] Record discoveries and cultivar lineage.
-- [ ] Sell specimens and invest in equipment.
-- [ ] Include one initial automation capability.
-- [ ] Provide clear costs, outcomes and failure reasons.
+## Production phases
 
-## Phase 3 — simulation systems
-- [ ] Genetics modules: loci, alleles, inheritance, phenotype, mutation and breeding outcomes.
-- [ ] Seeded random source and deterministic tests.
-- [ ] Cultivation, plant health, species-specific growth and propagation trade-offs.
-- [ ] Tissue-culture workflows and acclimatisation.
-- [ ] Research trees, upgrades and objective progression.
-- [ ] Document fictional rules; do not claim precise simulation of real plant genetics.
+### Phase 1 — reliable foundation (current priority)
+- [ ] Add a reproducible seeded random source for simulation systems and tests.
+- [ ] Move simulation rules out of the React application into focused, pure game modules.
+- [ ] Add deterministic tests for day advancement, breeding outcomes, plant growth, economy and offline progress.
+- [ ] Strengthen save schema validation, migrations, referential integrity and recovery reporting.
+- [ ] Add browser-level end-to-end smoke tests for new game, progression, save/load, shop and settings.
+- [ ] Establish formatting/linting and CI gates without making local development cumbersome.
+- [ ] Document the supported prototype behaviours and remaining known limitations.
 
-## Phase 4 — management and scale
-- [ ] Multiple rooms, environmental zones and functional equipment placement.
-- [ ] Staff candidates, skills, costs and process improvements.
-- [ ] Connected propagation-to-sale production chains.
-- [ ] Configurable automation priorities and minimum stock.
-- [ ] Dynamic NPC buyers, contracts and market demand.
-- [ ] Institutional milestones, eras and optional facility expansion; no mandatory prestige reset.
+**Exit gate:** repeatable test runs; invalid saves cannot silently corrupt current progress; a new player can complete the core loop in a browser smoke test.
 
-## Phase 5 — saves, polish and content
-- [ ] Versioned save schema, validation, migrations and recovery.
-- [ ] Generous, transparent offline progression calculated on return; any cap must be explicit, and blocked tasks must be explained.
-- [ ] Economy and progression balance tests.
-- [ ] Import and validate existing catalogue records.
-- [ ] Centralise artwork references and file-extension handling.
-- [ ] Responsive layouts, accessibility and reduced-motion options.
-- [ ] Performance and early-access readiness checks.
+### Phase 2 — genetics and cultivation simulation
+- [ ] Define explicit genetic loci/alleles and inheritance rules behind a versioned simulation API.
+- [ ] Keep genotype, expressed phenotype, player knowledge and mutation evidence separate.
+- [ ] Implement parent compatibility, probability estimates, offspring generation and lineage records.
+- [ ] Add mutation origin, category, expression, tissue distribution, inheritance stability and evidence history.
+- [ ] Implement species-aware growth, health, environmental tolerances, propagation and acclimatisation.
+- [ ] Build deterministic fixtures and balance tests for expected outcome ranges.
+- [ ] Make advanced breeding controls unlock progressively through research; targeting must improve odds, never guarantee outcomes.
 
-## Phase 6 — later features
-- [ ] Sandbox mode and deeper simulation controls.
-- [ ] Cloud saves with conflict resolution and clear recovery behaviour.
-- [ ] Optional social features and opt-in rankings, only after the offline core is reliable; no online-gated progression.
-- [ ] Trading with anti-duplication and economy safeguards.
-- [ ] Extensible modding support.
-- [ ] Windows desktop packaging; assess macOS and mobile support.
+**Exit gate:** players can explain a result, reproduce a simulation from its seed, and trace every offspring to its parents and breeding project.
 
-## Release gate
-Do not begin broad implementation until the design audit, UI blueprint and first-playable acceptance criteria are reviewed. Keep the game runnable at each milestone, prefer small verifiable changes, and never describe an untested build or deployment as verified. The first playable build is a simplified vertical slice, not a requirement to implement every advanced system.
+### Phase 3 — management and production depth
+- [ ] Add multiple rooms and environmental zones with functional capacity and equipment.
+- [ ] Expand staff into candidates, skills, specialisations, schedules, training and wages.
+- [ ] Connect growth, propagation, acclimatisation, quality checks, storage and sales into production chains.
+- [ ] Add player-configurable automation priorities, minimum stock and exception handling.
+- [ ] Implement buyers, market demand, contracts, reputation and seasonal/event-driven opportunities.
+- [ ] Build a transparent economy model with forecasts, recurring costs, cash-flow warnings and recovery choices.
+- [ ] Add a branching research tree with meaningful trade-offs and specialisations.
+
+**Exit gate:** more than one viable strategy exists; automation creates strategic capacity rather than simply removing clicks.
+
+### Phase 4 — long-term progression and content
+- [ ] Deliver a guided opening arc and a substantial mid-game progression path.
+- [ ] Add institutional milestones, research eras, collection goals, cultivar registration and achievements.
+- [ ] Add sandbox/freeplay and optional long-term challenge goals; no mandatory prestige reset.
+- [ ] Expand the data-driven plant catalogue in reviewed content batches, validating taxonomy, stable IDs, artwork paths and usage rights.
+- [ ] Add contracts, events and buyer archetypes that reward different specialisations.
+- [ ] Add advanced multi-generation breeding programmes and selection criteria.
+- [ ] Tune pacing for short check-ins and extended optimisation sessions, with a target of 100+ hours of optional mastery rather than artificial grind.
+
+**Exit gate:** a complete start-to-late-game arc, several distinct play styles and enough content for repeated runs.
+
+### Phase 5 — botanical environments and presentation
+- [ ] Replace placeholder art systematically with consistent, licensed or original assets.
+- [ ] Build rich room/greenhouse scenes that communicate climate, plant condition, equipment and production state.
+- [ ] Preserve a clear information hierarchy in the laboratory UI; do not sacrifice readability for decoration.
+- [ ] Add purposeful transitions, plant-state feedback, discovery moments and restrained sound design.
+- [ ] Ensure reduced motion, high contrast, keyboard navigation, scalable UI and readable text.
+- [ ] Profile catalogue, large collections, simulation updates and asset loading for performance.
+
+**Exit gate:** coherent visual identity across every major screen, with feedback that makes actions and discoveries understandable.
+
+### Phase 6 — desktop and Steam release
+- [ ] Decide and implement the desktop wrapper/engine approach after a technical spike; preserve the TypeScript game core where viable.
+- [ ] Add Windows builds, app identity, versioning, window/resolution handling and safe local save paths.
+- [ ] Implement robust backups, migration and recovery for desktop saves; evaluate optional Steam Cloud only after local reliability.
+- [ ] Add input handling, pause/focus behaviour, crash diagnostics and first-launch experience.
+- [ ] Test clean installs, upgrades, save migration, offline play, performance and supported Windows configurations.
+- [ ] Prepare Steam store assets, trailer/screenshots, accessibility disclosures, privacy notes, support route and release checklist.
+- [ ] Run a limited external playtest and address blocking feedback before Early Access.
+
+**Exit gate:** reproducible release builds, tested save migration, no known critical blockers, and a documented support/recovery process.
+
+### Later, explicitly optional
+- Cloud sync and conflict resolution.
+- Opt-in social features, rankings or trading, only after offline progression is reliable.
+- Mod support and additional desktop platforms.
+
+These must never gate the single-player core loop.
+
+## Delivery rules
+
+- Work in small branches and reviewable pull requests; keep `main` releasable.
+- Keep simulation logic independent of UI, rendering, storage and online services.
+- Use seeded randomness for reproducible simulation tests and save enough state to reproduce important outcomes.
+- Do not claim browser interaction, performance, packaging or release readiness without actually testing it.
+- Prefer a smaller set of complete, balanced systems over many shallow screens.
+- Never expose Supabase service-role credentials; the core game must remain playable offline.
+- Use the acceptance checklist in `README.md` at each milestone.
+
+## Immediate next actions
+
+1. Land a small deterministic random utility and tests.
+2. Refactor day advancement into a testable simulation module and replace direct `Math.random()` use in game decisions with a simulation random source.
+3. Add regression coverage around breeding, plant growth, weekly costs and offline catch-up.
+4. Add browser-level smoke tests and use them to identify real interaction failures.
+5. Strengthen save migration and referential integrity before adding high-volume content.
