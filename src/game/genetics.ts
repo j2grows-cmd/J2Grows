@@ -221,6 +221,10 @@ export function createMutation(random: () => number = Math.random, provenance: {
     detected: false,
     beneficial: null,
     evidenceCount: 0,
+    origin: provenance.origin ?? "legacy",
+    tissueDistribution: provenance.tissueDistribution ?? "unknown",
+    ...(Number.isFinite(provenance.originDay) ? { originDay: provenance.originDay } : {}),
+    ...(provenance.parentMutationIds?.length ? { parentMutationIds: [...new Set(provenance.parentMutationIds)] } : {}),
   };
 }
 
