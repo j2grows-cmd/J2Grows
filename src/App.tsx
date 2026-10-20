@@ -18,7 +18,8 @@ import { canCreateOffset } from "./game/propagation-eligibility.ts";
 import { checkSaveEnvelope, isRecord, normalizeBreedingProjectRelations, normalizeManualSaveSlots, normalizeSpecimens } from "./game/save-validation.ts";
 import { loadSpeciesCatalog } from "./supabase";
 import { getArtworkStatusSummary, getCatalogueSourceLabel, type ArtworkState, type CatalogueSource } from "./game/catalogue-status";
-import { getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
+import { auditSpeciesEconomy, getSpeciesEconomy, getShopAvailability, STARTING_CASH, type RarityTier } from "./game/catalog";
+import { estimateRecoverySales, projectOperatingCash } from "./game/economy.ts";
 import { analyseGenetics, createMutation, createSpecimenGenetics, growVariegation, observePlant, calculateSpecimenValue, DEFAULT_ENVIRONMENT, type PlantEnvironment, type SpecimenGenetics } from "./game/genetics";
 import { applyTraitTargeting, breedingDurationDays, breedingFailureChance, calculateBreedingCost, calculateTargetedBreedingCost, calculateTargetedFailureChance, canBreed, inheritTraits, mutationOccurs, type BreedingProject, type TargetableTrait, RESEARCH_TREE, canUnlockResearch, unlockResearch } from "./game/progression";
 
@@ -1139,7 +1140,7 @@ function App() {
         {page === "Facilities" && <FacilitiesPage cash={cash} analysisEquipmentLevel={analysisEquipmentLevel} facilityLevels={facilityLevels} routineAutomationUnlocked={researchUnlocks.includes("routine-automation")} onBuy={(name) => { const cost = nextFacilityUpgradeCost(name, facilityLevels, analysisEquipmentLevel); if (cost === null || !canPurchaseFacilityUpgrade(name, facilityLevels, analysisEquipmentLevel, cash)) { announce(cost === null ? "That facility is already at its maximum level or is not available." : "Not enough funds for this upgrade."); return; } setCash((value) => value - cost); if (name === "Analysis workstation") setAnalysisEquipmentLevel((level) => level + 1); else setFacilityLevels((levels) => ({ ...levels, [name === "Propagation bench" ? "propagationBench" : "environmentalController"]: levels[name === "Propagation bench" ? "propagationBench" : "environmentalController"] + 1 })); announce(`${name} upgraded for ${money(cost)}. The benefit is active immediately; facility running costs apply every seventh day.`); }} />}
         {page === "Staff" && <StaffPage cash={cash} staffState={staffState} onToggleCare={() => setStaffState((current) => ({ ...current, routineCareEnabled: !current.routineCareEnabled }))} onStartTraining={() => { if (!canStartStaffTraining(cash, staffState)) { announce(cash < STAFF_TRAINING_COST ? `Training costs ${money(STAFF_TRAINING_COST)}.` : staffState.trainingLevel >= 3 ? "Your assistant has reached the maximum training level." : "Training is already in progress."); return; } const next = startStaffTraining(staffState); if (!next) return; setCash((current) => current - STAFF_TRAINING_COST); setStaffState(next); announce(`Basic plant-care training started for ${money(STAFF_TRAINING_COST)}. It completes after ${next.trainingDaysRemaining} simulated days.`); }} /> }
         {page === "Shop" && <ShopPage specimens={specimens} species={tutorialOpen && tutorialStep === 1 ? tutorialShopSpecies : catalogSpecies} tutorialMode={tutorialOpen && tutorialStep === 1} cash={cash} day={day} onSell={sellSpecimen} onBuy={(plant) => { if (tutorialOpen && tutorialStep === 1) { if (!catalogSpecies.some((item) => item.id === plant.id)) setSpeciesCatalog([...catalogSpecies, plant]); acquireSpecies(plant, true); } else purchaseSpecies(plant); }} />}
-        {page === "Finances" && <FinancesPage cash={cash} specimens={specimens} weeklyOperatingCost={weeklyFacilityOperatingCost(facilityLevels, analysisEquipmentLevel, researchUnlocks.includes("routine-automation")) + weeklyStaffOperatingCost(staffState)} /> }
+        {page === "Finances" && <FinancesPage cash={cash} day={day} specimens={specimens} weeklyOperatingCost={weeklyFacilityOperatingCost(facilityLevels, analysisEquipmentLevel, researchUnlocks.includes("routine-automation")) + weeklyStaffOperatingCost(staffState)} /> }
         {page === "Settings" && <SettingsPage onReplayTutorial={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} onResetGame={resetGame} day={day} specimensCount={specimens.length} catalogSource={catalogSource} saveSlots={saveSlots} onSaveSlot={saveToSlot} onLoadSlot={loadFromSlot} />}
       </div>
       <footer className="app-footer"><span>J2Grows <span className="footer-separator">/</span> Prototype 0.1</span><span>All specimen and economic values are early prototype data.</span><span><span className="online-dot" /> Offline-first</span></footer>
@@ -1343,12 +1344,14 @@ function ShopPage({ specimens, species, cash, day, onBuy, onSell, tutorialMode =
   return <><div className="metric-grid"><Metric label="Available species" value={String(available.length)} detail="Stock varies by rarity and day" icon={ShoppingBag} /><Metric label="Your sale-ready specimens" value={String(specimens.filter((item) => !item.protected).length)} detail="Not protected or reserved" icon={TrendingUp} /><Metric label="Available funds" value={money(cash)} detail="Starting budget: £100" icon={Wallet} tone="gold" /></div><section className="panel"><SectionHeader title="Today's nursery stock" subtitle="Base prices apply to standard juvenile plants. Variegation, stability, health, maturity and genetics affect individual value." />{available.length ? available.map((plant) => { const price = getSpeciesEconomy(plant.id)?.basePrice ?? getSpeciesEconomy(plant.name)?.basePrice ?? plant.basePrice ?? 15; return <div className="shop-listing" key={plant.id}><PlantArt type={plant.image} /><div className="shop-listing-copy"><strong>{plant.name}</strong><span>{plant.rarity} · Juvenile base price</span></div><strong className={tutorialMode ? "tutorial-shop-price" : undefined}>{money(price)}</strong><button className="button button-primary" disabled={cash < price} onClick={() => onBuy(plant)}>{cash < price ? "Too expensive" : "Buy"}</button></div>; }) : <div className="empty-state">No plants available today. Advance a day to refresh stock.</div>}</section><section className="panel"><SectionHeader title="Your plant listings" subtitle="Review each specimen before listing it. Protected plants cannot be sold." />{specimens.map((item) => <div className="shop-listing" key={item.id}><PlantArt type={findSpecies(item.speciesId).image} /><div className="shop-listing-copy"><strong>{item.nickname} · {findSpecies(item.speciesId).name}</strong><span>{item.id} · {item.protected ? "Protected specimen" : "Eligible for sale"}</span></div><strong>{money(item.value)}</strong><button className="button button-primary" disabled={item.protected} onClick={() => onSell(item)}>{item.protected ? "Protected" : "Sell"}</button></div>)}</section></>;
 }
 
-function FinancesPage({ cash, specimens, weeklyOperatingCost }: { cash: number; specimens: Specimen[]; weeklyOperatingCost: number }) {
+function FinancesPage({ cash, day, specimens, weeklyOperatingCost }: { cash: number; day: number; specimens: Specimen[]; weeklyOperatingCost: number }) {
   const inventory = specimens.reduce((sum, specimen) => sum + Math.max(0, specimen.value), 0);
-  const monthlyOperatingCost = weeklyOperatingCost * 4;
-  const projectedCash = cash - monthlyOperatingCost;
   const protectedInventory = specimens.filter((specimen) => specimen.protected).reduce((sum, specimen) => sum + Math.max(0, specimen.value), 0);
   const saleEligibleInventory = Math.max(0, inventory - protectedInventory);
+  const projections = [30, 60, 90].map((days) => projectOperatingCash(cash, day, days, weeklyOperatingCost));
+  const monthProjection = projections[0];
+  const recovery = estimateRecoverySales(monthProjection.deficit, saleEligibleInventory);
+  const catalogueAudit = auditSpeciesEconomy();
   return <>
     <div className="metric-grid">
       <Metric label="Available funds" value={money(cash)} detail="Current local balance" icon={Wallet} tone="gold" />
@@ -1358,31 +1361,27 @@ function FinancesPage({ cash, specimens, weeklyOperatingCost }: { cash: number; 
     </div>
     <div className="two-column-layout">
       <section className="panel">
-        <SectionHeader title="Financial outlook" subtitle="A simple cost-only projection based on currently enabled facilities and staff care." />
+        <SectionHeader title="Financial outlook" subtitle="Cost projection follows the same day-7, day-14, day-21 operating-cost schedule as the simulation." />
         <div className="finance-projection">
-          <div className="finance-projection-row"><span>Current cash</span><strong>{money(cash)}</strong></div>
-          <div className="finance-projection-row"><span>Estimated running costs over 30 days (4 weekly charges)</span><strong>−{money(monthlyOperatingCost)}</strong></div>
-          <div className="finance-projection-row finance-projection-total"><span>Projected cash after 30 days</span><strong className={projectedCash < 0 ? "health-low" : "health-good"}>{money(projectedCash)}</strong></div>
+          <div className="finance-projection-row"><span>Current cash · Day {day}</span><strong>{money(cash)}</strong></div>
+          {projections.map((projection) => <div className={projection.days === 30 ? "finance-projection-row finance-projection-total" : "finance-projection-row"} key={projection.days}><span>{projection.days}-day outlook · {projection.charges} weekly charges</span><strong className={projection.projectedCash < 0 ? "health-low" : "health-good"}>{money(projection.projectedCash)}</strong></div>)}
         </div>
-        <p className="muted-copy">This is a cost-only estimate, not a full forecast. It assumes no plant purchases or sales, no research spending and no new upgrades. Plant values are estimates, not guaranteed sale proceeds.</p>
-        {projectedCash < 0 && <p className="finance-warning"><AlertTriangle size={15} /> Current cash would not cover the projected running costs. Pause optional care or upgrade spending and sell eligible stock to improve the balance.</p>}
+        <p className="muted-copy">This is a cost-only estimate: it excludes future purchases, sales, research spending, upgrades and uncertain income. Inventory values are estimates, not guaranteed proceeds.</p>
+        {monthProjection.deficit > 0 && <p className="finance-warning"><AlertTriangle size={15} /> The 30-day outlook shows a £{Math.ceil(monthProjection.deficit)} shortfall. Consider reducing optional running costs or selling eligible stock.</p>}
+        {monthProjection.deficit > 0 && <div className="finance-projection"><div className="finance-projection-row"><span>Estimated sale value to cover the shortfall (10% buffer)</span><strong>{money(recovery.targetSaleValue)}</strong></div><div className="finance-projection-row"><span>Additional stock value still needed</span><strong>{money(recovery.inventoryShortfall)}</strong></div></div>}
       </section>
       <aside className="panel">
         <SectionHeader title="Financial safeguards" />
         <div className="safeguard-item"><ShieldCheck size={18} /><div><strong>Upfront costs</strong><span>Shop and upgrade purchases check available funds before spending.</span></div></div>
-        <div className="safeguard-item"><ShieldCheck size={18} /><div><strong>Protected stock</strong><span>{money(protectedInventory)} in estimated inventory is protected from manual sale; protected specimens cannot be sold from the catalogue or shop.</span></div></div>
-        <div className="safeguard-item"><Clock3 size={18} /><div><strong>Running costs</strong><span>Weekly costs are deducted on simulated days 7, 14, 21 and so on, including during enabled offline progression.</span></div></div>
-        <div className="safeguard-item"><Wallet size={18} /><div><strong>Sale-eligible inventory</strong><span>{money(saleEligibleInventory)} estimated value across unprotected specimens. Actual proceeds depend on each specimen's current value.</span></div></div>
-        <p className="muted-copy">Debt, bankruptcy and automatic financial recovery are intentionally not simulated in this prototype; balances may fall below zero if you cannot cover running costs.</p>
+        <div className="safeguard-item"><ShieldCheck size={18} /><div><strong>Protected stock</strong><span>{money(protectedInventory)} in estimated inventory is protected from manual sale.</span></div></div>
+        <div className="safeguard-item"><Clock3 size={18} /><div><strong>Running costs</strong><span>Operating charges are deducted on simulated days divisible by seven.</span></div></div>
+        <div className="safeguard-item"><Wallet size={18} /><div><strong>Sale-eligible inventory</strong><span>{money(saleEligibleInventory)} estimated value across unprotected specimens.</span></div></div>
+        <div className="safeguard-item"><Database size={18} /><div><strong>Price catalogue review</strong><span>{catalogueAudit.total} economy entries · {catalogueAudit.lowConfidenceNames.length} low-confidence prices flagged for review · {catalogueAudit.duplicateNames.length} duplicate names detected.</span></div></div>
+        <p className="muted-copy">The forecast does not assume plants will sell. Actual income depends on player actions; balances can still fall below zero if running costs exceed available funds.</p>
       </aside>
     </div>
   </>;
 }
-
-
-export default App;
-
-
 function SettingsPage({ onReplayTutorial, onResetGame, day, specimensCount, catalogSource, saveSlots, onSaveSlot, onLoadSlot }: { onReplayTutorial: () => void; onResetGame: () => void; day: number; specimensCount: number; catalogSource: CatalogueSource; saveSlots: Record<string, GameSave | null>; onSaveSlot: (slot: string) => void; onLoadSlot: (slot: string) => void }) {
   return <div className="settings-layout">
     <section className="panel settings-panel"><div className="settings-heading"><div className="settings-icon"><Settings size={21} /></div><div><h2>Game settings</h2><p>Manage your J2Grows prototype experience.</p></div></div>
