@@ -1,5 +1,6 @@
 import type { Specimen } from "../data.ts";
 import type { PlantEnvironment } from "./genetics.ts";
+import { normalizeGenome } from "./alleles.ts";
 
 const VALID_STAGES = new Set(["Corm / Seedling", "Juvenile", "Growing", "Mature", "Breeding-ready"]);
 const VALID_PROPAGATION_METHODS = new Set(["corm", "cutting", "division", "tissue-culture"]);
@@ -40,6 +41,7 @@ function validGenetics(value: unknown): Specimen["genetics"] | undefined {
       growthPotential: finite(profile.growthPotential, 50, 0, 100),
       mutationGenePresent: typeof profile.mutationGenePresent === "boolean" ? profile.mutationGenePresent : false,
       mutationIds: profile.mutationIds.filter((item): item is string => typeof item === "string"),
+      ...(normalizeGenome(profile.genome) ? { genome: normalizeGenome(profile.genome)! } : {}),
     },
     expression: finite(value.expression, 0, 0, 100),
     environment: environment as unknown as PlantEnvironment,
