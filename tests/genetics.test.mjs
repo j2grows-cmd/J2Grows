@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { SPECIES_ECONOMY, getSpeciesEconomy, STARTING_CASH } from "../src/game/catalog.ts";
 import { species } from "../src/data.ts";
 import { createSeededRandom } from "../src/game/random.ts";
-import { calculateHealthFactor, calculateMaturityFactor, calculateSpecimenValue, environmentalSuitability, getShopAvailability, growVariegation, inheritGenetics, observePlant, analyseGenetics } from "../src/game/genetics.ts";
+import { calculateHealthFactor, calculateMaturityFactor, calculateSpecimenValue, environmentalSuitability, getShopAvailability, growVariegation, inheritGenetics, observePlant, analyseGenetics, createSpecimenGenetics } from "../src/game/genetics.ts";
 
 test("catalogue has unique species and positive prices", () => {
   assert.ok(SPECIES_ECONOMY.length > 0);
