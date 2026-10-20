@@ -2068,3 +2068,14 @@ body{
 /* The dimmer and guide are separate body-level layers: targets can shine above the dimmer while the guide stays above targets. */
 .tutorial-backdrop{z-index:1000!important}
 .tutorial-dialog{z-index:2000!important}
+
+/* Bell dropdown replaces the page-level notice banner. */
+.topbar{overflow:visible!important;z-index:3000}
+.notification-menu{position:relative;display:flex;align-items:center;flex:0 0 42px}
+.notification-menu .notification-button{display:grid!important}
+.notification-card{position:absolute;top:calc(100% + 14px);right:-86px;z-index:3100;width:min(340px,calc(100vw - 24px));padding:0 16px 15px;border:1px solid rgba(174,205,112,.52);border-radius:13px;background:#10170f;box-shadow:0 18px 48px rgba(0,0,0,.55);color:var(--text)}
+.notification-card:before{content:"";position:absolute;right:98px;top:-7px;width:12px;height:12px;transform:rotate(45deg);border-top:1px solid rgba(174,205,112,.52);border-left:1px solid rgba(174,205,112,.52);background:#10170f}
+.notification-card-heading{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0 11px;border-bottom:1px solid rgba(201,173,104,.2);font-size:14px;letter-spacing:.04em}
+.notification-card-heading button{display:grid;place-items:center;width:26px;height:26px;border:1px solid #35432a;border-radius:7px;background:#182116;color:var(--text);cursor:pointer}
+.notification-card p{margin:12px 0 0;color:#c7d0ba;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+@media(max-width:680px){.notification-card{right:-50px}}
