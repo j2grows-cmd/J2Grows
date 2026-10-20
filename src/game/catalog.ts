@@ -124,12 +124,14 @@ export function getSpeciesEconomy(name: string): SpeciesEconomy | undefined {
   const normalized = normalizeSpeciesName(name);
   const exact = economyByName.get(normalized);
   if (exact) return exact;
-  // Catalogue names sometimes omit the genus or use a cultivar epithet.
-  const suffixMatch = SPECIES_ECONOMY.find((item) => {
+  // Suffix matching is allowed only when it identifies exactly one row.
+  // Ambiguous epithets (for example shared cultivar names) must not silently
+  // borrow another species' price or rarity.
+  const suffixMatches = SPECIES_ECONOMY.filter((item) => {
     const candidate = normalizeSpeciesName(item.name);
     return normalized.endsWith(candidate) || candidate.endsWith(normalized);
   });
-  return suffixMatch;
+  return suffixMatches.length === 1 ? suffixMatches[0] : undefined;
 }
 
 export const SHOP_APPEARANCE_CHANCE: Record<RarityTier, number> = {
@@ -146,3 +148,25 @@ export function getShopAvailability(rarity: RarityTier, random: () => number = M
 }
 
 export const STARTING_CASH = 100;
+
+export type EconomyCatalogueAudit = {
+  total: number;
+  duplicateNames: string[];
+  invalidPrices: string[];
+  missingRarityTiers: RarityTier[];
+  lowConfidenceNames: string[];
+};
+
+export function auditSpeciesEconomy(rows: readonly SpeciesEconomy[] = SPECIES_ECONOMY): EconomyCatalogueAudit {
+  const names = new Map<string, number>();
+  for (const row of rows) {
+    const key = normalizeSpeciesName(row.name);
+    names.set(key, (names.get(key) ?? 0) + 1);
+  }
+  const duplicateNames = [...names.entries()].filter(([, count]) => count > 1).map(([name]) => name).sort();
+  const invalidPrices = rows.filter((row) => !Number.isFinite(row.basePrice) || row.basePrice <= 0).map((row) => row.name);
+  const present = new Set(rows.map((row) => row.rarity));
+  const missingRarityTiers = (["Common", "Uncommon", "Rare", "Very Rare", "Ultra Rare", "Mythic"] as RarityTier[]).filter((tier) => !present.has(tier));
+  const lowConfidenceNames = rows.filter((row) => row.confidence === "Low").map((row) => row.name);
+  return { total: rows.length, duplicateNames, invalidPrices, missingRarityTiers, lowConfidenceNames };
+}
