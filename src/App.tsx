@@ -12,7 +12,6 @@ import { createUniqueSpecimenId } from "./game/specimen-id.ts";
 import { createEventRandom } from "./game/random.ts";
 import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, normalizeFacilityLevels, propagationDaysRequired, weeklyFacilityOperatingCost, type FacilityLevels, type FacilityName } from "./game/facilities.ts";
 import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, startStaffTraining, STAFF_TRAINING_COST, weeklyStaffOperatingCost, type StaffState } from "./game/staff.ts";
-import { getOfflineProgressDays } from "./game/offline-progress.ts";
 import { getFallbackArtworkType } from "./game/plant-artwork.ts";
 import { canCreateOffset } from "./game/propagation-eligibility.ts";
 import { checkSaveEnvelope, isRecord, normalizeManualSaveSlots, normalizeSpecimens } from "./game/save-validation.ts";
@@ -223,7 +222,7 @@ function App() {
   const [staffState, setStaffState] = useState<StaffState>(normalizeStaffState(loadedSave.staffState));
   const [offlineProgressEnabled, setOfflineProgressEnabled] = useState(false);
   const [simulationSeed, setSimulationSeed] = useState(loadedSave.simulationSeed);
-  const [offlineDaysRemaining, setOfflineDaysRemaining] = useState(loadedSave.offlineDays);
+  const [, setOfflineDaysRemaining] = useState(loadedSave.offlineDays);
   const [saveSlots, setSaveSlots] = useState<Record<string, GameSave | null>>(() => {
     const slotsKey = "j2grows.manual-save-slots.v1";
     try {
@@ -1154,7 +1153,7 @@ function App() {
         {page === "Staff" && <StaffPage cash={cash} staffState={staffState} onToggleCare={() => setStaffState((current) => ({ ...current, routineCareEnabled: !current.routineCareEnabled }))} onStartTraining={() => { if (!canStartStaffTraining(cash, staffState)) { announce(cash < STAFF_TRAINING_COST ? `Training costs ${money(STAFF_TRAINING_COST)}.` : staffState.trainingLevel >= 3 ? "Your assistant has reached the maximum training level." : "Training is already in progress."); return; } const next = startStaffTraining(staffState); if (!next) return; setCash((current) => current - STAFF_TRAINING_COST); setStaffState(next); announce(`Basic plant-care training started for ${money(STAFF_TRAINING_COST)}. It completes after ${next.trainingDaysRemaining} simulated days.`); }} /> }
         {page === "Shop" && <ShopPage specimens={specimens} species={tutorialOpen && tutorialStep === 1 ? tutorialShopSpecies : catalogSpecies} tutorialMode={tutorialOpen && tutorialStep === 1} cash={cash} day={day} onSell={sellSpecimen} onBuy={(plant) => { if (tutorialOpen && tutorialStep === 1) { if (!catalogSpecies.some((item) => item.id === plant.id)) setSpeciesCatalog([...catalogSpecies, plant]); acquireSpecies(plant, true); } else purchaseSpecies(plant); }} />}
         {page === "Finances" && <FinancesPage cash={cash} specimens={specimens} weeklyOperatingCost={weeklyFacilityOperatingCost(facilityLevels, analysisEquipmentLevel, researchUnlocks.includes("routine-automation")) + weeklyStaffOperatingCost(staffState)} /> }
-        {page === "Settings" && <SettingsPage onReplayTutorial={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} onResetGame={resetGame} day={day} specimensCount={specimens.length} catalogSource={catalogSource} saveSlots={saveSlots} onSaveSlot={saveToSlot} onLoadSlot={loadFromSlot} offlineProgressEnabled={offlineProgressEnabled} onToggleOfflineProgress={toggleOfflineProgress} />}
+        {page === "Settings" && <SettingsPage onReplayTutorial={() => { setTutorialStep(0); setPage("Dashboard"); setTutorialOpen(true); }} onResetGame={resetGame} day={day} specimensCount={specimens.length} catalogSource={catalogSource} saveSlots={saveSlots} onSaveSlot={saveToSlot} onLoadSlot={loadFromSlot} />}
       </div>
       <footer className="app-footer"><span>J2Grows <span className="footer-separator">/</span> Prototype 0.1</span><span>All specimen and economic values are early prototype data.</span><span><span className="online-dot" /> Offline-first</span></footer>
     </main>
@@ -1397,7 +1396,7 @@ function FinancesPage({ cash, specimens, weeklyOperatingCost }: { cash: number; 
 export default App;
 
 
-function SettingsPage({ onReplayTutorial, onResetGame, day, specimensCount, catalogSource, saveSlots, onSaveSlot, onLoadSlot, offlineProgressEnabled, onToggleOfflineProgress }: { onReplayTutorial: () => void; onResetGame: () => void; day: number; specimensCount: number; catalogSource: CatalogueSource; saveSlots: Record<string, GameSave | null>; onSaveSlot: (slot: string) => void; onLoadSlot: (slot: string) => void; offlineProgressEnabled: boolean; onToggleOfflineProgress: () => void }) {
+function SettingsPage({ onReplayTutorial, onResetGame, day, specimensCount, catalogSource, saveSlots, onSaveSlot, onLoadSlot }: { onReplayTutorial: () => void; onResetGame: () => void; day: number; specimensCount: number; catalogSource: CatalogueSource; saveSlots: Record<string, GameSave | null>; onSaveSlot: (slot: string) => void; onLoadSlot: (slot: string) => void }) {
   return <div className="settings-layout">
     <section className="panel settings-panel"><div className="settings-heading"><div className="settings-icon"><Settings size={21} /></div><div><h2>Game settings</h2><p>Manage your J2Grows prototype experience.</p></div></div>
       <div className="settings-row"><div><strong>Getting started guide</strong><p>Replay the seven-step introduction to the nursery, collection and gameplay systems.</p></div><button className="button button-quiet" onClick={onReplayTutorial}><BookOpen size={15} /> Replay tutorial</button></div>
