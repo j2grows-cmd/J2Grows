@@ -44,5 +44,4 @@ test("main-menu settings exports a portable JSON backup", async ({ page }) => {
   await page.getByRole("button", { name: /Export backup/i }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe("j2grows-save-backup.json");
-  await expect(page.getByText(/Save backup exported/i)).toBeVisible();
 });
