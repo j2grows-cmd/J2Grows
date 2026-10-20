@@ -262,11 +262,8 @@ function App() {
     const shopStockPanel = tutorialStep === 1 && page === "Shop"
       ? document.querySelector(".page-content section.panel .shop-listing")?.closest("section.panel") ?? null
       : null;
-    const shopPictureTargets = shopStockPanel
-      ? Array.from(shopStockPanel.querySelectorAll(".shop-listing > .plant-art"))
-      : [];
-    const shopNameTargets = shopStockPanel
-      ? Array.from(shopStockPanel.querySelectorAll(".shop-listing-copy > strong"))
+    const shopRows = shopStockPanel
+      ? Array.from(shopStockPanel.querySelectorAll(".shop-listing"))
       : [];
     const shopPriceTargets = shopStockPanel
       ? Array.from(shopStockPanel.querySelectorAll(".tutorial-shop-price"))
@@ -274,10 +271,11 @@ function App() {
     const shopBuyTargets = shopStockPanel
       ? Array.from(shopStockPanel.querySelectorAll(".shop-listing .button-primary"))
       : [];
-    const shopTargets = [...shopPictureTargets, ...shopNameTargets, ...shopPriceTargets, ...shopBuyTargets];
+    const shopTargets = [...shopPriceTargets, ...shopBuyTargets];
     const highlightTargets: Element[] = shopTargets.length ? shopTargets : pageTarget ? [pageTarget] : [];
     const target = shopPriceTargets[0] ?? shopBuyTargets[0] ?? pageTarget ?? document.querySelector(".tutorial-footer .button-primary");
     if (!target) return;
+    shopRows.forEach((element) => element.classList.add("tutorial-spotlight-clear"));
     highlightTargets.forEach((element) => element.classList.add("tutorial-spotlight-target"));
     if (tutorialStep > 0) target.scrollIntoView({ block: "center", behavior: "smooth" });
     const guide = document.querySelector(".tutorial-dialog") as HTMLElement | null;
@@ -323,7 +321,10 @@ function App() {
       guide.style.left = `${left}px`;
       guide.style.top = `${top}px`;
     }
-    return () => highlightTargets.forEach((element) => element.classList.remove("tutorial-spotlight-target"));
+    return () => {
+      highlightTargets.forEach((element) => element.classList.remove("tutorial-spotlight-target"));
+      shopRows.forEach((element) => element.classList.remove("tutorial-spotlight-clear"));
+    };
   }, [tutorialOpen, tutorialStep, page]);
   function saveInstituteName() {
     const name = instituteNameDraft.trim().slice(0, 40);
