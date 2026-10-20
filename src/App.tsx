@@ -706,10 +706,13 @@ function App() {
       const generation = Math.max(parentA.generation ?? 0, parentB.generation ?? 0) + 1;
       const inheritedMutationIds = inherited.mutationIds;
       const stabilityGenerations = Object.fromEntries(inheritedMutationIds.map((mutationId) => [mutationId, Math.max(parentA.stabilityGenerations?.[mutationId] ?? 0, parentB.stabilityGenerations?.[mutationId] ?? 0) + 1]));
-      const stableMutationIds = inheritedMutationIds.filter((mutationId) => (stabilityGenerations[mutationId] ?? 0) >= 3);
       const inheritedMutationRecords = [...recordA.research.mutations, ...recordB.research.mutations]
         .filter((mutation, index, all) => inheritedMutationIds.includes(mutation.id) && all.findIndex((candidate) => candidate.id === mutation.id) === index)
         .map((mutation) => ({ ...mutation, detected: false, evidenceCount: 0 }));
+      const stableMutationIds = inheritedMutationIds.filter((mutationId) => {
+        const mutation = inheritedMutationRecords.find((record) => record.id === mutationId);
+        return Boolean(mutation && assessMutationStability(stabilityGenerations[mutationId] ?? 0, mutation.stability).stable);
+      });
       const childId = createUniqueSpecimenId([...nextSpecimens, ...completedChildren].map((item) => item.id));
       const childVariation = Math.round(inherited.variegationPotential);
       const child: Specimen = {
