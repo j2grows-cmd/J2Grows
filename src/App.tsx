@@ -517,7 +517,7 @@ function App() {
     } catch {
       setNotice("Local save unavailable. Your progress may not persist in this browser.");
     }
-  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState, offlineProgressEnabled]);
+  }, [specimens, breedingProjects, cash, research, day, projectStarted, analysisTargetSpecimenId, analysisStartedDay, analysisEquipmentLevel, greenhouseEnvironment, researchUnlocks, facilityLevels, staffState]);
 
   useEffect(() => {
     try { localStorage.setItem("j2grows.manual-save-slots.v1", JSON.stringify(saveSlots)); }
