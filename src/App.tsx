@@ -10,6 +10,7 @@ import {
 import { findSpecies, initialSpecimens, setSpeciesCatalog, species as prototypeSpecies, type Species, type Specimen } from "./data";
 import { createUniqueSpecimenId } from "./game/specimen-id.ts";
 import { createEventRandom } from "./game/random.ts";
+import { assessCrossEligibility, createBreedingIdentity } from "./game/breeding.ts";
 import { advanceEstablishedGrowthStage, advancePropagationPhase, calculateDailyHealth } from "./game/simulation.ts";
 import { applyEnvironmentalController, canPurchaseFacilityUpgrade, nextFacilityUpgradeCost, normalizeFacilityLevels, weeklyFacilityOperatingCost, type FacilityLevels, type FacilityName } from "./game/facilities.ts";
 import { advanceStaffDay, canStartStaffTraining, DEFAULT_STAFF_STATE, effectiveStaffCareCondition, normalizeStaffState, startStaffTraining, STAFF_TRAINING_COST, weeklyStaffOperatingCost, type StaffState } from "./game/staff.ts";
@@ -941,18 +942,13 @@ function App() {
       announce("Choose two different available parent specimens.");
       return;
     }
-    if (!canBreed(parentA.stage, parentB.stage, parentA.health, parentB.health, Boolean(parentA.reservedByProjectId), Boolean(parentB.reservedByProjectId)) || parentA.dead || parentB.dead) {
-      announce("Both parents must be healthy, alive, Breeding-ready and available.");
-      return;
-    }
     const speciesA = findSpecies(parentA.speciesId);
     const speciesB = findSpecies(parentB.speciesId);
-    const genusA = speciesA.latin.split(" ")[0];
-    const genusB = speciesB.latin.split(" ")[0];
-    if (genusA !== genusB) {
-      announce("This prototype supports crosses within the same genus.");
-      return;
-    }
+    const eligibility = assessCrossEligibility(
+      { id: parentA.id, genus: speciesA.latin.split(" ")[0], stage: parentA.stage, health: parentA.health, dead: parentA.dead, reserved: Boolean(parentA.reservedByProjectId) },
+      { id: parentB.id, genus: speciesB.latin.split(" ")[0], stage: parentB.stage, health: parentB.health, dead: parentB.dead, reserved: Boolean(parentB.reservedByProjectId) },
+    );
+    if (!eligibility.eligible) { announce(eligibility.reason ?? "These parents cannot be crossed."); return; }
     const rarityA = (getSpeciesEconomy(speciesA.id)?.rarity ?? speciesA.rarity) as RarityTier;
     const rarityB = (getSpeciesEconomy(speciesB.id)?.rarity ?? speciesB.rarity) as RarityTier;
     const targeted = Boolean(targetTrait && researchUnlocks.includes("inheritance-mapping"));
@@ -962,14 +958,15 @@ function App() {
       announce(`This breeding project costs ${money(cost)}. You currently have ${money(cash)}.`);
       return;
     }
-    const id = "BRD-" + day + "-" + (breedingProjects.length + 1) + "-" + parentA.id + "-" + parentB.id;
+    const identity = createBreedingIdentity(day, breedingProjects.length + 1, parentA.id, parentB.id);
+    const id = identity.projectId;
     const condition = (greenhouseEnvironment.light + greenhouseEnvironment.nutrition + greenhouseEnvironment.humidity + parentA.health + parentB.health) / 5;
     const project: BreedingProject = {
       id, parentAId, parentBId, startedDay: day,
       completesOnDay: day + breedingDurationDays(5, researchUnlocks.includes("selective-breeding") ? 15 : 0),
       cost, status: "active",
       failureChance: calculateTargetedFailureChance(breedingFailureChance(researchUnlocks.includes("selective-breeding") ? 3 : 0, condition), targeted),
-      lineId: `LINE-${Date.now().toString(36).toUpperCase()}`,
+      lineId: identity.lineId,
       targetTrait: targeted ? targetTrait : undefined,
     };
     setCash((current) => current - cost);
