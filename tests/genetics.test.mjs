@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { SPECIES_ECONOMY, getSpeciesEconomy, STARTING_CASH } from "../src/game/catalog.ts";
 import { species } from "../src/data.ts";
 import { createSeededRandom } from "../src/game/random.ts";
+import { phenotypeFromGenome } from "../src/game/alleles.ts";
 import { calculateHealthFactor, calculateMaturityFactor, calculateSpecimenValue, environmentalSuitability, getShopAvailability, growVariegation, inheritGenetics, observePlant, analyseGenetics, createSpecimenGenetics } from "../src/game/genetics.ts";
 
 test("catalogue has unique species and positive prices", () => {
@@ -139,4 +140,20 @@ test("mutation records are not guaranteed to pass to every offspring", () => {
   const childB = inheritGenetics(a, b, createSeededRandom("mutation-child"));
   assert.deepEqual(childA, childB);
   assert.ok(childA.mutationIds.length <= 1);
+});
+test("offspring numeric traits remain consistent with their heritable genome after spontaneous mutation", () => {
+  const genome = { variegation:{maternal:"5",paternal:"5"}, stability:{maternal:"5",paternal:"5"}, growth:{maternal:"5",paternal:"5"}, hiddenPotential:{maternal:"5",paternal:"5"} };
+  const parent = { variegationPotential:50, stability:50, hiddenPotential:50, growthPotential:50, mutationGenePresent:false, mutationIds:[], genome };
+  let mutatedChild;
+  for (let seed = 0; seed < 500; seed += 1) {
+    const candidate = inheritGenetics(parent, parent, createSeededRandom("genome-mutation-" + seed));
+    if (candidate.mutationIds.some((id) => id.startsWith("spontaneous-"))) { mutatedChild = candidate; break; }
+  }
+  assert.ok(mutatedChild, "seeded fixtures should include a spontaneous mutation");
+  assert.ok(mutatedChild.genome);
+  const phenotype = phenotypeFromGenome(mutatedChild.genome);
+  assert.equal(mutatedChild.variegationPotential, phenotype.variegationPotential);
+  assert.equal(mutatedChild.stability, phenotype.stability);
+  assert.equal(mutatedChild.growthPotential, phenotype.growthPotential);
+  assert.equal(mutatedChild.hiddenPotential, phenotype.hiddenPotential);
 });
