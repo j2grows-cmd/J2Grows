@@ -23,3 +23,14 @@ test("manual save slots can save and reload the current simulation day", async (
   await page.getByRole("button", { name: "Load", exact: true }).first().click();
   await expect(page.getByText(/Day 2/).first()).toBeVisible();
 });
+
+test("shop lists affordable stock and a purchase adds a specimen", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /BEGIN YOUR JOURNEY/i }).click();
+  await page.getByRole("button", { name: "Shop", exact: true }).evaluate((element) => (element as HTMLElement).click());
+  await expect(page.getByText("Today's nursery stock")).toBeVisible();
+  const firstPurchase = page.getByRole("button", { name: "Buy", exact: true }).first();
+  await expect(firstPurchase).toBeEnabled();
+  await firstPurchase.click();
+  await expect(page.getByText("Your plant listings")).toBeVisible();
+});
