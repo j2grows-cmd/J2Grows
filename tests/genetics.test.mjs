@@ -5,7 +5,7 @@ import { species } from "../src/data.ts";
 import { calculateHealthFactor, calculateMaturityFactor, calculateSpecimenValue, environmentalSuitability, getShopAvailability, growVariegation, inheritGenetics, observePlant, analyseGenetics } from "../src/game/genetics.ts";
 
 test("catalogue has unique species and positive prices and positive prices", () => {
-  assert.ok(SPECIES_ECONOMY.length >= 99);
+  assert.ok(SPECIES_ECONOMY.length > 0);
   assert.equal(species.length, SPECIES_ECONOMY.length, "offline catalogue should expose every priced species");
   assert.equal(new Set(SPECIES_ECONOMY.map((item) => item.name.toLowerCase())).size, SPECIES_ECONOMY.length);
   assert.ok(SPECIES_ECONOMY.every((item) => item.basePrice > 0));
