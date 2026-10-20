@@ -262,13 +262,19 @@ function App() {
     const shopStockPanel = tutorialStep === 1 && page === "Shop"
       ? document.querySelector(".page-content section.panel .shop-listing")?.closest("section.panel") ?? null
       : null;
+    const shopPictureTargets = shopStockPanel
+      ? Array.from(shopStockPanel.querySelectorAll(".shop-listing > .plant-art"))
+      : [];
+    const shopNameTargets = shopStockPanel
+      ? Array.from(shopStockPanel.querySelectorAll(".shop-listing-copy > strong"))
+      : [];
     const shopPriceTargets = shopStockPanel
       ? Array.from(shopStockPanel.querySelectorAll(".tutorial-shop-price"))
       : [];
     const shopBuyTargets = shopStockPanel
       ? Array.from(shopStockPanel.querySelectorAll(".shop-listing .button-primary"))
       : [];
-    const shopTargets = [...shopPriceTargets, ...shopBuyTargets];
+    const shopTargets = [...shopPictureTargets, ...shopNameTargets, ...shopPriceTargets, ...shopBuyTargets];
     const highlightTargets: Element[] = shopTargets.length ? shopTargets : pageTarget ? [pageTarget] : [];
     const target = shopPriceTargets[0] ?? shopBuyTargets[0] ?? pageTarget ?? document.querySelector(".tutorial-footer .button-primary");
     if (!target) return;
