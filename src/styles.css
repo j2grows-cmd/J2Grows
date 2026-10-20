@@ -2064,3 +2064,7 @@ body{
 
 /* The whole coachmark layer must outrank shop rows raised above the dimmer. */
 .tutorial-backdrop{z-index:1500!important}
+
+/* The dimmer and guide are separate body-level layers: targets can shine above the dimmer while the guide stays above targets. */
+.tutorial-backdrop{z-index:1000!important}
+.tutorial-dialog{z-index:2000!important}
