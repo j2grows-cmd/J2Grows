@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { SPECIES_ECONOMY, getSpeciesEconomy, STARTING_CASH } from "../src/game/catalog.ts";
 import { species } from "../src/data.ts";
+import { createSeededRandom } from "../src/game/random.ts";
 import { calculateHealthFactor, calculateMaturityFactor, calculateSpecimenValue, environmentalSuitability, getShopAvailability, growVariegation, inheritGenetics, observePlant, analyseGenetics } from "../src/game/genetics.ts";
 
 test("catalogue has unique species and positive prices", () => {
@@ -101,5 +102,17 @@ test("rarity affects shop availability", () => {
 });
 
 test("mutation carriers receive a latent record before analysis and can be replayed from a seed", () => {
-  const { createSeededRandom } = require("../src/game/random.ts");
+  let carrier;
+  for (let seed = 0; seed < 100; seed += 1) {
+    const candidate = createSpecimenGenetics(0, createSeededRandom(seed));
+    if (candidate.genetics.mutationGenePresent) { carrier = candidate; break; }
+  }
+  assert.ok(carrier, "the seeded fixture search should find a mutation carrier");
+  assert.ok(carrier.genetics.mutationIds.length > 0);
+  assert.equal(carrier.research.mutations.length, 1);
+  assert.equal(carrier.research.mutations[0].detected, false);
+  assert.equal(carrier.research.mutations[0].origin, "latent");
+  const replay = createSpecimenGenetics(0, createSeededRandom(0));
+  const replayAgain = createSpecimenGenetics(0, createSeededRandom(0));
+  assert.deepEqual(replay.research.mutations, replayAgain.research.mutations);
 });
