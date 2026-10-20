@@ -2650,3 +2650,68 @@ input, select, textarea {
  .premium-plant-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
  .premium-plant-art{height:130px}
 }
+
+
+/* Layout pass 2: match the reference composition, not just its colour palette. */
+.premium-welcome{min-height:224px!important;height:224px!important;padding:25px 28px!important;align-items:flex-start!important}
+.premium-welcome-content{z-index:5!important;max-width:720px!important;padding-top:2px!important}
+.premium-welcome h1{font-size:clamp(38px,3.5vw,54px)!important;max-width:760px!important}
+.premium-welcome p{max-width:620px!important;font-size:14px!important}
+.premium-welcome-actions{margin-top:17px!important}
+.premium-welcome-caption{z-index:4!important;right:16px!important;bottom:16px!important}
+.premium-stat-grid{position:relative!important;z-index:3!important;margin-top:-105px!important;margin-bottom:0!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:10px!important;padding:0 10px!important}
+.premium-stat-card{min-height:94px!important;padding:13px 12px!important;background:linear-gradient(145deg,rgba(7,15,9,.96),rgba(8,17,10,.97))!important;backdrop-filter:blur(12px)!important;border-color:rgba(201,173,104,.58)!important;box-shadow:0 10px 28px rgba(0,0,0,.24)!important}
+.premium-stat-copy small{font-size:12px!important}
+.premium-stat-copy strong{font-size:24px!important}
+.premium-stat-copy em{font-size:11px!important}
+.premium-dashboard-grid{margin-top:0!important;gap:10px!important;grid-template-columns:minmax(0,1.18fr) minmax(0,1fr) minmax(0,1.12fr)!important}
+.premium-environment,.premium-activity,.premium-finance{min-height:280px!important;padding:13px 13px 0!important}
+.premium-panel-heading{margin-bottom:9px!important}
+.premium-panel-heading h2{font-size:17px!important}
+.premium-panel-heading p{font-size:11px!important}
+.premium-condition-grid{gap:8px!important}
+.premium-condition{padding:9px 10px!important;row-gap:5px!important}
+.premium-condition small{font-size:11px!important}
+.premium-condition strong{font-size:15px!important}
+.premium-meter{height:6px!important}
+.premium-activity-row{padding:10px 1px!important;gap:8px!important}
+.premium-activity-row strong{font-size:12px!important}
+.premium-activity-row small{font-size:10px!important}
+.premium-panel-footer{margin-top:7px!important;padding:9px 0!important}
+.premium-balance-card{padding:12px!important;gap:5px!important}
+.premium-balance-card strong{font-size:27px!important}
+.premium-finance-details{margin-top:10px!important}
+.premium-finance-note{margin-top:10px!important}
+.premium-featured{grid-column:1/span 2!important;padding:13px!important}
+.premium-plant-grid{gap:9px!important}
+.premium-plant-art{height:clamp(100px,9vw,140px)!important}
+.premium-side-stack{gap:10px!important}
+.premium-research,.premium-tasks{padding:12px!important}
+.premium-task-list{gap:9px!important}
+.premium-task-row{gap:8px!important}
+.premium-task-icon{flex-basis:29px!important;width:29px!important;height:29px!important}
+@media(max-width:1350px){
+ .premium-stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;margin-top:-70px!important}
+ .premium-welcome{height:220px!important;min-height:220px!important}
+ .premium-dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .premium-environment,.premium-activity,.premium-finance{min-height:260px!important}
+ .premium-featured{grid-column:1/-1!important}
+ .premium-side-stack{grid-column:1/-1!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:900px){
+ .premium-welcome{height:auto!important;min-height:245px!important;padding:22px!important}
+ .premium-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;margin-top:-24px!important;padding:0!important}
+ .premium-dashboard-grid{grid-template-columns:minmax(0,1fr)!important}
+ .premium-featured,.premium-side-stack{grid-column:auto!important}
+ .premium-side-stack{display:flex!important}
+ .premium-environment,.premium-activity,.premium-finance{min-height:unset!important}
+}
+@media(max-width:560px){
+ .premium-welcome{min-height:250px!important;height:auto!important;padding:18px!important}
+ .premium-welcome h1{font-size:34px!important}
+ .premium-stat-grid{gap:7px!important;margin-top:-12px!important}
+ .premium-stat-card{min-height:78px!important;padding:9px!important}
+ .premium-stat-copy strong{font-size:20px!important}
+ .premium-stat-ring,.premium-stat-trend{display:none!important}
+ .premium-plant-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
