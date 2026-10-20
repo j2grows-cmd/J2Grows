@@ -2051,3 +2051,7 @@ body{
 .tutorial-shop-price{display:inline-block;padding:2px 4px;border-radius:5px}
 
 .tutorial-shop-name{display:inline-block;padding:2px 4px;border-radius:5px}
+
+/* Keep the shop rows clear of the dimming layer without outlining plant art or names. */
+.tutorial-spotlight-clear{position:relative!important;z-index:1001!important}
+.tutorial-shop-name{display:inline-block;padding:2px 4px;border-radius:5px}
