@@ -182,6 +182,7 @@ function App() {
     return () => { cancelled = true; };
   }, []);
   const [page, setPage] = useState<Page>("Dashboard");
+  const [mainMenuOpen, setMainMenuOpen] = useState(true);
   const [specimens, setSpecimens] = useState<Specimen[]>(loadedSave.specimens.map((specimen) => ({ ...specimen, genetics: specimen.genetics ?? createSpecimenGenetics(specimen.variegation) })));
   const [breedingProjects, setBreedingProjects] = useState<BreedingProject[]>(loadedSave.breedingProjects ?? []);
   const [researchUnlocks, setResearchUnlocks] = useState<string[]>(loadedSave.researchUnlocks ?? []);
@@ -1019,6 +1020,34 @@ function App() {
   }
 
   const pageTitle = page === "Plant Catalogue" ? "Plant Catalogue" : page === "Specimen Record" ? activeSpecies.name : page;
+
+  if (mainMenuOpen) {
+    const hasSave = (() => { try { return Boolean(localStorage.getItem(SAVE_KEY)); } catch { return false; } })();
+    const enterGame = (destination: Page = "Dashboard") => { setPage(destination); setMainMenuOpen(false); };
+    return <div className="main-menu-screen" style={{ backgroundImage: "linear-gradient(90deg, rgba(5,10,6,.88) 0%, rgba(5,10,6,.56) 48%, rgba(5,10,6,.2) 100%), linear-gradient(0deg, rgba(5,10,6,.72), transparent 48%), url(https://lwaxzivcjzpmmantryor.supabase.co/storage/v1/object/public/Artwork/banner.png)" }}>
+      <div className="main-menu-vignette" />
+      <header className="main-menu-brand">
+        <img src="https://lwaxzivcjzpmmantryor.supabase.co/storage/v1/object/public/Artwork/logo.png" alt="J2Grows" />
+        <span>CULTIVATE <i>·</i> BREED <i>·</i> BUILD <i>·</i> DISCOVER</span>
+      </header>
+      <section className="main-menu-content">
+        <div className="main-menu-eyebrow"><span /> BOTANICAL RESEARCH &amp; GENETICS <span /></div>
+        <h1>Grow beyond<br /><em>the extraordinary.</em></h1>
+        <p>Build your collection. Unlock hidden traits. Cultivate the next generation of botanical discoveries.</p>
+        <div className="main-menu-actions">
+          <button className="main-menu-primary" onClick={() => enterGame("Dashboard")}><Sprout size={18} /> {hasSave ? "CONTINUE" : "BEGIN YOUR JOURNEY"} <ArrowRight size={17} /></button>
+          <button className="main-menu-secondary" onClick={() => { if (window.confirm("Start a new game? This will replace your current local save.")) { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem(SAVE_BACKUP_KEY); } catch {} window.location.reload(); } }}><Plus size={17} /> NEW GAME</button>
+          <div className="main-menu-quicklinks">
+            <button onClick={() => enterGame("Greenhouse")}><Leaf size={16} /> Greenhouse</button>
+            <button onClick={() => enterGame("Research")}><Microscope size={16} /> Research</button>
+            <button onClick={() => enterGame("Settings")}><Settings size={16} /> Settings</button>
+          </div>
+        </div>
+        <div className="main-menu-footer"><span><span className="main-menu-status-dot" /> YOUR PRIVATE BOTANICAL INSTITUTE</span><span>PROTOTYPE 0.1 <i>·</i> AUTOSAVE ENABLED</span></div>
+      </section>
+      <div className="main-menu-edition"><span>J2G</span><span>BOTANICAL<br />SIMULATION</span></div>
+    </div>;
+  }
 
   return <div className="app-shell">
     <aside className={`sidebar ${showMenu ? "sidebar-open" : ""}`}>
