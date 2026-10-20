@@ -28,6 +28,8 @@ export type PlantEnvironment = {
 
 export type MutationCategory = "colour" | "morphology" | "growth" | "novelty";
 export type MutationInheritance = "stable" | "unstable" | "mixed";
+export type MutationOrigin = "growth" | "propagation" | "breeding" | "analysis" | "legacy";
+export type TissueDistribution = "sectoral" | "meristematic" | "whole-plant" | "unknown";
 
 export type PlantMutation = {
   id: string;
@@ -42,6 +44,10 @@ export type PlantMutation = {
   beneficial: boolean | null;
   /** Number of distinct recorded observations supporting confirmation. */
   evidenceCount?: number;
+  origin?: MutationOrigin;
+  tissueDistribution?: TissueDistribution;
+  originDay?: number;
+  parentMutationIds?: string[];
 };
 
 export type ResearchState = {
@@ -189,7 +195,7 @@ export function analyseGenetics(record: SpecimenGenetics, cost = 25): SpecimenGe
   };
 }
 
-export function createMutation(random: () => number = Math.random): PlantMutation {
+export function createMutation(random: () => number = Math.random, provenance: { origin?: MutationOrigin; tissueDistribution?: TissueDistribution; originDay?: number; parentMutationIds?: string[] } = {}): PlantMutation {
   const categories: MutationCategory[] = ["colour", "morphology", "growth", "novelty"];
   const roll = random();
   const rarity: PlantMutation["rarity"] = roll < 0.58 ? "Minor" : roll < 0.83 ? "Unusual" : roll < 0.96 ? "Rare" : roll < 0.995 ? "Exceptional" : "Novel cultivar";
