@@ -762,20 +762,25 @@ function App() {
         const record = completedTarget.genetics ?? createSpecimenGenetics(completedTarget.variegation, createEventRandom(simulationSeed, "mutation-analysis-genetics:" + completedTarget.id));
         if (record.genetics.mutationGenePresent) {
           const analysisRandom = createEventRandom(simulationSeed, "mutation-analysis:" + target.id);
-          const mutation = { ...createMutation(analysisRandom, { origin: "analysis", tissueDistribution: "unknown", originDay: day }), detected: true, evidenceCount: 3 };
+          const existingLatent = record.research.mutations.find((candidate) => record.genetics.mutationIds.includes(candidate.id) && !candidate.detected);
+          // New saves discover a mutation that already exists in the latent record. Only legacy saves
+          // missing a latent record receive a deterministic compatibility record.
+          const mutation = existingLatent
+            ? { ...existingLatent, detected: true, evidenceCount: Math.max(3, existingLatent.evidenceCount ?? 0) }
+            : { ...createMutation(analysisRandom, { origin: "legacy", tissueDistribution: "unknown", originDay: nextDay }), detected: true, evidenceCount: 3 };
           const geneticsRecord = {
             ...record,
             genetics: { ...record.genetics, mutationIds: [...new Set([...record.genetics.mutationIds, mutation.id])] },
             research: {
               ...record.research,
-              mutations: [...record.research.mutations, mutation],
+              mutations: [...record.research.mutations.filter((candidate) => candidate.id !== mutation.id), mutation],
               discoveredTraits: [...new Set([...record.research.discoveredTraits, "mutation-details"])],
             },
           };
           completedTarget.genetics = geneticsRecord;
           completedTarget.discovered = true;
-          mutationMessage += ` Mutation Analysis detected ${mutation.name} (${mutation.rarity}) in ${completedTarget.nickname}.`;
-        } else {
+          mutationMessage += ` Mutation Analysis confirmed existing ${mutation.name} (${mutation.rarity}) in ${completedTarget.nickname}.`;
+        }else {
           mutationMessage += ` Mutation Analysis found no detectable mutation gene in ${completedTarget.nickname}. This specimen cannot be analysed again.`;
         }
         completedTarget.value = specimenValue(completedTarget);
