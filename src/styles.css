@@ -2188,3 +2188,9 @@ html[data-visual-quality="low"] .main-menu-screen:before{opacity:.35}
  .preference-slider output{grid-column:2;grid-row:1}
  .main-menu-settings-footer{align-items:flex-start;flex-direction:column}
 }
+
+
+.import-save-label{position:relative;display:inline-flex;align-items:center;gap:8px;cursor:pointer;white-space:nowrap}
+.import-save-label input[type="file"]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.import-save-label:focus-within{outline:2px solid #b8d58a;outline-offset:3px}
+@media(max-width:560px){.import-save-label{white-space:normal;text-align:center;justify-content:center}}
