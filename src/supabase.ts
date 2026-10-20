@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { makeStorageSpecies, species as prototypeSpecies, type Species } from "./data";
 import { getSpeciesEconomy } from "./game/catalog";
-import { normalizeSpeciesRows, type ValidatedSpeciesRow } from "./game/supabase-catalog";
+import { auditSpeciesRows, normalizeSpeciesRows, type ValidatedSpeciesRow } from "./game/supabase-catalog";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -48,7 +48,16 @@ export async function loadSpeciesCatalog(): Promise<{ species: Species[]; source
     .order("name");
 
   if (!tableError && rows?.length) {
+    const audit = auditSpeciesRows(rows);
     const validatedRows = normalizeSpeciesRows(rows);
+    if (audit.invalidRowIndexes.length || audit.duplicateIds.length || audit.missingArtworkPaths.length || audit.missingCareProfiles.length) {
+      console.warn("Supabase species catalogue audit", {
+        totalRows: audit.totalRows, validRows: audit.validRows, invalidRows: audit.invalidRowIndexes.length,
+        duplicateIds: audit.duplicateIds, missingArtworkPaths: audit.missingArtworkPaths.length,
+        missingCareProfiles: audit.missingCareProfiles.length, missingScientificNames: audit.missingScientificNames.length,
+        missingFamilies: audit.missingFamilies.length, missingTraits: audit.missingTraits.length,
+      });
+    }
     if (validatedRows.length) {
       if (validatedRows.length !== rows.length) console.warn(`Skipped ${rows.length - validatedRows.length} invalid or duplicate Supabase species row(s).`);
       return { species: validatedRows.map(fromSpeciesRow), source: "supabase-table" };
