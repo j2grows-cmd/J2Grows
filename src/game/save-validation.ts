@@ -128,3 +128,89 @@ export function normalizeManualSaveSlots(value: unknown): Record<string, unknown
   }
   return slots;
 }
+
+
+export type BreedingProjectRecovery = {
+  specimens: Specimen[];
+  projects: Record<string, unknown>[];
+  dropped: number;
+  repaired: number;
+};
+
+/**
+ * Repairs cross-record save relationships after individual records are normalized.
+ * Active projects must reference two distinct existing parents, and each parent may
+ * be reserved by at most one active project. Orphaned reservations are cleared.
+ */
+export function normalizeBreedingProjectRelations(
+  specimensInput: Specimen[],
+  projectsInput: unknown,
+): BreedingProjectRecovery {
+  const specimens = specimensInput.map((item) => ({ ...item }));
+  const specimenById = new Map(specimens.map((item) => [item.id, item]));
+  const rawProjects = Array.isArray(projectsInput) ? projectsInput : [];
+  const projects: Record<string, unknown>[] = [];
+  const projectIds = new Set<string>();
+  const reservedParents = new Set<string>();
+  let dropped = 0;
+  let repaired = 0;
+
+  for (const raw of rawProjects) {
+    if (!isRecord(raw)
+      || typeof raw.id !== "string" || !raw.id.trim()
+      || typeof raw.parentAId !== "string" || typeof raw.parentBId !== "string"
+      || raw.parentAId === raw.parentBId
+      || typeof raw.startedDay !== "number" || !Number.isFinite(raw.startedDay)
+      || typeof raw.completesOnDay !== "number" || !Number.isFinite(raw.completesOnDay)
+      || typeof raw.cost !== "number" || !Number.isFinite(raw.cost) || raw.cost < 0
+      || !["active", "completed", "cancelled"].includes(String(raw.status))
+      || typeof raw.lineId !== "string"
+      || typeof raw.failureChance !== "number" || !Number.isFinite(raw.failureChance)
+      || raw.failureChance < 0 || raw.failureChance > 1
+      || raw.startedDay < 1 || raw.completesOnDay < raw.startedDay) {
+      dropped++;
+      continue;
+    }
+    if (projectIds.has(raw.id)) {
+      dropped++;
+      continue;
+    }
+    const isActive = raw.status === "active";
+    const parentA = specimenById.get(raw.parentAId);
+    const parentB = specimenById.get(raw.parentBId);
+    if (isActive && (!parentA || !parentB || reservedParents.has(raw.parentAId) || reservedParents.has(raw.parentBId))) {
+      dropped++;
+      continue;
+    }
+    const project = { ...raw };
+    if (project.targetTrait !== undefined && !["variegationPotential", "stability", "growthPotential", "hiddenPotential"].includes(String(project.targetTrait))) {
+      delete project.targetTrait;
+      repaired++;
+    }
+    projects.push(project);
+    projectIds.add(raw.id);
+    if (isActive) {
+      reservedParents.add(raw.parentAId);
+      reservedParents.add(raw.parentBId);
+      if (parentA!.reservedByProjectId !== raw.id) {
+        parentA!.reservedByProjectId = raw.id;
+        repaired++;
+      }
+      if (parentB!.reservedByProjectId !== raw.id) {
+        parentB!.reservedByProjectId = raw.id;
+        repaired++;
+      }
+    }
+  }
+
+  for (const specimen of specimens) {
+    if (specimen.reservedByProjectId && !projects.some((project) =>
+      project.id === specimen.reservedByProjectId
+      && project.status === "active"
+      && (project.parentAId === specimen.id || project.parentBId === specimen.id))) {
+      specimen.reservedByProjectId = undefined;
+      repaired++;
+    }
+  }
+  return { specimens, projects, dropped, repaired };
+}
