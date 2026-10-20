@@ -1,4 +1,5 @@
 import type { RarityTier } from "./catalog.ts";
+import { createGenome, inheritGenome, phenotypeFromGenome, type GeneticGenome } from "./alleles.ts";
 
 export type GeneticProfile = {
   /** Inherited propensity for visible variegation, 0–100. */
@@ -11,6 +12,8 @@ export type GeneticProfile = {
   /** Whether this plant carries the latent mutation gene that Mutation Analysis can detect. */
   mutationGenePresent: boolean;
   mutationIds: string[];
+  /** Versioned locus-based genotype; absent on legacy saves until safely migrated. */
+  genome?: GeneticGenome;
 };
 
 export type PlantEnvironment = {
@@ -66,8 +69,14 @@ const varied = (value: number, random: () => number, spread = 8) => clamp(value 
 
 
 export function createSpecimenGenetics(expression = 0, random: () => number = Math.random): SpecimenGenetics {
+  const genome = createGenome(random);
+  const phenotype = phenotypeFromGenome(genome);
   const genetics = createGeneticProfile(random);
-  genetics.variegationPotential = clamp(Math.max(expression, genetics.variegationPotential));
+  genetics.genome = genome;
+  genetics.variegationPotential = clamp(Math.max(expression, phenotype.variegationPotential, genetics.variegationPotential));
+  genetics.stability = phenotype.stability;
+  genetics.growthPotential = phenotype.growthPotential;
+  genetics.hiddenPotential = phenotype.hiddenPotential;
   return {
     genetics,
     expression: clamp(expression),
@@ -90,9 +99,12 @@ export function createGeneticProfile(random: () => number = Math.random): Geneti
 
 /** Hybrid inheritance: parental traits blend, vary, and can rarely mutate. */
 export function inheritGenetics(parentA: GeneticProfile, parentB: GeneticProfile, random: () => number = Math.random): GeneticProfile {
+  const genome = parentA.genome && parentB.genome ? inheritGenome(parentA.genome, parentB.genome, random) : undefined;
+  const phenotype = genome ? phenotypeFromGenome(genome) : undefined;
   const average = (a: number, b: number) => (a + b) / 2;
   const mutationIds = [...new Set([...parentA.mutationIds, ...parentB.mutationIds])];
   const child: GeneticProfile = {
+    ...(genome ? { genome } : {}),
     variegationPotential: varied(average(parentA.variegationPotential, parentB.variegationPotential), random, 12),
     stability: varied(average(parentA.stability, parentB.stability), random, 10),
     hiddenPotential: varied(average(parentA.hiddenPotential, parentB.hiddenPotential), random, 18),
@@ -100,6 +112,12 @@ export function inheritGenetics(parentA: GeneticProfile, parentB: GeneticProfile
     mutationGenePresent: random() < 0.5 ? parentA.mutationGenePresent : parentB.mutationGenePresent,
     mutationIds,
   };
+  if (phenotype) {
+    child.variegationPotential = phenotype.variegationPotential;
+    child.stability = phenotype.stability;
+    child.growthPotential = phenotype.growthPotential;
+    child.hiddenPotential = phenotype.hiddenPotential;
+  }
   if (random() < 0.025) {
     const mutation = (random() < 0.5 ? "spontaneous-colour-shift" : "spontaneous-morphology") + "-" + Math.round(random() * 1e9).toString(36);
     child.mutationIds = [...new Set([...child.mutationIds, mutation])];
