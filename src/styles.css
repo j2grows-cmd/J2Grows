@@ -2031,3 +2031,19 @@ body{
 /* Let gameplay remain clickable beneath the non-modal guide. */
 .tutorial-dialog{pointer-events:none}
 .tutorial-close{pointer-events:none}
+
+
+/* Compact coachmark that sits beside the active tutorial control. */
+.tutorial-dialog{width:min(330px,calc(100vw - 24px));max-height:min(64vh,560px);border-radius:14px}
+.tutorial-topline{gap:8px;padding:11px 14px;font-size:11px;letter-spacing:1.25px}
+.tutorial-mark{width:28px;height:28px;border-radius:8px}
+.tutorial-close{width:26px;height:26px}
+.tutorial-progress-label{padding:12px 17px 7px;font-size:11px;letter-spacing:1px}
+.tutorial-progress-track{margin:0 17px}
+.tutorial-content{padding:16px 18px}
+.tutorial-eyebrow{font-size:11px;letter-spacing:1.1px}
+.tutorial-content h2{margin:9px 0 8px;font-size:clamp(21px,3vw,27px)}
+.tutorial-content>p{font-size:13px;line-height:1.55}
+.tutorial-tip{gap:8px;margin-top:12px;padding:9px 10px;font-size:12px;line-height:1.5}
+.tutorial-footer{padding:10px 15px;font-size:12px}
+.tutorial-action-hint{margin-top:10px!important;padding:8px 10px;font-size:12px!important}
